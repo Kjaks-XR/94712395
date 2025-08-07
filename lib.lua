@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.06"
+local version = "0.07"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2455,27 +2455,28 @@ function Funcs:AddSlider(Idx, Info)
     end
 
 
-		function Slider:UpdateColors()
-    local targetColor = Slider.IsActive and Library.AccentColor or Library.InactiveColor;
-    local targetColorDark = Slider.IsActive and Library.AccentColorDark or Library.InactiveColorDark;
+function Slider:UpdateColors()
+    local isDefault = (Slider.Value == Info.Default)
+    local targetFillColor = isDefault and Library.InactiveColor or Library.AccentColor;
+    local targetFillBorder = isDefault and Library.InactiveColorDark or Library.AccentColorDark;
 
-    TweenService:Create(Fill, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-        BackgroundColor3 = targetColor,
-        BorderColor3 = targetColorDark
+    TweenService:Create(Fill, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = targetFillColor,
+        BorderColor3 = targetFillBorder
     }):Play();
 
-    TweenService:Create(HideBorderRight, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-        BackgroundColor3 = targetColor
+    TweenService:Create(HideBorderRight, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = targetFillColor
     }):Play();
 
     if SliderLabel then
         local targetTextColor = Slider.IsActive and Library.FontColor or Color3.fromRGB(150, 150, 150);
-
         TweenService:Create(SliderLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
             TextColor3 = targetTextColor
         }):Play();
     end
 end
+
 
 
 
