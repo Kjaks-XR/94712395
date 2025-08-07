@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.08"
+local version = "0.09"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2375,11 +2375,13 @@ function Funcs:AddSlider(Idx, Info)
         local Groupbox = self;
         local Container = Groupbox.Container;
 
+        local TitleLabel
         if not Info.Compact then
-            Library:CreateLabel({
+            TitleLabel = Library:CreateLabel({
                 Size = UDim2.new(1, 0, 0, 10);
                 TextSize = 14;
                 Text = Info.Text;
+                TextColor3 = Color3.fromRGB(128, 128, 128); -- Başlangıçta gri
                 TextXAlignment = Enum.TextXAlignment.Left;
                 TextYAlignment = Enum.TextYAlignment.Bottom;
                 ZIndex = 5;
@@ -2445,7 +2447,6 @@ function Funcs:AddSlider(Idx, Info)
             Size = UDim2.new(1, 0, 1, 0);
             TextSize = 14;
             Text = 'Infinite';
-            TextColor3 = Color3.fromRGB(128, 128, 128); -- Başlangıçta gri
             ZIndex = 9;
             Parent = SliderInner;
         });
@@ -2472,13 +2473,15 @@ function Funcs:AddSlider(Idx, Info)
             tween:Play()
         end
 
-        -- Text renk değiştirme fonksiyonu
+        -- Text renk değiştirme fonksiyonu (Title için)
         function Slider:UpdateTextColor(touched)
-            local TweenService = game:GetService("TweenService")
-            local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            local targetColor = touched and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(128, 128, 128)
-            local colorTween = TweenService:Create(DisplayLabel, tweenInfo, {TextColor3 = targetColor})
-            colorTween:Play()
+            if TitleLabel then
+                local TweenService = game:GetService("TweenService")
+                local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+                local targetColor = touched and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(128, 128, 128)
+                local colorTween = TweenService:Create(TitleLabel, tweenInfo, {TextColor3 = targetColor})
+                colorTween:Play()
+            end
         end
 
         function Slider:Display()
@@ -2559,9 +2562,8 @@ function Funcs:AddSlider(Idx, Info)
                     local OldValue = Slider.Value;
                     Slider.Value = nValue;
 
-                    -- Anlık güncelleme için tween kullanmadan direkt güncelle
-                    local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
-                    Fill.Size = UDim2.new(0, X, 1, 0);
+                    -- Smooth tween ile hareket ettir
+                    Slider:TweenFill(UDim2.new(0, nX, 1, 0));
                     
                     local Suffix = Info.Suffix or '';
                     if Info.Compact then
@@ -2572,7 +2574,7 @@ function Funcs:AddSlider(Idx, Info)
                         DisplayLabel.Text = string.format('%s/%s', Slider.Value .. Suffix, Slider.Max .. Suffix);
                     end
 
-                    HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
+                    HideBorderRight.Visible = not (nX == Slider.MaxSize or nX == 0);
 
                     if nValue ~= OldValue then
                         Library:SafeCallback(Slider.Callback, Slider.Value);
