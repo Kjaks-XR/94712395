@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.04"
+local version = "0.05"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2276,25 +2276,27 @@ do
         Toggle:Display()
     end
 
-    function Toggle:Display()
-	local targetBorderColor = Toggle.Value and Library.AccentColorDark or Library.InactiveColorDark;
-	local targetOuterBorder = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.new(0, 0, 0));
-	local targetTextColor = Toggle.Value and Library.FontColor or Color3.new(0.6, 0.6, 0.6);
-	local innerColor = Toggle.Value and Library.AccentColor or Color3.new(0.05, 0.05, 0.05);
+function Toggle:Display()
+    local bgColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(25, 25, 25)
+    local borderColor = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(40, 40, 40)
+    local outerColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(30, 30, 30))
+    local textColor = Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
 
-	TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-		BackgroundColor3 = innerColor,
-		BorderColor3 = targetBorderColor
-	}):Play();
+    TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = bgColor,
+        BorderColor3 = borderColor
+    }):Play()
 
-	TweenService:Create(ToggleOuter, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-		BorderColor3 = targetOuterBorder
-	}):Play();
+    TweenService:Create(ToggleOuter, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BorderColor3 = outerColor
+    }):Play()
 
-	TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-		TextColor3 = targetTextColor
-	}):Play();
+    TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        TextColor3 = textColor
+    }):Play()
 end
+
+
 
     function Toggle:OnChanged(Func)
         Toggle.Changed = Func;
@@ -2452,28 +2454,31 @@ function Funcs:AddSlider(Idx, Info)
         Library:AddToolTip(Info.Tooltip, SliderOuter)
     end
 
-function Slider:UpdateColors()
-	local targetInner = Library.MainColor;
-	local targetOuter = (Slider.IsHeld or Slider.IsHovered) and Library.AccentColor or Color3.new(0, 0, 0);
-	local targetBar = (Slider.IsHeld or Slider.IsHovered) and Library.AccentColor or Library.AccentColorDark;
-	local targetTextColor = (Slider.IsHeld or Slider.Value ~= Info.Default) and Library.FontColor or Color3.new(0.6, 0.6, 0.6);
+    function Slider:UpdateColors()
+    local targetColor = Slider.IsActive and Library.AccentColor or Library.InactiveColor;
+    local targetColorDark = Slider.IsActive and Library.AccentColorDark or Library.InactiveColorDark;
+    
+    TweenService:Create(Fill, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = targetColor,
+        BorderColor3 = targetColorDark
+    }):Play()
 
-	TweenService:Create(SliderOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-		BorderColor3 = targetOuter
-	}):Play();
+    TweenService:Create(HideBorderRight, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = targetColor
+    }):Play()
 
-	TweenService:Create(SliderInner, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-		BackgroundColor3 = targetInner
-	}):Play();
+    if SliderLabel then
+        local targetTextColor = Library.FontColor
+        if not Slider.IsActive then
+            targetTextColor = Color3.fromRGB(150, 150, 150) -- açık gri, eski rengine dönüş
+        end
 
-	TweenService:Create(SliderLabel, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-		TextColor3 = targetTextColor
-	}):Play();
-
-	TweenService:Create(SliderFill, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-		BackgroundColor3 = targetBar
-	}):Play();
+        TweenService:Create(SliderLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            TextColor3 = targetTextColor
+        }):Play()
+    end
 end
+
 
     function Slider:Display()
         local Suffix = Info.Suffix or ''
