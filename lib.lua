@@ -2381,12 +2381,14 @@ function Funcs:AddSlider(Idx, Info)
                 Size = UDim2.new(1, 0, 0, 10);
                 TextSize = 14;
                 Text = Info.Text;
-                TextColor3 = Color3.fromRGB(128, 128, 128); -- Başlangıçta gri
                 TextXAlignment = Enum.TextXAlignment.Left;
                 TextYAlignment = Enum.TextYAlignment.Bottom;
                 ZIndex = 5;
                 Parent = Container;
             });
+
+            -- Başlangıçta gri renk ayarla
+            TitleLabel.TextColor3 = Color3.fromRGB(128, 128, 128);
 
             Groupbox:AddBlank(3);
         end
@@ -2468,7 +2470,7 @@ function Funcs:AddSlider(Idx, Info)
         -- Smooth tween fonksiyonu
         function Slider:TweenFill(targetSize)
             local TweenService = game:GetService("TweenService")
-            local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+            local tweenInfo = TweenInfo.new(0.75, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
             local tween = TweenService:Create(Fill, tweenInfo, {Size = targetSize})
             tween:Play()
         end
