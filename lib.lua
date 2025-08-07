@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.05"
+local version = "0.06"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2454,30 +2454,29 @@ function Funcs:AddSlider(Idx, Info)
         Library:AddToolTip(Info.Tooltip, SliderOuter)
     end
 
-    function Slider:UpdateColors()
+
+		function Slider:UpdateColors()
     local targetColor = Slider.IsActive and Library.AccentColor or Library.InactiveColor;
     local targetColorDark = Slider.IsActive and Library.AccentColorDark or Library.InactiveColorDark;
-    
+
     TweenService:Create(Fill, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
         BackgroundColor3 = targetColor,
         BorderColor3 = targetColorDark
-    }):Play()
+    }):Play();
 
     TweenService:Create(HideBorderRight, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
         BackgroundColor3 = targetColor
-    }):Play()
+    }):Play();
 
     if SliderLabel then
-        local targetTextColor = Library.FontColor
-        if not Slider.IsActive then
-            targetTextColor = Color3.fromRGB(150, 150, 150) -- açık gri, eski rengine dönüş
-        end
+        local targetTextColor = Slider.IsActive and Library.FontColor or Color3.fromRGB(150, 150, 150);
 
         TweenService:Create(SliderLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
             TextColor3 = targetTextColor
-        }):Play()
+        }):Play();
     end
 end
+
 
 
     function Slider:Display()
@@ -2578,6 +2577,11 @@ end
     Groupbox:AddBlank(Info.BlankSize or 6)
     Groupbox:Resize()
     Options[Idx] = Slider
+if SliderLabel then
+    TweenService:Create(SliderLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        TextColor3 = Color3.fromRGB(150, 150, 150)
+    }):Play();
+end
 
     return Slider
 end
