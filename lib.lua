@@ -392,6 +392,9 @@ local Library = {
     ScreenGui = ScreenGui;
 };
 
+Library.InactiveColor = Color3.fromRGB(60, 60, 60);
+Library.InactiveColorDark = Library:GetDarkerColor(Library.InactiveColor);
+
 local RainbowStep = 0
 local Hue = 0
 
@@ -787,6 +790,37 @@ do
             ZIndex = 6;
             Parent = ToggleLabel;
         });
+
+
+
+
+
+
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "GlowFrameExample"
+
+
+local glow = Instance.new("ImageLabel", DisplayFrame)
+glow.Name = "GlowEffect"
+glow.Image = "rbxassetid://18245826428" -- Glow texture ID
+glow.ScaleType = Enum.ScaleType.Slice
+glow.SliceCenter = Rect.new(21, 21, 79, 79)
+glow.ImageColor3 = Color3.fromRGB(100, 100, 255) -- Mavi renk
+glow.ImageTransparency = 0.1
+glow.BackgroundTransparency = 1
+glow.Size = UDim2.new(1, 40, 1, 40)
+glow.Position = UDim2.new(0, -20, 0, -20)
+glow.ZIndex = -1
+
+
+
+
+
+
+
+
+
+		
 
         -- Transparency image taken from https://github.com/matas3535/SplixPrivateDrawingLibrary/blob/main/Library.lua cus i'm lazy
         local CheckerFrame = Library:Create('ImageLabel', {
@@ -2161,339 +2195,395 @@ do
     end;
 
     function Funcs:AddToggle(Idx, Info)
-        assert(Info.Text, 'AddInput: Missing `Text` string.')
+    assert(Info.Text, 'AddInput: Missing `Text` string.')
 
-        local Toggle = {
-            Value = Info.Default or false;
-            Type = 'Toggle';
+    local Toggle = {
+        Value = Info.Default or false;
+        Type = 'Toggle';
+        IsHovered = false;
+        Callback = Info.Callback or function(Value) end;
+        Addons = {},
+        Risky = Info.Risky,
+    };
 
-            Callback = Info.Callback or function(Value) end;
-            Addons = {},
-            Risky = Info.Risky,
-        };
+    local Groupbox = self;
+    local Container = Groupbox.Container;
 
-        local Groupbox = self;
-        local Container = Groupbox.Container;
+    local ToggleOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0);
+        BorderColor3 = Color3.new(0, 0, 0);
+        Size = UDim2.new(0, 13, 0, 13);
+        ZIndex = 5;
+        Parent = Container;
+    });
 
-        local ToggleOuter = Library:Create('Frame', {
-            BackgroundColor3 = Color3.new(0, 0, 0);
-            BorderColor3 = Color3.new(0, 0, 0);
-            Size = UDim2.new(0, 13, 0, 13);
-            ZIndex = 5;
-            Parent = Container;
-        });
+    Library:AddToRegistry(ToggleOuter, {
+        BorderColor3 = 'Black';
+    });
 
-        Library:AddToRegistry(ToggleOuter, {
-            BorderColor3 = 'Black';
-        });
+    local ToggleInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.InactiveColor;
+        BorderColor3 = Library.InactiveColorDark;
+        BorderMode = Enum.BorderMode.Inset;
+        Size = UDim2.new(1, 0, 1, 0);
+        ZIndex = 6;
+        Parent = ToggleOuter;
+    });
 
-        local ToggleInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Library.OutlineColor;
-            BorderMode = Enum.BorderMode.Inset;
-            Size = UDim2.new(1, 0, 1, 0);
-            ZIndex = 6;
-            Parent = ToggleOuter;
-        });
+    -- Don't add to registry yet, we'll handle colors manually
+    local ToggleLabel = Library:CreateLabel({
+        Size = UDim2.new(0, 216, 1, 0);
+        Position = UDim2.new(1, 6, 0, 0);
+        TextSize = 14;
+        Text = Info.Text;
+        TextXAlignment = Enum.TextXAlignment.Left;
+        ZIndex = 6;
+        Parent = ToggleInner;
+    });
 
-        Library:AddToRegistry(ToggleInner, {
-            BackgroundColor3 = 'MainColor';
-            BorderColor3 = 'OutlineColor';
-        });
+    Library:Create('UIListLayout', {
+        Padding = UDim.new(0, 4);
+        FillDirection = Enum.FillDirection.Horizontal;
+        HorizontalAlignment = Enum.HorizontalAlignment.Right;
+        SortOrder = Enum.SortOrder.LayoutOrder;
+        Parent = ToggleLabel;
+    });
 
-        local ToggleLabel = Library:CreateLabel({
-            Size = UDim2.new(0, 216, 1, 0);
-            Position = UDim2.new(1, 6, 0, 0);
+    local ToggleRegion = Library:Create('Frame', {
+        BackgroundTransparency = 1;
+        Size = UDim2.new(0, 170, 1, 0);
+        ZIndex = 8;
+        Parent = ToggleOuter;
+    });
+
+    -- Enhanced hover effects
+    ToggleRegion.MouseEnter:Connect(function()
+        Toggle.IsHovered = true;
+        if not Toggle.Value then
+            TweenService:Create(ToggleOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BorderColor3 = Library.AccentColor
+            }):Play();
+        end
+    end);
+
+    ToggleRegion.MouseLeave:Connect(function()
+        Toggle.IsHovered = false;
+        if not Toggle.Value then
+            TweenService:Create(ToggleOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BorderColor3 = Color3.new(0, 0, 0)
+            }):Play();
+        end
+    end);
+
+    function Toggle:UpdateColors()
+        Toggle:Display();
+    end;
+
+    if type(Info.Tooltip) == 'string' then
+        Library:AddToolTip(Info.Tooltip, ToggleRegion)
+    end
+
+    function Toggle:Display()
+        local targetBackgroundColor = Toggle.Value and Library.AccentColor or Library.InactiveColor;
+        local targetBorderColor = Toggle.Value and Library.AccentColorDark or Library.InactiveColorDark;
+        local targetOuterBorder = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.new(0, 0, 0));
+
+        -- Smooth transition for toggle state
+        TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = targetBackgroundColor,
+            BorderColor3 = targetBorderColor
+        }):Play();
+
+        TweenService:Create(ToggleOuter, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BorderColor3 = targetOuterBorder
+        }):Play();
+    end;
+
+    function Toggle:OnChanged(Func)
+        Toggle.Changed = Func;
+        Func(Toggle.Value);
+    end;
+
+    function Toggle:SetValue(Bool)
+        Bool = (not not Bool);
+
+        Toggle.Value = Bool;
+        Toggle:Display();
+
+        for _, Addon in next, Toggle.Addons do
+            if Addon.Type == 'KeyPicker' and Addon.SyncToggleState then
+                Addon.Toggled = Bool
+                Addon:Update()
+            end
+        end
+
+        Library:SafeCallback(Toggle.Callback, Toggle.Value);
+        Library:SafeCallback(Toggle.Changed, Toggle.Value);
+        Library:UpdateDependencyBoxes();
+    end;
+
+    ToggleRegion.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
+            Toggle:SetValue(not Toggle.Value)
+            Library:AttemptSave();
+        end;
+    end);
+
+    if Toggle.Risky then
+        Library:RemoveFromRegistry(ToggleLabel)
+        ToggleLabel.TextColor3 = Library.RiskColor
+        Library:AddToRegistry(ToggleLabel, { TextColor3 = 'RiskColor' })
+    end
+
+    Toggle:Display();
+    Groupbox:AddBlank(Info.BlankSize or 5 + 2);
+    Groupbox:Resize();
+
+    Toggle.TextLabel = ToggleLabel;
+    Toggle.Container = Container;
+    setmetatable(Toggle, BaseAddons);
+
+    Toggles[Idx] = Toggle;
+
+    Library:UpdateDependencyBoxes();
+
+    return Toggle;
+end;
+
+
+   function Funcs:AddSlider(Idx, Info)
+    assert(Info.Default, 'AddSlider: Missing default value.');
+    assert(Info.Text, 'AddSlider: Missing slider text.');
+    assert(Info.Min, 'AddSlider: Missing minimum value.');
+    assert(Info.Max, 'AddSlider: Missing maximum value.');
+    assert(Info.Rounding, 'AddSlider: Missing rounding value.');
+
+    local Slider = {
+        Value = Info.Default;
+        Min = Info.Min;
+        Max = Info.Max;
+        Rounding = Info.Rounding;
+        MaxSize = 232;
+        Type = 'Slider';
+        IsActive = false;
+        IsHovered = false;
+        Callback = Info.Callback or function(Value) end;
+    };
+
+    local Groupbox = self;
+    local Container = Groupbox.Container;
+
+    if not Info.Compact then
+        Library:CreateLabel({
+            Size = UDim2.new(1, 0, 0, 10);
             TextSize = 14;
             Text = Info.Text;
             TextXAlignment = Enum.TextXAlignment.Left;
-            ZIndex = 6;
-            Parent = ToggleInner;
-        });
-
-        Library:Create('UIListLayout', {
-            Padding = UDim.new(0, 4);
-            FillDirection = Enum.FillDirection.Horizontal;
-            HorizontalAlignment = Enum.HorizontalAlignment.Right;
-            SortOrder = Enum.SortOrder.LayoutOrder;
-            Parent = ToggleLabel;
-        });
-
-        local ToggleRegion = Library:Create('Frame', {
-            BackgroundTransparency = 1;
-            Size = UDim2.new(0, 170, 1, 0);
-            ZIndex = 8;
-            Parent = ToggleOuter;
-        });
-
-        Library:OnHighlight(ToggleRegion, ToggleOuter,
-            { BorderColor3 = 'AccentColor' },
-            { BorderColor3 = 'Black' }
-        );
-
-        function Toggle:UpdateColors()
-            Toggle:Display();
-        end;
-
-        if type(Info.Tooltip) == 'string' then
-            Library:AddToolTip(Info.Tooltip, ToggleRegion)
-        end
-
-        function Toggle:Display()
-            ToggleInner.BackgroundColor3 = Toggle.Value and Library.AccentColor or Library.MainColor;
-            ToggleInner.BorderColor3 = Toggle.Value and Library.AccentColorDark or Library.OutlineColor;
-
-            Library.RegistryMap[ToggleInner].Properties.BackgroundColor3 = Toggle.Value and 'AccentColor' or 'MainColor';
-            Library.RegistryMap[ToggleInner].Properties.BorderColor3 = Toggle.Value and 'AccentColorDark' or 'OutlineColor';
-        end;
-
-        function Toggle:OnChanged(Func)
-            Toggle.Changed = Func;
-            Func(Toggle.Value);
-        end;
-
-        function Toggle:SetValue(Bool)
-            Bool = (not not Bool);
-
-            Toggle.Value = Bool;
-            Toggle:Display();
-
-            for _, Addon in next, Toggle.Addons do
-                if Addon.Type == 'KeyPicker' and Addon.SyncToggleState then
-                    Addon.Toggled = Bool
-                    Addon:Update()
-                end
-            end
-
-            Library:SafeCallback(Toggle.Callback, Toggle.Value);
-            Library:SafeCallback(Toggle.Changed, Toggle.Value);
-            Library:UpdateDependencyBoxes();
-        end;
-
-        ToggleRegion.InputBegan:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
-                Toggle:SetValue(not Toggle.Value) -- Why was it not like this from the start?
-                Library:AttemptSave();
-            end;
-        end);
-
-        if Toggle.Risky then
-            Library:RemoveFromRegistry(ToggleLabel)
-            ToggleLabel.TextColor3 = Library.RiskColor
-            Library:AddToRegistry(ToggleLabel, { TextColor3 = 'RiskColor' })
-        end
-
-        Toggle:Display();
-        Groupbox:AddBlank(Info.BlankSize or 5 + 2);
-        Groupbox:Resize();
-
-        Toggle.TextLabel = ToggleLabel;
-        Toggle.Container = Container;
-        setmetatable(Toggle, BaseAddons);
-
-        Toggles[Idx] = Toggle;
-
-        Library:UpdateDependencyBoxes();
-
-        return Toggle;
-    end;
-
-    function Funcs:AddSlider(Idx, Info)
-        assert(Info.Default, 'AddSlider: Missing default value.');
-        assert(Info.Text, 'AddSlider: Missing slider text.');
-        assert(Info.Min, 'AddSlider: Missing minimum value.');
-        assert(Info.Max, 'AddSlider: Missing maximum value.');
-        assert(Info.Rounding, 'AddSlider: Missing rounding value.');
-
-        local Slider = {
-            Value = Info.Default;
-            Min = Info.Min;
-            Max = Info.Max;
-            Rounding = Info.Rounding;
-            MaxSize = 232;
-            Type = 'Slider';
-            Callback = Info.Callback or function(Value) end;
-        };
-
-        local Groupbox = self;
-        local Container = Groupbox.Container;
-
-        if not Info.Compact then
-            Library:CreateLabel({
-                Size = UDim2.new(1, 0, 0, 10);
-                TextSize = 14;
-                Text = Info.Text;
-                TextXAlignment = Enum.TextXAlignment.Left;
-                TextYAlignment = Enum.TextYAlignment.Bottom;
-                ZIndex = 5;
-                Parent = Container;
-            });
-
-            Groupbox:AddBlank(3);
-        end
-
-        local SliderOuter = Library:Create('Frame', {
-            BackgroundColor3 = Color3.new(0, 0, 0);
-            BorderColor3 = Color3.new(0, 0, 0);
-            Size = UDim2.new(1, -4, 0, 13);
+            TextYAlignment = Enum.TextYAlignment.Bottom;
             ZIndex = 5;
             Parent = Container;
         });
 
-        Library:AddToRegistry(SliderOuter, {
-            BorderColor3 = 'Black';
-        });
+        Groupbox:AddBlank(3);
+    end
 
-        local SliderInner = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderColor3 = Library.OutlineColor;
-            BorderMode = Enum.BorderMode.Inset;
-            Size = UDim2.new(1, 0, 1, 0);
-            ZIndex = 6;
-            Parent = SliderOuter;
-        });
+    local SliderOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0);
+        BorderColor3 = Color3.new(0, 0, 0);
+        Size = UDim2.new(1, -4, 0, 13);
+        ZIndex = 5;
+        Parent = Container;
+    });
 
-        Library:AddToRegistry(SliderInner, {
-            BackgroundColor3 = 'MainColor';
-            BorderColor3 = 'OutlineColor';
-        });
+    local SliderInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.OutlineColor;
+        BorderMode = Enum.BorderMode.Inset;
+        Size = UDim2.new(1, 0, 1, 0);
+        ZIndex = 6;
+        Parent = SliderOuter;
+    });
 
-        local Fill = Library:Create('Frame', {
-            BackgroundColor3 = Library.AccentColor;
-            BorderColor3 = Library.AccentColorDark;
-            Size = UDim2.new(0, 0, 1, 0);
-            ZIndex = 7;
-            Parent = SliderInner;
-        });
+    Library:AddToRegistry(SliderInner, {
+        BackgroundColor3 = 'MainColor';
+        BorderColor3 = 'OutlineColor';
+    });
 
-        Library:AddToRegistry(Fill, {
-            BackgroundColor3 = 'AccentColor';
-            BorderColor3 = 'AccentColorDark';
-        });
+    local Fill = Library:Create('Frame', {
+        BackgroundColor3 = Library.InactiveColor;
+        BorderColor3 = Library.InactiveColorDark;
+        Size = UDim2.new(0, 0, 1, 0);
+        ZIndex = 7;
+        Parent = SliderInner;
+    });
 
-        local HideBorderRight = Library:Create('Frame', {
-            BackgroundColor3 = Library.AccentColor;
-            BorderSizePixel = 0;
-            Position = UDim2.new(1, 0, 0, 0);
-            Size = UDim2.new(0, 1, 1, 0);
-            ZIndex = 8;
-            Parent = Fill;
-        });
+    local HideBorderRight = Library:Create('Frame', {
+        BackgroundColor3 = Library.InactiveColor;
+        BorderSizePixel = 0;
+        Position = UDim2.new(1, 0, 0, 0);
+        Size = UDim2.new(0, 1, 1, 0);
+        ZIndex = 8;
+        Parent = Fill;
+    });
 
-        Library:AddToRegistry(HideBorderRight, {
-            BackgroundColor3 = 'AccentColor';
-        });
+    local DisplayLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 1, 0);
+        TextSize = 14;
+        Text = 'Infinite';
+        ZIndex = 9;
+        Parent = SliderInner;
+    });
 
-        local DisplayLabel = Library:CreateLabel({
-            Size = UDim2.new(1, 0, 1, 0);
-            TextSize = 14;
-            Text = 'Infinite';
-            ZIndex = 9;
-            Parent = SliderInner;
-        });
-
-        Library:OnHighlight(SliderOuter, SliderOuter,
-            { BorderColor3 = 'AccentColor' },
-            { BorderColor3 = 'Black' }
-        );
-
-        if type(Info.Tooltip) == 'string' then
-            Library:AddToolTip(Info.Tooltip, SliderOuter)
+    -- Enhanced hover and interaction effects
+    SliderInner.MouseEnter:Connect(function()
+        Slider.IsHovered = true;
+        if not Slider.IsActive then
+            TweenService:Create(SliderOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BorderColor3 = Library.AccentColor
+            }):Play();
         end
+    end);
 
-        function Slider:UpdateColors()
-            Fill.BackgroundColor3 = Library.AccentColor;
-            Fill.BorderColor3 = Library.AccentColorDark;
-        end;
+    SliderInner.MouseLeave:Connect(function()
+        Slider.IsHovered = false;
+        if not Slider.IsActive then
+            TweenService:Create(SliderOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BorderColor3 = Color3.new(0, 0, 0)
+            }):Play();
+        end
+    end);
 
-        function Slider:Display()
-            local Suffix = Info.Suffix or '';
+    if type(Info.Tooltip) == 'string' then
+        Library:AddToolTip(Info.Tooltip, SliderOuter)
+    end
 
-            if Info.Compact then
-                DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix
-            elseif Info.HideMax then
-                DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix)
-            else
-                DisplayLabel.Text = string.format('%s/%s', Slider.Value .. Suffix, Slider.Max .. Suffix);
-            end
-
-            local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
-            Fill.Size = UDim2.new(0, X, 1, 0);
-
-            HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
-        end;
-
-        function Slider:OnChanged(Func)
-            Slider.Changed = Func;
-            Func(Slider.Value);
-        end;
-
-        local function Round(Value)
-            if Slider.Rounding == 0 then
-                return math.floor(Value);
-            end;
-
-
-            return tonumber(string.format('%.' .. Slider.Rounding .. 'f', Value))
-        end;
-
-        function Slider:GetValueFromXOffset(X)
-            return Round(Library:MapValue(X, 0, Slider.MaxSize, Slider.Min, Slider.Max));
-        end;
-
-        function Slider:SetValue(Str)
-            local Num = tonumber(Str);
-
-            if (not Num) then
-                return;
-            end;
-
-            Num = math.clamp(Num, Slider.Min, Slider.Max);
-
-            Slider.Value = Num;
-            Slider:Display();
-
-            Library:SafeCallback(Slider.Callback, Slider.Value);
-            Library:SafeCallback(Slider.Changed, Slider.Value);
-        end;
-
-        SliderInner.InputBegan:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
-                local mPos = Mouse.X;
-                local gPos = Fill.Size.X.Offset;
-                local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
-
-                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                    local nMPos = Mouse.X;
-                    local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize);
-
-                    local nValue = Slider:GetValueFromXOffset(nX);
-                    local OldValue = Slider.Value;
-                    Slider.Value = nValue;
-
-                    Slider:Display();
-
-                    if nValue ~= OldValue then
-                        Library:SafeCallback(Slider.Callback, Slider.Value);
-                        Library:SafeCallback(Slider.Changed, Slider.Value);
-                    end;
-
-                    RenderStepped:Wait();
-                end;
-
-                Library:AttemptSave();
-            end;
-        end);
-
-        Slider:Display();
-        Groupbox:AddBlank(Info.BlankSize or 6);
-        Groupbox:Resize();
-
-        Options[Idx] = Slider;
-
-        return Slider;
+    function Slider:UpdateColors()
+        local targetColor = Slider.IsActive and Library.AccentColor or Library.InactiveColor;
+        local targetColorDark = Slider.IsActive and Library.AccentColorDark or Library.InactiveColorDark;
+        
+        TweenService:Create(Fill, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = targetColor,
+            BorderColor3 = targetColorDark
+        }):Play();
+        
+        TweenService:Create(HideBorderRight, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = targetColor
+        }):Play();
     end;
 
+    function Slider:Display()
+        local Suffix = Info.Suffix or '';
+
+        if Info.Compact then
+            DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix
+        elseif Info.HideMax then
+            DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix)
+        else
+            DisplayLabel.Text = string.format('%s/%s', Slider.Value .. Suffix, Slider.Max .. Suffix);
+        end
+
+        local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
+        
+        TweenService:Create(Fill, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0, X, 1, 0)
+        }):Play();
+
+        HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
+        
+        -- Update active state based on whether slider has been moved from default
+        local wasActive = Slider.IsActive;
+        Slider.IsActive = (Slider.Value ~= Info.Default);
+        
+        if wasActive ~= Slider.IsActive then
+            Slider:UpdateColors();
+        end
+    end;
+
+    function Slider:OnChanged(Func)
+        Slider.Changed = Func;
+        Func(Slider.Value);
+    end;
+
+    local function Round(Value)
+        if Slider.Rounding == 0 then
+            return math.floor(Value);
+        end;
+
+        return tonumber(string.format('%.' .. Slider.Rounding .. 'f', Value))
+    end;
+
+    function Slider:GetValueFromXOffset(X)
+        return Round(Library:MapValue(X, 0, Slider.MaxSize, Slider.Min, Slider.Max));
+    end;
+
+    function Slider:SetValue(Str)
+        local Num = tonumber(Str);
+
+        if (not Num) then
+            return;
+        end;
+
+        Num = math.clamp(Num, Slider.Min, Slider.Max);
+
+        Slider.Value = Num;
+        Slider:Display();
+
+        Library:SafeCallback(Slider.Callback, Slider.Value);
+        Library:SafeCallback(Slider.Changed, Slider.Value);
+    end;
+
+    SliderInner.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
+            Slider.IsActive = true;
+            Slider:UpdateColors();
+            
+            -- Update outer border during interaction
+            TweenService:Create(SliderOuter, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                BorderColor3 = Library.AccentColor
+            }):Play();
+            
+            local mPos = Mouse.X;
+            local gPos = Fill.Size.X.Offset;
+            local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
+
+            while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                local nMPos = Mouse.X;
+                local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize);
+
+                local nValue = Slider:GetValueFromXOffset(nX);
+                local OldValue = Slider.Value;
+                Slider.Value = nValue;
+
+                Slider:Display();
+
+                if nValue ~= OldValue then
+                    Library:SafeCallback(Slider.Callback, Slider.Value);
+                    Library:SafeCallback(Slider.Changed, Slider.Value);
+                end;
+
+                RenderStepped:Wait();
+            end;
+            
+            -- Reset border when not hovered after interaction
+            if not Slider.IsHovered then
+                TweenService:Create(SliderOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    BorderColor3 = Color3.new(0, 0, 0)
+                }):Play();
+            end
+
+            Library:AttemptSave();
+        end;
+    end);
+
+    Slider:Display();
+    Groupbox:AddBlank(Info.BlankSize or 6);
+    Groupbox:Resize();
+
+    Options[Idx] = Slider;
+
+    return Slider;
+end;
+	
     function Funcs:AddDropdown(Idx, Info)
         if Info.SpecialType == 'Player' then
             Info.Values = GetPlayersString();
