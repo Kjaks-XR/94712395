@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.07"
+local version = "0.08"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -235,9 +235,9 @@ task.spawn(function()
 	while true do
 		pcall(function()
 			task.wait(1);
-			xsx.Text = 'XWare V3';
+			xsx.Text = 'XWare V3.4';
 			task.wait(1);
-			xsx.Text = 'XWare V3_';
+			xsx.Text = 'XWare V3.4_';
 		end);
 	end;
 end);
@@ -795,23 +795,28 @@ do
 
 
 
-local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "GlowFrameExample"
+local TweenService = game:GetService("TweenService");
 
+local glow = Instance.new("ImageLabel", DisplayFrame);
+glow.Name = "GlowEffect";
+glow.Image = "rbxassetid://18245826428";
+glow.ScaleType = Enum.ScaleType.Slice;
+glow.SliceCenter = Rect.new(10, 10, 60, 60);
+glow.ImageColor3 = Color3.fromRGB(80, 60, 150);
+glow.ImageTransparency = 0.3;
+glow.BackgroundTransparency = 1;
+glow.Size = UDim2.new(1, 40, 1, 40);
+glow.Position = UDim2.new(0, -20, 0, -20);
+glow.ZIndex = -1;
 
-local glow = Instance.new("ImageLabel", DisplayFrame)
-glow.Name = "GlowEffect"
-glow.Image = "rbxassetid://18245826428" -- Glow texture ID
-glow.ScaleType = Enum.ScaleType.Slice
-glow.SliceCenter = Rect.new(21, 21, 79, 79)
-glow.ImageColor3 = Color3.fromRGB(100, 100, 255) -- Mavi renk
-glow.ImageTransparency = 0.1
-glow.BackgroundTransparency = 1
-glow.Size = UDim2.new(1, 40, 1, 40)
-glow.Position = UDim2.new(0, -20, 0, -20)
-glow.ZIndex = -1
+local function Pulse()
+	local info = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true);
+	local props = { ImageTransparency = 0.6 };
+	local tween = TweenService:Create(glow, info, props);
+	tween:Play();
+end;
 
-
+task.spawn(Pulse)
 
 
 
@@ -2350,242 +2355,249 @@ end
 
 
 function Funcs:AddSlider(Idx, Info)
-    assert(Info.Default, 'AddSlider: Missing default value.')
-    assert(Info.Text, 'AddSlider: Missing slider text.')
-    assert(Info.Min, 'AddSlider: Missing minimum value.')
-    assert(Info.Max, 'AddSlider: Missing maximum value.')
-    assert(Info.Rounding, 'AddSlider: Missing rounding value.')
+        assert(Info.Default, 'AddSlider: Missing default value.');
+        assert(Info.Text, 'AddSlider: Missing slider text.');
+        assert(Info.Min, 'AddSlider: Missing minimum value.');
+        assert(Info.Max, 'AddSlider: Missing maximum value.');
+        assert(Info.Rounding, 'AddSlider: Missing rounding value.');
 
-    local Slider = {
-        Value = Info.Default;
-        Min = Info.Min;
-        Max = Info.Max;
-        Rounding = Info.Rounding;
-        MaxSize = 232;
-        Type = 'Slider';
-        IsActive = false;
-        IsHovered = false;
-        Callback = Info.Callback or function(Value) end;
-    }
+        local Slider = {
+            Value = Info.Default;
+            Min = Info.Min;
+            Max = Info.Max;
+            Rounding = Info.Rounding;
+            MaxSize = 232;
+            Type = 'Slider';
+            Callback = Info.Callback or function(Value) end;
+            IsTouched = false; -- Dokunma durumu
+        };
 
-    local Groupbox = self
-    local Container = Groupbox.Container
+        local Groupbox = self;
+        local Container = Groupbox.Container;
 
-    local SliderLabel
-    if not Info.Compact then
-        SliderLabel = Library:CreateLabel({
-            Size = UDim2.new(1, 0, 0, 10);
-            TextSize = 14;
-            Text = Info.Text;
-            TextXAlignment = Enum.TextXAlignment.Left;
-            TextYAlignment = Enum.TextYAlignment.Bottom;
+        if not Info.Compact then
+            Library:CreateLabel({
+                Size = UDim2.new(1, 0, 0, 10);
+                TextSize = 14;
+                Text = Info.Text;
+                TextXAlignment = Enum.TextXAlignment.Left;
+                TextYAlignment = Enum.TextYAlignment.Bottom;
+                ZIndex = 5;
+                Parent = Container;
+            });
+
+            Groupbox:AddBlank(3);
+        end
+
+        local SliderOuter = Library:Create('Frame', {
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
+            Size = UDim2.new(1, -4, 0, 13);
             ZIndex = 5;
             Parent = Container;
-        })
-        Groupbox:AddBlank(3)
-    end
+        });
 
-    local SliderOuter = Library:Create('Frame', {
-        BackgroundColor3 = Color3.new(0, 0, 0);
-        BorderColor3 = Color3.new(0, 0, 0);
-        Size = UDim2.new(1, -4, 0, 13);
-        ZIndex = 5;
-        Parent = Container;
-    })
+        Library:AddToRegistry(SliderOuter, {
+            BorderColor3 = 'Black';
+        });
 
-    local SliderInner = Library:Create('Frame', {
-        BackgroundColor3 = Library.MainColor;
-        BorderColor3 = Library.OutlineColor;
-        BorderMode = Enum.BorderMode.Inset;
-        Size = UDim2.new(1, 0, 1, 0);
-        ZIndex = 6;
-        Parent = SliderOuter;
-    })
+        local SliderInner = Library:Create('Frame', {
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderMode = Enum.BorderMode.Inset;
+            Size = UDim2.new(1, 0, 1, 0);
+            ZIndex = 6;
+            Parent = SliderOuter;
+        });
 
-    Library:AddToRegistry(SliderInner, {
-        BackgroundColor3 = 'MainColor';
-        BorderColor3 = 'OutlineColor';
-    })
+        Library:AddToRegistry(SliderInner, {
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
+        });
 
-    local Fill = Library:Create('Frame', {
-        BackgroundColor3 = Library.InactiveColor;
-        BorderColor3 = Library.InactiveColorDark;
-        Size = UDim2.new(0, 0, 1, 0);
-        ZIndex = 7;
-        Parent = SliderInner;
-    })
+        local Fill = Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor;
+            BorderColor3 = Library.AccentColorDark;
+            Size = UDim2.new(0, 0, 1, 0);
+            ZIndex = 7;
+            Parent = SliderInner;
+        });
 
-    local HideBorderRight = Library:Create('Frame', {
-        BackgroundColor3 = Library.InactiveColor;
-        BorderSizePixel = 0;
-        Position = UDim2.new(1, 0, 0, 0);
-        Size = UDim2.new(0, 1, 1, 0);
-        ZIndex = 8;
-        Parent = Fill;
-    })
+        Library:AddToRegistry(Fill, {
+            BackgroundColor3 = 'AccentColor';
+            BorderColor3 = 'AccentColorDark';
+        });
 
-    local DisplayLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 1, 0);
-        TextSize = 14;
-        Text = 'Infinite';
-        ZIndex = 9;
-        Parent = SliderInner;
-    })
+        local HideBorderRight = Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor;
+            BorderSizePixel = 0;
+            Position = UDim2.new(1, 0, 0, 0);
+            Size = UDim2.new(0, 1, 1, 0);
+            ZIndex = 8;
+            Parent = Fill;
+        });
 
-    SliderInner.MouseEnter:Connect(function()
-        Slider.IsHovered = true;
-        if not Slider.IsActive then
-            TweenService:Create(SliderOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                BorderColor3 = Library.AccentColor
-            }):Play();
-        end
-    end)
+        Library:AddToRegistry(HideBorderRight, {
+            BackgroundColor3 = 'AccentColor';
+        });
 
-    SliderInner.MouseLeave:Connect(function()
-        Slider.IsHovered = false;
-        if not Slider.IsActive then
-            TweenService:Create(SliderOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                BorderColor3 = Color3.new(0, 0, 0)
-            }):Play();
-        end
-    end)
+        local DisplayLabel = Library:CreateLabel({
+            Size = UDim2.new(1, 0, 1, 0);
+            TextSize = 14;
+            Text = 'Infinite';
+            TextColor3 = Color3.fromRGB(128, 128, 128); -- Başlangıçta gri
+            ZIndex = 9;
+            Parent = SliderInner;
+        });
 
-    if type(Info.Tooltip) == 'string' then
-        Library:AddToolTip(Info.Tooltip, SliderOuter)
-    end
+        Library:OnHighlight(SliderOuter, SliderOuter,
+            { BorderColor3 = 'AccentColor' },
+            { BorderColor3 = 'Black' }
+        );
 
-
-function Slider:UpdateColors()
-    local isDefault = (Slider.Value == Info.Default)
-    local targetFillColor = isDefault and Library.InactiveColor or Library.AccentColor;
-    local targetFillBorder = isDefault and Library.InactiveColorDark or Library.AccentColorDark;
-
-    TweenService:Create(Fill, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-        BackgroundColor3 = targetFillColor,
-        BorderColor3 = targetFillBorder
-    }):Play();
-
-    TweenService:Create(HideBorderRight, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-        BackgroundColor3 = targetFillColor
-    }):Play();
-
-    if SliderLabel then
-        local targetTextColor = Slider.IsActive and Library.FontColor or Color3.fromRGB(150, 150, 150);
-        TweenService:Create(SliderLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-            TextColor3 = targetTextColor
-        }):Play();
-    end
-end
-
-
-
-
-    function Slider:Display()
-        local Suffix = Info.Suffix or ''
-
-        if Info.Compact then
-            DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix
-        elseif Info.HideMax then
-            DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix)
-        else
-            DisplayLabel.Text = string.format('%s/%s', Slider.Value .. Suffix, Slider.Max .. Suffix)
+        if type(Info.Tooltip) == 'string' then
+            Library:AddToolTip(Info.Tooltip, SliderOuter)
         end
 
-        local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize))
+        function Slider:UpdateColors()
+            Fill.BackgroundColor3 = Library.AccentColor;
+            Fill.BorderColor3 = Library.AccentColorDark;
+        end;
 
-        TweenService:Create(Fill, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
-            Size = UDim2.new(0, X, 1, 0)
-        }):Play()
-
-        HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0)
-
-        Slider.IsActive = (Slider.Value ~= Info.Default)
-        Slider:UpdateColors()
-    end
-
-    function Slider:OnChanged(Func)
-        Slider.Changed = Func;
-        Func(Slider.Value)
-    end
-
-    local function Round(Value)
-        if Slider.Rounding == 0 then
-            return math.floor(Value)
+        -- Smooth tween fonksiyonu
+        function Slider:TweenFill(targetSize)
+            local TweenService = game:GetService("TweenService")
+            local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+            local tween = TweenService:Create(Fill, tweenInfo, {Size = targetSize})
+            tween:Play()
         end
-        return tonumber(string.format('%.' .. Slider.Rounding .. 'f', Value))
-    end
 
-    function Slider:GetValueFromXOffset(X)
-        return Round(Library:MapValue(X, 0, Slider.MaxSize, Slider.Min, Slider.Max));
-    end
+        -- Text renk değiştirme fonksiyonu
+        function Slider:UpdateTextColor(touched)
+            local TweenService = game:GetService("TweenService")
+            local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            local targetColor = touched and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(128, 128, 128)
+            local colorTween = TweenService:Create(DisplayLabel, tweenInfo, {TextColor3 = targetColor})
+            colorTween:Play()
+        end
 
-    function Slider:SetValue(Str)
-        local Num = tonumber(Str)
-        if not Num then return end
+        function Slider:Display()
+            local Suffix = Info.Suffix or '';
 
-        Num = math.clamp(Num, Slider.Min, Slider.Max)
-        Slider.Value = Num
-        Slider:Display()
-        Library:SafeCallback(Slider.Callback, Slider.Value)
-        Library:SafeCallback(Slider.Changed, Slider.Value)
-    end
+            if Info.Compact then
+                DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix
+            elseif Info.HideMax then
+                DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix)
+            else
+                DisplayLabel.Text = string.format('%s/%s', Slider.Value .. Suffix, Slider.Max .. Suffix);
+            end
 
-    SliderInner.InputBegan:Connect(function(Input)
-        if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
-            Slider.IsActive = true
-            Slider:UpdateColors()
+            local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
+            
+            -- Smooth tween ile boyut değişimi
+            Slider:TweenFill(UDim2.new(0, X, 1, 0));
 
-            TweenService:Create(SliderOuter, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
-                BorderColor3 = Library.AccentColor
-            }):Play()
+            HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
+        end;
 
-            local mPos = Mouse.X;
-            local gPos = Fill.Size.X.Offset;
-            local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
+        function Slider:OnChanged(Func)
+            Slider.Changed = Func;
+            Func(Slider.Value);
+        end;
 
-            while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                local nMPos = Mouse.X;
-                local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize)
+        local function Round(Value)
+            if Slider.Rounding == 0 then
+                return math.floor(Value);
+            end;
 
-                local nValue = Slider:GetValueFromXOffset(nX)
-                local OldValue = Slider.Value
-                Slider.Value = nValue
+            return tonumber(string.format('%.' .. Slider.Rounding .. 'f', Value))
+        end;
 
-                Slider:Display()
+        function Slider:GetValueFromXOffset(X)
+            return Round(Library:MapValue(X, 0, Slider.MaxSize, Slider.Min, Slider.Max));
+        end;
 
-                if nValue ~= OldValue then
-                    Library:SafeCallback(Slider.Callback, Slider.Value)
-                    Library:SafeCallback(Slider.Changed, Slider.Value)
+        function Slider:SetValue(Str)
+            local Num = tonumber(Str);
+
+            if (not Num) then
+                return;
+            end;
+
+            Num = math.clamp(Num, Slider.Min, Slider.Max);
+
+            Slider.Value = Num;
+            Slider:Display();
+
+            -- Değer değiştiğinde dokunulmuş olarak işaretle
+            if not Slider.IsTouched then
+                Slider.IsTouched = true;
+                Slider:UpdateTextColor(true);
+            end
+
+            Library:SafeCallback(Slider.Callback, Slider.Value);
+            Library:SafeCallback(Slider.Changed, Slider.Value);
+        end;
+
+        SliderInner.InputBegan:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
+                local mPos = Mouse.X;
+                local gPos = Fill.Size.X.Offset;
+                local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
+
+                -- Slider'a dokunulduğunda text rengini beyaz yap
+                if not Slider.IsTouched then
+                    Slider.IsTouched = true;
                 end
+                Slider:UpdateTextColor(true);
 
-                RenderStepped:Wait()
-            end
+                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                    local nMPos = Mouse.X;
+                    local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize);
 
-            Slider.IsActive = (Slider.Value ~= Info.Default)
-            Slider:UpdateColors()
+                    local nValue = Slider:GetValueFromXOffset(nX);
+                    local OldValue = Slider.Value;
+                    Slider.Value = nValue;
 
-            if not Slider.IsHovered then
-                TweenService:Create(SliderOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                    BorderColor3 = Color3.new(0, 0, 0)
-                }):Play()
-            end
+                    -- Anlık güncelleme için tween kullanmadan direkt güncelle
+                    local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
+                    Fill.Size = UDim2.new(0, X, 1, 0);
+                    
+                    local Suffix = Info.Suffix or '';
+                    if Info.Compact then
+                        DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix
+                    elseif Info.HideMax then
+                        DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix)
+                    else
+                        DisplayLabel.Text = string.format('%s/%s', Slider.Value .. Suffix, Slider.Max .. Suffix);
+                    end
 
-            Library:AttemptSave()
-        end
-    end)
+                    HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
 
-    Slider:Display()
-    Groupbox:AddBlank(Info.BlankSize or 6)
-    Groupbox:Resize()
-    Options[Idx] = Slider
-if SliderLabel then
-    TweenService:Create(SliderLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-        TextColor3 = Color3.fromRGB(150, 150, 150)
-    }):Play();
-end
+                    if nValue ~= OldValue then
+                        Library:SafeCallback(Slider.Callback, Slider.Value);
+                        Library:SafeCallback(Slider.Changed, Slider.Value);
+                    end;
 
-    return Slider
-end
+                    RenderStepped:Wait();
+                end;
+
+                -- Mouse bırakıldığında text rengini geri gri yap
+                wait(0.1) -- Kısa bir bekleme
+                Slider:UpdateTextColor(false);
+
+                Library:AttemptSave();
+            end;
+        end);
+
+        Slider:Display();
+        Groupbox:AddBlank(Info.BlankSize or 6);
+        Groupbox:Resize();
+
+        Options[Idx] = Slider;
+
+        return Slider;
+    end;
 
 	
     function Funcs:AddDropdown(Idx, Info)
