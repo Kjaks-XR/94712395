@@ -8,7 +8,8 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-
+local version = "0.1"
+warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
 
@@ -2285,6 +2286,9 @@ do
         local targetBackgroundColor = Toggle.Value and Library.AccentColor or Library.InactiveColor;
         local targetBorderColor = Toggle.Value and Library.AccentColorDark or Library.InactiveColorDark;
         local targetOuterBorder = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.new(0, 0, 0));
+        
+        -- Text color based on toggle state
+        local targetTextColor = Toggle.Value and Library.FontColor or Color3.new(0.6, 0.6, 0.6); -- Gray when inactive
 
         -- Smooth transition for toggle state
         TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
@@ -2294,6 +2298,11 @@ do
 
         TweenService:Create(ToggleOuter, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
             BorderColor3 = targetOuterBorder
+        }):Play();
+        
+        -- Smooth transition for text color
+        TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            TextColor3 = targetTextColor
         }):Play();
     end;
 
@@ -2349,7 +2358,7 @@ do
 end;
 
 
-   function Funcs:AddSlider(Idx, Info)
+function Funcs:AddSlider(Idx, Info)
     assert(Info.Default, 'AddSlider: Missing default value.');
     assert(Info.Text, 'AddSlider: Missing slider text.');
     assert(Info.Min, 'AddSlider: Missing minimum value.');
@@ -2371,8 +2380,9 @@ end;
     local Groupbox = self;
     local Container = Groupbox.Container;
 
+    local SliderLabel;
     if not Info.Compact then
-        Library:CreateLabel({
+        SliderLabel = Library:CreateLabel({
             Size = UDim2.new(1, 0, 0, 10);
             TextSize = 14;
             Text = Info.Text;
@@ -2467,6 +2477,15 @@ end;
         TweenService:Create(HideBorderRight, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
             BackgroundColor3 = targetColor
         }):Play();
+        
+        -- Update text colors based on active state
+        local targetTextColor = Slider.IsActive and Library.FontColor or Color3.new(0.6, 0.6, 0.6); -- Gray when inactive
+        
+        if SliderLabel then
+            TweenService:Create(SliderLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                TextColor3 = targetTextColor
+            }):Play();
+        end
     end;
 
     function Slider:Display()
@@ -2561,6 +2580,14 @@ end;
 
                 RenderStepped:Wait();
             end;
+            
+            -- Reset active state and colors after interaction
+            local wasActive = Slider.IsActive;
+            Slider.IsActive = (Slider.Value ~= Info.Default);
+            
+            if wasActive ~= Slider.IsActive then
+                Slider:UpdateColors();
+            end
             
             -- Reset border when not hovered after interaction
             if not Slider.IsHovered then
