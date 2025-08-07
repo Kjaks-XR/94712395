@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.1"
+local version = "0.02"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2237,7 +2237,7 @@ do
         Text = Info.Text;
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = 6;
-        Parent = ToggleInner;
+       Parent = ToggleOuter;
     });
 
     Library:Create('UIListLayout', {
@@ -2508,12 +2508,9 @@ function Funcs:AddSlider(Idx, Info)
         HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
         
         -- Update active state based on whether slider has been moved from default
-        local wasActive = Slider.IsActive;
-        Slider.IsActive = (Slider.Value ~= Info.Default);
-        
-        if wasActive ~= Slider.IsActive then
-            Slider:UpdateColors();
-        end
+Slider.IsActive = (Slider.Value ~= Info.Default);
+Slider:UpdateColors();
+
     end;
 
     function Slider:OnChanged(Func)
