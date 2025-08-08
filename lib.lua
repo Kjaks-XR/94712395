@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.10"
+local version = "0.11"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2603,13 +2603,10 @@ function Funcs:AddSlider(Idx, Info)
         return Slider;
     end;
 
-	local TweenService = game:GetService("TweenService");
-	
 
-	
+
+
 function Funcs:AddDropdown(Idx, Info)
-    local TweenService = game:GetService("TweenService");
-
     if Info.SpecialType == 'Player' then
         Info.Values = GetPlayersString();
         Info.AllowNull = true;
@@ -2619,7 +2616,7 @@ function Funcs:AddDropdown(Idx, Info)
     end;
 
     assert(Info.Values, 'AddDropdown: Missing dropdown value list.');
-    assert(Info.AllowNull or Info.Default, 'AddDropdown: Missing default value. Pass `AllowNull` as true if this was intentional.');
+    assert(Info.AllowNull or Info.Default, 'AddDropdown: Missing default value. Pass AllowNull as true if this was intentional.')
 
     if (not Info.Text) then
         Info.Compact = true;
@@ -2630,14 +2627,20 @@ function Funcs:AddDropdown(Idx, Info)
         Value = Info.Multi and {};
         Multi = Info.Multi;
         Type = 'Dropdown';
-        SpecialType = Info.SpecialType;
+        SpecialType = Info.SpecialType; -- can be either 'Player' or 'Team'
         Callback = Info.Callback or function(Value) end;
+        IsAnimating = false; -- Add animation state tracking
     };
 
     local Groupbox = self;
     local Container = Groupbox.Container;
 
     local RelativeOffset = 0;
+
+    -- Tween settings for smooth animations
+    local TweenService = game:GetService("TweenService");
+    local TweenInfo_Fast = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out);
+    local TweenInfo_Smooth = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out);
 
     if not Info.Compact then
         local DropdownLabel = Library:CreateLabel({
@@ -2721,7 +2724,7 @@ function Funcs:AddDropdown(Idx, Info)
     );
 
     if type(Info.Tooltip) == 'string' then
-        Library:AddToolTip(Info.Tooltip, DropdownOuter);
+        Library:AddToolTip(Info.Tooltip, DropdownOuter)
     end
 
     local MAX_DROPDOWN_ITEMS = 8;
@@ -2732,6 +2735,8 @@ function Funcs:AddDropdown(Idx, Info)
         ZIndex = 20;
         Visible = false;
         Parent = ScreenGui;
+        -- Start with zero size for animation
+        Size = UDim2.fromOffset(0, 0);
     });
 
     local function RecalculateListPosition()
@@ -2739,7 +2744,8 @@ function Funcs:AddDropdown(Idx, Info)
     end;
 
     local function RecalculateListSize(YSize)
-        ListOuter.Size = UDim2.fromOffset(DropdownOuter.AbsoluteSize.X, YSize or (MAX_DROPDOWN_ITEMS * 20 + 2));
+        -- Store the target size for animations
+        Dropdown.TargetSize = UDim2.fromOffset(DropdownOuter.AbsoluteSize.X, YSize or (MAX_DROPDOWN_ITEMS * 20 + 2));
     end;
 
     RecalculateListPosition();
@@ -2769,15 +2775,17 @@ function Funcs:AddDropdown(Idx, Info)
         Size = UDim2.new(1, 0, 1, 0);
         ZIndex = 21;
         Parent = ListInner;
-        TopImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png';
-        BottomImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png';
-        ScrollBarThickness = 3;
-        ScrollBarImageColor3 = Library.AccentColor;
+
+        TopImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+        BottomImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+
+        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = Library.AccentColor,
     });
 
     Library:AddToRegistry(Scrolling, {
-        ScrollBarImageColor3 = 'AccentColor';
-    });
+        ScrollBarImageColor3 = 'AccentColor'
+    })
 
     Library:Create('UIListLayout', {
         Padding = UDim.new(0, 0);
@@ -2796,6 +2804,7 @@ function Funcs:AddDropdown(Idx, Info)
                     Str = Str .. Value .. ', ';
                 end;
             end;
+
             Str = Str:sub(1, #Str - 2);
         else
             Str = Dropdown.Value or '';
@@ -2807,9 +2816,11 @@ function Funcs:AddDropdown(Idx, Info)
     function Dropdown:GetActiveValues()
         if Info.Multi then
             local T = {};
+
             for Value, Bool in next, Dropdown.Value do
                 table.insert(T, Value);
             end;
+
             return T;
         else
             return Dropdown.Value and 1 or 0;
@@ -2828,13 +2839,9 @@ function Funcs:AddDropdown(Idx, Info)
 
         local Count = 0;
 
-        local function SmoothSelect(ButtonLabel, Selected)
-            local targetColor = Selected and Library.AccentColor or Library.FontColor;
-            TweenService:Create(ButtonLabel, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextColor3 = targetColor}):Play();
-        end;
-
         for Idx, Value in next, Values do
             local Table = {};
+
             Count = Count + 1;
 
             local Button = Library:Create('Frame', {
@@ -2843,7 +2850,7 @@ function Funcs:AddDropdown(Idx, Info)
                 BorderMode = Enum.BorderMode.Middle;
                 Size = UDim2.new(1, -1, 0, 20);
                 ZIndex = 23;
-                Active = true;
+                Active = true,
                 Parent = Scrolling;
             });
 
@@ -2868,7 +2875,13 @@ function Funcs:AddDropdown(Idx, Info)
                 { BorderColor3 = 'OutlineColor', ZIndex = 23 }
             );
 
-            local Selected = Info.Multi and Dropdown.Value[Value] or Dropdown.Value == Value;
+            local Selected;
+
+            if Info.Multi then
+                Selected = Dropdown.Value[Value];
+            else
+                Selected = Dropdown.Value == Value;
+            end;
 
             function Table:UpdateButton()
                 if Info.Multi then
@@ -2876,17 +2889,64 @@ function Funcs:AddDropdown(Idx, Info)
                 else
                     Selected = Dropdown.Value == Value;
                 end;
-                SmoothSelect(ButtonLabel, Selected);
+
+                -- Smooth color transition for selection
+                local targetColor = Selected and Library.AccentColor or Library.FontColor;
+                local colorTween = TweenService:Create(ButtonLabel, TweenInfo_Fast, {
+                    TextColor3 = targetColor
+                });
+                colorTween:Play();
+
+                Library.RegistryMap[ButtonLabel].Properties.TextColor3 = Selected and 'AccentColor' or 'FontColor';
             end;
+
+            -- Add smooth hover effect
+            local function CreateHoverEffect()
+                local originalSize = Button.Size;
+                
+                Button.MouseEnter:Connect(function()
+                    if not Dropdown.IsAnimating then
+                        local hoverTween = TweenService:Create(Button, TweenInfo_Fast, {
+                            Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset + 2, originalSize.Y.Scale, originalSize.Y.Offset)
+                        });
+                        hoverTween:Play();
+                    end
+                end);
+
+                Button.MouseLeave:Connect(function()
+                    if not Dropdown.IsAnimating then
+                        local unhoverTween = TweenService:Create(Button, TweenInfo_Fast, {
+                            Size = originalSize
+                        });
+                        unhoverTween:Play();
+                    end
+                end);
+            end;
+
+            CreateHoverEffect();
 
             ButtonLabel.InputBegan:Connect(function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    -- Add click animation
+                    local clickTween = TweenService:Create(Button, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                        Size = UDim2.new(Button.Size.X.Scale, Button.Size.X.Offset - 4, Button.Size.Y.Scale, Button.Size.Y.Offset)
+                    });
+                    
+                    clickTween:Play();
+                    clickTween.Completed:Connect(function()
+                        local returnTween = TweenService:Create(Button, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                            Size = UDim2.new(1, -1, 0, 20)
+                        });
+                        returnTween:Play();
+                    end);
+
                     local Try = not Selected;
 
                     if Dropdown:GetActiveValues() == 1 and (not Try) and (not Info.AllowNull) then
                     else
                         if Info.Multi then
                             Selected = Try;
+
                             if Selected then
                                 Dropdown.Value[Value] = true;
                             else
@@ -2894,11 +2954,13 @@ function Funcs:AddDropdown(Idx, Info)
                             end;
                         else
                             Selected = Try;
+
                             if Selected then
                                 Dropdown.Value = Value;
                             else
                                 Dropdown.Value = nil;
                             end;
+
                             for _, OtherButton in next, Buttons do
                                 OtherButton:UpdateButton();
                             end;
@@ -2906,8 +2968,10 @@ function Funcs:AddDropdown(Idx, Info)
 
                         Table:UpdateButton();
                         Dropdown:Display();
+
                         Library:SafeCallback(Dropdown.Callback, Dropdown.Value);
                         Library:SafeCallback(Dropdown.Changed, Dropdown.Value);
+
                         Library:AttemptSave();
                     end;
                 end;
@@ -2915,10 +2979,12 @@ function Funcs:AddDropdown(Idx, Info)
 
             Table:UpdateButton();
             Dropdown:Display();
+
             Buttons[Button] = Table;
         end;
 
         Scrolling.CanvasSize = UDim2.fromOffset(0, (Count * 20) + 1);
+
         local Y = math.clamp(Count * 20, 0, MAX_DROPDOWN_ITEMS * 20) + 1;
         RecalculateListSize(Y);
     end;
@@ -2927,29 +2993,57 @@ function Funcs:AddDropdown(Idx, Info)
         if NewValues then
             Dropdown.Values = NewValues;
         end;
+
         Dropdown:BuildDropdownList();
     end;
 
     function Dropdown:OpenDropdown()
+        if Dropdown.IsAnimating then return end;
+        
+        Dropdown.IsAnimating = true;
         ListOuter.Visible = true;
         Library.OpenedFrames[ListOuter] = true;
-        DropdownArrow.Rotation = 180;
-
-        local startSize = UDim2.fromOffset(DropdownOuter.AbsoluteSize.X, 0);
-        local endSize = UDim2.fromOffset(DropdownOuter.AbsoluteSize.X, ListOuter.Size.Y.Offset);
-        ListOuter.Size = startSize;
-        TweenService:Create(ListOuter, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = endSize}):Play();
+        
+        -- Animate dropdown opening
+        ListOuter.Size = UDim2.fromOffset(Dropdown.TargetSize.X.Offset, 0);
+        
+        local openTween = TweenService:Create(ListOuter, TweenInfo_Smooth, {
+            Size = Dropdown.TargetSize
+        });
+        
+        local arrowTween = TweenService:Create(DropdownArrow, TweenInfo_Smooth, {
+            Rotation = 180
+        });
+        
+        openTween:Play();
+        arrowTween:Play();
+        
+        openTween.Completed:Connect(function()
+            Dropdown.IsAnimating = false;
+        end);
     end;
 
     function Dropdown:CloseDropdown()
-        local endSize = UDim2.fromOffset(DropdownOuter.AbsoluteSize.X, 0);
-        local tween = TweenService:Create(ListOuter, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = endSize});
-        tween:Play();
-        tween.Completed:Connect(function()
+        if Dropdown.IsAnimating then return end;
+        
+        Dropdown.IsAnimating = true;
+        
+        local closeTween = TweenService:Create(ListOuter, TweenInfo_Smooth, {
+            Size = UDim2.fromOffset(Dropdown.TargetSize.X.Offset, 0)
+        });
+        
+        local arrowTween = TweenService:Create(DropdownArrow, TweenInfo_Smooth, {
+            Rotation = 0
+        });
+        
+        closeTween:Play();
+        arrowTween:Play();
+        
+        closeTween.Completed:Connect(function()
             ListOuter.Visible = false;
+            Library.OpenedFrames[ListOuter] = nil;
+            Dropdown.IsAnimating = false;
         end);
-        Library.OpenedFrames[ListOuter] = nil;
-        DropdownArrow.Rotation = 0;
     end;
 
     function Dropdown:OnChanged(Func)
@@ -2960,11 +3054,13 @@ function Funcs:AddDropdown(Idx, Info)
     function Dropdown:SetValue(Val)
         if Dropdown.Multi then
             local nTable = {};
+
             for Value, Bool in next, Val do
                 if table.find(Dropdown.Values, Value) then
-                    nTable[Value] = true;
+                    nTable[Value] = true
                 end;
             end;
+
             Dropdown.Value = nTable;
         else
             if (not Val) then
@@ -2973,7 +3069,9 @@ function Funcs:AddDropdown(Idx, Info)
                 Dropdown.Value = Val;
             end;
         end;
+
         Dropdown:BuildDropdownList();
+
         Library:SafeCallback(Dropdown.Callback, Dropdown.Value);
         Library:SafeCallback(Dropdown.Changed, Dropdown.Value);
     end;
@@ -2991,8 +3089,10 @@ function Funcs:AddDropdown(Idx, Info)
     InputService.InputBegan:Connect(function(Input)
         if Input.UserInputType == Enum.UserInputType.MouseButton1 then
             local AbsPos, AbsSize = ListOuter.AbsolutePosition, ListOuter.AbsoluteSize;
+
             if Mouse.X < AbsPos.X or Mouse.X > AbsPos.X + AbsSize.X
                 or Mouse.Y < (AbsPos.Y - 20 - 1) or Mouse.Y > AbsPos.Y + AbsSize.Y then
+
                 Dropdown:CloseDropdown();
             end;
         end;
@@ -3001,33 +3101,36 @@ function Funcs:AddDropdown(Idx, Info)
     Dropdown:BuildDropdownList();
     Dropdown:Display();
 
-    local Defaults = {};
+    local Defaults = {}
+
     if type(Info.Default) == 'string' then
-        local Idx = table.find(Dropdown.Values, Info.Default);
+        local Idx = table.find(Dropdown.Values, Info.Default)
         if Idx then
-            table.insert(Defaults, Idx);
+            table.insert(Defaults, Idx)
         end
     elseif type(Info.Default) == 'table' then
         for _, Value in next, Info.Default do
-            local Idx = table.find(Dropdown.Values, Value);
+            local Idx = table.find(Dropdown.Values, Value)
             if Idx then
-                table.insert(Defaults, Idx);
-            end;
-        end;
+                table.insert(Defaults, Idx)
+            end
+        end
     elseif type(Info.Default) == 'number' and Dropdown.Values[Info.Default] ~= nil then
-        table.insert(Defaults, Info.Default);
+        table.insert(Defaults, Info.Default)
     end
 
     if next(Defaults) then
         for i = 1, #Defaults do
-            local Index = Defaults[i];
+            local Index = Defaults[i]
             if Info.Multi then
-                Dropdown.Value[Dropdown.Values[Index]] = true;
+                Dropdown.Value[Dropdown.Values[Index]] = true
             else
                 Dropdown.Value = Dropdown.Values[Index];
             end
-            if (not Info.Multi) then break end;
+
+            if (not Info.Multi) then break end
         end
+
         Dropdown:BuildDropdownList();
         Dropdown:Display();
     end
@@ -3036,8 +3139,10 @@ function Funcs:AddDropdown(Idx, Info)
     Groupbox:Resize();
 
     Options[Idx] = Dropdown;
+
     return Dropdown;
 end;
+	
 
 
     function Funcs:AddDependencyBox()
