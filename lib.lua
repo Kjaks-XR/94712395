@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.12"
+local version = "0.13"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -1800,192 +1800,169 @@ do
         return Label;
     end;
 
-    function Funcs:AddButton(...)
-        -- TODO: Eventually redo this
-        local Button = {};
-        local function ProcessButtonParams(Class, Obj, ...)
-            local Props = select(1, ...)
-            if type(Props) == 'table' then
-                Obj.Text = Props.Text
-                Obj.Func = Props.Func
-                Obj.DoubleClick = Props.DoubleClick
-                Obj.Tooltip = Props.Tooltip
-            else
-                Obj.Text = select(1, ...)
-                Obj.Func = select(2, ...)
+  local TweenService = game:GetService('TweenService')
+
+function Funcs:AddButton(...)
+    local Button = {}
+    local function ProcessButtonParams(Class, Obj, ...)
+        local Props = select(1, ...)
+        if type(Props) == 'table' then
+            Obj.Text = Props.Text
+            Obj.Func = Props.Func
+            Obj.DoubleClick = Props.DoubleClick
+            Obj.Tooltip = Props.Tooltip
+        else
+            Obj.Text = select(1, ...)
+            Obj.Func = select(2, ...)
+        end
+        assert(type(Obj.Func) == 'function', 'AddButton: `Func` callback is missing.')
+    end
+
+    ProcessButtonParams('Button', Button, ...)
+
+    local Groupbox = self
+    local Container = Groupbox.Container
+
+    local function CreateBaseButton(Button)
+        local Outer = Library:Create('Frame', {
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
+            Size = UDim2.new(1, -4, 0, 20);
+            ZIndex = 5;
+        })
+
+        local Inner = Library:Create('Frame', {
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderMode = Enum.BorderMode.Inset;
+            Size = UDim2.new(1, 0, 1, 0);
+            ZIndex = 6;
+            Parent = Outer;
+        })
+
+        local Label = Library:CreateLabel({
+            Size = UDim2.new(1, 0, 1, 0);
+            TextSize = 14;
+            Text = Button.Text;
+            TextColor3 = Color3.fromRGB(128, 128, 128);
+            ZIndex = 6;
+            Parent = Inner;
+        })
+
+        Library:Create('UIGradient', {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(212, 212, 212))
+            });
+            Rotation = 90;
+            Parent = Inner;
+        })
+
+        Library:AddToRegistry(Outer, {
+            BorderColor3 = 'Black';
+        })
+
+        Library:AddToRegistry(Inner, {
+            BackgroundColor3 = 'MainColor';
+            BorderColor3 = 'OutlineColor';
+        })
+
+        Library:OnHighlight(Outer, Outer,
+            { BorderColor3 = 'AccentColor' },
+            { BorderColor3 = 'Black' }
+        )
+
+        return Outer, Inner, Label
+    end
+
+    local function TweenColor(label, targetColor)
+        local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+        local tween = TweenService:Create(label, tweenInfo, {TextColor3 = targetColor})
+        tween:Play()
+    end
+
+    local function InitEvents(Button)
+        local function ValidateClick(Input)
+            if Library:MouseIsOverOpenedFrame() then return false end
+            if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return false end
+            return true
+        end
+
+        local pressed = false
+
+        Button.Outer.InputBegan:Connect(function(Input)
+            if not ValidateClick(Input) then return end
+            if Button.Locked then return end
+
+            if not pressed then
+                pressed = true
+                TweenColor(Button.Label, Color3.new(1, 1, 1)) -- Beyaz yap
             end
 
-            assert(type(Obj.Func) == 'function', 'AddButton: `Func` callback is missing.');
-        end
+            if Button.DoubleClick then
+                Library:RemoveFromRegistry(Button.Label)
+                Library:AddToRegistry(Button.Label, { TextColor3 = 'AccentColor' })
 
-        ProcessButtonParams('Button', Button, ...)
+                Button.Label.TextColor3 = Library.AccentColor
+                Button.Label.Text = 'Are you sure?'
+                Button.Locked = true
 
-        local Groupbox = self;
-        local Container = Groupbox.Container;
+                local clicked = false
+                local function WaitForSecondClick()
+                    local event = Button.Outer.InputBegan:Wait()
+                    if ValidateClick(event) then clicked = true end
+                end
+                task.defer(WaitForSecondClick)
 
-        local function CreateBaseButton(Button)
-            local Outer = Library:Create('Frame', {
-                BackgroundColor3 = Color3.new(0, 0, 0);
-                BorderColor3 = Color3.new(0, 0, 0);
-                Size = UDim2.new(1, -4, 0, 20);
-                ZIndex = 5;
-            });
-
-            local Inner = Library:Create('Frame', {
-                BackgroundColor3 = Library.MainColor;
-                BorderColor3 = Library.OutlineColor;
-                BorderMode = Enum.BorderMode.Inset;
-                Size = UDim2.new(1, 0, 1, 0);
-                ZIndex = 6;
-                Parent = Outer;
-            });
-
-            local Label = Library:CreateLabel({
-                Size = UDim2.new(1, 0, 1, 0);
-                TextSize = 14;
-                Text = Button.Text;
-                ZIndex = 6;
-                Parent = Inner;
-            });
-
-            Library:Create('UIGradient', {
-                Color = ColorSequence.new({
-                    ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
-                    ColorSequenceKeypoint.new(1, Color3.fromRGB(212, 212, 212))
-                });
-                Rotation = 90;
-                Parent = Inner;
-            });
-
-            Library:AddToRegistry(Outer, {
-                BorderColor3 = 'Black';
-            });
-
-            Library:AddToRegistry(Inner, {
-                BackgroundColor3 = 'MainColor';
-                BorderColor3 = 'OutlineColor';
-            });
-
-            Library:OnHighlight(Outer, Outer,
-                { BorderColor3 = 'AccentColor' },
-                { BorderColor3 = 'Black' }
-            );
-
-            return Outer, Inner, Label
-        end
-
-        local function InitEvents(Button)
-            local function WaitForEvent(event, timeout, validator)
-                local bindable = Instance.new('BindableEvent')
-                local connection = event:Once(function(...)
-
-                    if type(validator) == 'function' and validator(...) then
-                        bindable:Fire(true)
+                task.delay(0.5, function()
+                    if not clicked then
+                        Library:RemoveFromRegistry(Button.Label)
+                        Library:AddToRegistry(Button.Label, { TextColor3 = 'FontColor' })
+                        TweenColor(Button.Label, Color3.fromRGB(128,128,128)) -- Griye dön
+                        Button.Label.Text = Button.Text
+                        Button.Locked = false
+                        pressed = false
                     else
-                        bindable:Fire(false)
-                    end
-                end)
-                task.delay(timeout, function()
-                    connection:disconnect()
-                    bindable:Fire(false)
-                end)
-                return bindable.Event:Wait()
-            end
-
-            local function ValidateClick(Input)
-                if Library:MouseIsOverOpenedFrame() then
-                    return false
-                end
-
-                if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then
-                    return false
-                end
-
-                return true
-            end
-
-            Button.Outer.InputBegan:Connect(function(Input)
-                if not ValidateClick(Input) then return end
-                if Button.Locked then return end
-
-                if Button.DoubleClick then
-                    Library:RemoveFromRegistry(Button.Label)
-                    Library:AddToRegistry(Button.Label, { TextColor3 = 'AccentColor' })
-
-                    Button.Label.TextColor3 = Library.AccentColor
-                    Button.Label.Text = 'Are you sure?'
-                    Button.Locked = true
-
-                    local clicked = WaitForEvent(Button.Outer.InputBegan, 0.5, ValidateClick)
-
-                    Library:RemoveFromRegistry(Button.Label)
-                    Library:AddToRegistry(Button.Label, { TextColor3 = 'FontColor' })
-
-                    Button.Label.TextColor3 = Library.FontColor
-                    Button.Label.Text = Button.Text
-                    task.defer(rawset, Button, 'Locked', false)
-
-                    if clicked then
                         Library:SafeCallback(Button.Func)
                     end
+                end)
 
-                    return
-                end
-
-                Library:SafeCallback(Button.Func);
-            end)
-        end
-
-        Button.Outer, Button.Inner, Button.Label = CreateBaseButton(Button)
-        Button.Outer.Parent = Container
-
-        InitEvents(Button)
-
-        function Button:AddTooltip(tooltip)
-            if type(tooltip) == 'string' then
-                Library:AddToolTip(tooltip, self.Outer)
-            end
-            return self
-        end
-
-
-        function Button:AddButton(...)
-            local SubButton = {}
-
-            ProcessButtonParams('SubButton', SubButton, ...)
-
-            self.Outer.Size = UDim2.new(0.5, -2, 0, 20)
-
-            SubButton.Outer, SubButton.Inner, SubButton.Label = CreateBaseButton(SubButton)
-
-            SubButton.Outer.Position = UDim2.new(1, 3, 0, 0)
-            SubButton.Outer.Size = UDim2.fromOffset(self.Outer.AbsoluteSize.X - 2, self.Outer.AbsoluteSize.Y)
-            SubButton.Outer.Parent = self.Outer
-
-            function SubButton:AddTooltip(tooltip)
-                if type(tooltip) == 'string' then
-                    Library:AddToolTip(tooltip, self.Outer)
-                end
-                return SubButton
+                return
             end
 
-            if type(SubButton.Tooltip) == 'string' then
-                SubButton:AddTooltip(SubButton.Tooltip)
+            Library:SafeCallback(Button.Func)
+        end)
+
+        Button.Outer.InputEnded:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 and pressed then
+                pressed = false
+                TweenColor(Button.Label, Color3.fromRGB(128,128,128)) -- Griye dön
             end
+        end)
+    end
 
-            InitEvents(SubButton)
-            return SubButton
+    Button.Outer, Button.Inner, Button.Label = CreateBaseButton(Button)
+    Button.Outer.Parent = Container
+
+    InitEvents(Button)
+
+    function Button:AddTooltip(tooltip)
+        if type(tooltip) == 'string' then
+            Library:AddToolTip(tooltip, self.Outer)
         end
+        return self
+    end
 
-        if type(Button.Tooltip) == 'string' then
-            Button:AddTooltip(Button.Tooltip)
-        end
+    if type(Button.Tooltip) == 'string' then
+        Button:AddTooltip(Button.Tooltip)
+    end
 
-        Groupbox:AddBlank(5);
-        Groupbox:Resize();
+    Groupbox:AddBlank(5)
+    Groupbox:Resize()
 
-        return Button;
-    end;
+    return Button
+end
+
 
     function Funcs:AddDivider()
         local Groupbox = self;
