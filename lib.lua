@@ -1851,6 +1851,7 @@ function Funcs:AddButton(...)
         });
 
         -- Set initial gray color after label is created
+        task.wait() -- Wait a frame to ensure library settings are applied
         Label.TextColor3 = Color3.fromRGB(150, 150, 150);
 
         Library:Create('UIGradient', {
@@ -1869,6 +1870,11 @@ function Funcs:AddButton(...)
         Library:AddToRegistry(Inner, {
             BackgroundColor3 = 'MainColor';
             BorderColor3 = 'OutlineColor';
+        });
+
+        -- Add label to registry with gray color
+        Library:AddToRegistry(Label, {
+            TextColor3 = Color3.fromRGB(150, 150, 150);
         });
 
         Library:OnHighlight(Outer, Outer,
