@@ -1728,7 +1728,7 @@ task.spawn(Pulse)
     BaseAddons.__namecall = function(Table, Key, ...)
         return Funcs[Key](...);
     end;
-end;
+
 
 local BaseGroupbox = {};
 
