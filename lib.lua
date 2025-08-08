@@ -1,4 +1,3 @@
-
 local InputService = game:GetService('UserInputService');
 local TextService = game:GetService('TextService');
 local CoreGui = game:GetService('CoreGui');
@@ -9,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.15"
+local version = "0.14"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -1847,13 +1846,10 @@ function Funcs:AddButton(...)
             Size = UDim2.new(1, 0, 1, 0);
             TextSize = 14;
             Text = Button.Text;
+            TextColor3 = Color3.fromRGB(150, 150, 150); -- Start with gray text
             ZIndex = 6;
             Parent = Inner;
         });
-
-        -- Set initial gray color after label is created
-        task.wait() -- Wait a frame to ensure library settings are applied
-        Label.TextColor3 = Color3.fromRGB(150, 150, 150);
 
         Library:Create('UIGradient', {
             Color = ColorSequence.new({
@@ -1871,11 +1867,6 @@ function Funcs:AddButton(...)
         Library:AddToRegistry(Inner, {
             BackgroundColor3 = 'MainColor';
             BorderColor3 = 'OutlineColor';
-        });
-
-        -- Add label to registry with gray color
-        Library:AddToRegistry(Label, {
-            TextColor3 = Color3.fromRGB(150, 150, 150);
         });
 
         Library:OnHighlight(Outer, Outer,
