@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.14"
+local version = "0.15"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -1846,10 +1846,12 @@ function Funcs:AddButton(...)
             Size = UDim2.new(1, 0, 1, 0);
             TextSize = 14;
             Text = Button.Text;
-            TextColor3 = Color3.fromRGB(150, 150, 150); -- Start with gray text
             ZIndex = 6;
             Parent = Inner;
         });
+
+        -- Set initial gray color after label is created
+        Label.TextColor3 = Color3.fromRGB(150, 150, 150);
 
         Library:Create('UIGradient', {
             Color = ColorSequence.new({
