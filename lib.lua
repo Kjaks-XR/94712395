@@ -759,26 +759,27 @@ do
 
     function Funcs:AddColorPicker(Idx, Info)
     local ToggleLabel = self.TextLabel;
-
+    -- local Container = self.Container;
+    
     assert(Info.Default, 'AddColorPicker: Missing default value.');
-
+    
     local ColorPicker = {
         Value = Info.Default;
         Transparency = Info.Transparency or 0;
         Type = 'ColorPicker';
-        Title = type(Info.Title) == 'string' and Info.Title or 'Color picker';
+        Title = type(Info.Title) == 'string' and Info.Title or 'Color picker',
         Callback = Info.Callback or function(Color) end;
     };
-
+    
     function ColorPicker:SetHSVFromRGB(Color)
         local H, S, V = Color3.toHSV(Color);
         ColorPicker.Hue = H;
         ColorPicker.Sat = S;
         ColorPicker.Vib = V;
     end;
-
+    
     ColorPicker:SetHSVFromRGB(ColorPicker.Value);
-
+    
     local DisplayFrame = Library:Create('Frame', {
         BackgroundColor3 = ColorPicker.Value;
         BorderColor3 = Library:GetDarkerColor(ColorPicker.Value);
@@ -787,21 +788,20 @@ do
         ZIndex = 6;
         Parent = ToggleLabel;
     });
-
-    Library:Create('UIGradient', {
-        Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
-            ColorSequenceKeypoint.new(1, ColorPicker.Value)
-        };
+    
+    -- Add gradient with 90 degree rotation and subtle black tint
+    local Gradient = Library:Create('UIGradient', {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, ColorPicker.Value),
+            ColorSequenceKeypoint.new(1, Color3.new(
+                ColorPicker.Value.R * 0.7,
+                ColorPicker.Value.G * 0.7,
+                ColorPicker.Value.B * 0.7
+            ))
+        });
         Rotation = 90;
-        Transparency = NumberSequence.new{
-            NumberSequenceKeypoint.new(0, 0.15),
-            NumberSequenceKeypoint.new(1, 0.15)
-        };
         Parent = DisplayFrame;
     });
-end
-
 
 
 
@@ -1728,7 +1728,7 @@ task.spawn(Pulse)
     BaseAddons.__namecall = function(Table, Key, ...)
         return Funcs[Key](...);
     end;
-
+end;
 
 local BaseGroupbox = {};
 
