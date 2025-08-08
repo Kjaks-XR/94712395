@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.11"
+local version = "0.12"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -758,37 +758,50 @@ do
     local Funcs = {};
 
     function Funcs:AddColorPicker(Idx, Info)
-        local ToggleLabel = self.TextLabel;
-        -- local Container = self.Container;
+    local ToggleLabel = self.TextLabel;
 
-        assert(Info.Default, 'AddColorPicker: Missing default value.');
+    assert(Info.Default, 'AddColorPicker: Missing default value.');
 
-        local ColorPicker = {
-            Value = Info.Default;
-            Transparency = Info.Transparency or 0;
-            Type = 'ColorPicker';
-            Title = type(Info.Title) == 'string' and Info.Title or 'Color picker',
-            Callback = Info.Callback or function(Color) end;
+    local ColorPicker = {
+        Value = Info.Default;
+        Transparency = Info.Transparency or 0;
+        Type = 'ColorPicker';
+        Title = type(Info.Title) == 'string' and Info.Title or 'Color picker';
+        Callback = Info.Callback or function(Color) end;
+    };
+
+    function ColorPicker:SetHSVFromRGB(Color)
+        local H, S, V = Color3.toHSV(Color);
+        ColorPicker.Hue = H;
+        ColorPicker.Sat = S;
+        ColorPicker.Vib = V;
+    end;
+
+    ColorPicker:SetHSVFromRGB(ColorPicker.Value);
+
+    local DisplayFrame = Library:Create('Frame', {
+        BackgroundColor3 = ColorPicker.Value;
+        BorderColor3 = Library:GetDarkerColor(ColorPicker.Value);
+        BorderMode = Enum.BorderMode.Inset;
+        Size = UDim2.new(0, 28, 0, 14);
+        ZIndex = 6;
+        Parent = ToggleLabel;
+    });
+
+    Library:Create('UIGradient', {
+        Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+            ColorSequenceKeypoint.new(1, ColorPicker.Value)
         };
+        Rotation = 90;
+        Transparency = NumberSequence.new{
+            NumberSequenceKeypoint.new(0, 0.15),
+            NumberSequenceKeypoint.new(1, 0.15)
+        };
+        Parent = DisplayFrame;
+    });
+end
 
-        function ColorPicker:SetHSVFromRGB(Color)
-            local H, S, V = Color3.toHSV(Color);
-
-            ColorPicker.Hue = H;
-            ColorPicker.Sat = S;
-            ColorPicker.Vib = V;
-        end;
-
-        ColorPicker:SetHSVFromRGB(ColorPicker.Value);
-
-        local DisplayFrame = Library:Create('Frame', {
-            BackgroundColor3 = ColorPicker.Value;
-            BorderColor3 = Library:GetDarkerColor(ColorPicker.Value);
-            BorderMode = Enum.BorderMode.Inset;
-            Size = UDim2.new(0, 28, 0, 14);
-            ZIndex = 6;
-            Parent = ToggleLabel;
-        });
 
 
 
