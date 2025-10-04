@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.15"
+local version = "0.16"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -1826,16 +1826,12 @@ function Funcs:AddButton(...)
     local Container = Groupbox.Container;
 
     local function CreateBaseButton(Button)
-local Outer = Library:Create('Frame', {
-    AnchorPoint = Config.AnchorPoint,
-    BackgroundColor3 = Color3.new(0, 0, 0);
-    BorderSizePixel = 0;
-    Position = Config.Position,
-    Size = UDim2.fromOffset(540, 620), -- Original: UDim2.fromOffset(550, 600)
-    Visible = false;
-    ZIndex = 1;
-    Parent = ScreenGui;
-});
+        local Outer = Library:Create('Frame', {
+            BackgroundColor3 = Color3.new(0, 0, 0);
+            BorderColor3 = Color3.new(0, 0, 0);
+            Size = UDim2.new(1, -4, 0, 20);
+            ZIndex = 5;
+        });
 
         local Inner = Library:Create('Frame', {
             BackgroundColor3 = Library.MainColor;
@@ -3562,7 +3558,7 @@ function Library:CreateWindow(...)
     if type(Config.MenuFadeTime) ~= 'number' then Config.MenuFadeTime = 0.2 end
 
     if typeof(Config.Position) ~= 'UDim2' then Config.Position = UDim2.fromOffset(175, 50) end
-    if typeof(Config.Size) ~= 'UDim2' then Config.Size = UDim2.fromOffset(550, 600) end
+    if typeof(Config.Size) ~= 'UDim2' then Config.Size = UDim2.fromOffset(400, 620) end
 
     if Config.Center then
         Config.AnchorPoint = Vector2.new(0.5, 0.5)
