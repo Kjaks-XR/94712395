@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.14"
+local version = "0.15"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2279,6 +2279,14 @@ end;
         Size = UDim2.new(0, 13, 0, 13);
         ZIndex = 5;
         Parent = Container;
+    })
+
+		    local ToggleOuterOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0);
+        BorderColor3 = Color3.new(26, 26, 26);
+        Size = UDim2.new(0, 14, 0, 14);
+        ZIndex = 6;
+        Parent = ToggleOuter;
     })
 
     Library:AddToRegistry(ToggleOuter, {
