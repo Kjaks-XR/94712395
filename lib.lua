@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.2 custom fonted"
+local version = "0.13 custom fonted"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -486,16 +486,6 @@ function Library:Create(Class, Properties)
     return _Instance;
 end;
 
-function Library:GetFont(fontName)
-    fontName = fontName or "ProggyClean"
-    if not fontsLoaded then
-        -- Wait for fonts to load
-        repeat task.wait() until fontsLoaded
-    end
-    return fonts[fontName] or fonts["ProggyClean"] or Font.new("rbxasset://fonts/families/SourceSansPro.json")
-end
-
-
 function Library:ApplyTextStroke(Inst)
     Inst.TextStrokeTransparency = 1;
 
@@ -510,7 +500,7 @@ end;
 function Library:CreateLabel(Properties, IsHud)
     local _Instance = Library:Create('TextLabel', {
         BackgroundTransparency = 1;
-        FontFace = Library:GetFont("ProggyClean");  -- Use helper function
+        FontFace = Library.Fonts.ProggyClean;  -- Use FontFace instead of Font
         TextColor3 = Library.FontColor;
         TextSize = 16;
         TextStrokeTransparency = 0;
@@ -524,6 +514,7 @@ function Library:CreateLabel(Properties, IsHud)
 
     return Library:Create(_Instance, Properties);
 end;
+
 
 function Library:MakeDraggable(Instance, Cutoff)
     Instance.Active = true;
@@ -673,20 +664,10 @@ function Library:GetTextBounds(Text, FontFace, Size, Resolution)
     -- Create a temporary TextLabel to measure
     local temp = Instance.new("TextLabel")
     temp.Text = Text
+    temp.FontFace = FontFace
     temp.TextSize = Size
-    
-    -- Use FontFace if provided, otherwise fall back to default
-    if FontFace and typeof(FontFace) == "Font" then
-        temp.FontFace = FontFace
-    else
-        -- Fallback to library font or system font
-        temp.FontFace = Library.Fonts and Library.Fonts.ProggyClean or Font.new("rbxasset://fonts/families/SourceSansPro.json")
-    end
-    
     temp.Parent = game:GetService("CoreGui")
     
-    -- Wait a frame for TextBounds to update
-    task.wait()
     local bounds = temp.TextBounds
     temp:Destroy()
     
@@ -1031,6 +1012,7 @@ local HueBox = Library:Create('TextBox', {
     ZIndex = 20;
     Parent = HueBoxInner;
 });
+
 
 
         Library:ApplyTextStroke(HueBox);
