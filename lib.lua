@@ -2281,13 +2281,14 @@ end;
         Parent = Container;
     })
 
-		    local ToggleOuterOuter = Library:Create('Frame', {
-        BackgroundColor3 = Color3.new(20, 20, 20);
-        BorderColor3 = Color3.new(24, 24, 24);
-        Size = UDim2.new(0, 13, 0, 13);
-        ZIndex = 5;
-        Parent = ToggleOuter;
-    })
+local ToggleOuterOuter = Library:Create('Frame', {
+    BackgroundColor3 = Color3.fromRGB(20, 20, 20);
+    BorderColor3 = Color3.fromRGB(24, 24, 24);
+    Size = UDim2.new(0, 13, 0, 13);
+    ZIndex = 5;
+    Parent = ToggleOuter;
+})
+
 
     Library:AddToRegistry(ToggleOuter, {
         BorderColor3 = 'Black';
