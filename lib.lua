@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.19 custom fonted"
+local version = "0.13 custom fonted"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -22,50 +22,48 @@ local CoreGuiService = game:GetService("CoreGui")
 local TweenTable = {
 	Default = TweenInfo.new(0.17, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, false, 0)
 }
-
 local fonts = {}; do
-            function Register_Font(Name, Weight, Style, Asset)
-                if not isfile(Asset.Id) then
-                    writefile(Asset.Id, Asset.Font)
-                end
-
-                if isfile(Name .. ".font") then
-                    delfile(Name .. ".font")
-                end
-
-                local Data = {
-                    name = Name,
-                    faces = {
-                        {
-                            name = "Regular",
-                            weight = Weight,
-                            style = Style,
-                            assetId = getcustomasset(Asset.Id),
-                        },
-                    },
-                }
-
-                writefile(Name .. ".font", game:GetService("HttpService"):JSONEncode(Data))
-
-                return getcustomasset(Name .. ".font");
-            end
-
-            local ProggyTiny = Register_Font("ProggyTiny", 200, "Normal", {
-                Id = "ProggyTiny.ttf",
-                Font = game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/tahoma_bold.ttf"),
-            })
-
-            local ProggyClean = Register_Font("ProggyClean", 200, "normal", {
-                Id = "ProggyClean.ttf",
-                Font = game:HttpGet("https://github.com/97y1oHW/4991/raw/refs/heads/main/v3/Minecraftia-Regular.ttf")
-            })
-
-            fonts = {
-                ["TahomaBold"] = Font.new(ProggyTiny, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-                ["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-            }
+    function Register_Font(Name, Weight, Style, Asset)
+        if not isfile(Asset.Id) then
+            writefile(Asset.Id, Asset.Font)
         end
 
+        if isfile(Name .. ".font") then
+            delfile(Name .. ".font")
+        end
+
+        local Data = {
+            name = Name,
+            faces = {
+                {
+                    name = "Regular",
+                    weight = Weight,
+                    style = Style,
+                    assetId = getcustomasset(Asset.Id),
+                },
+            },
+        }
+
+        writefile(Name .. ".font", game:GetService("HttpService"):JSONEncode(Data))
+
+        return getcustomasset(Name .. ".font");
+    end
+
+    local ProggyTiny = Register_Font("ProggyTiny", 200, "Normal", {
+        Id = "ProggyTiny.ttf",
+        Font = game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/tahoma_bold.ttf"),
+    })
+
+    local ProggyClean = Register_Font("ProggyClean", 200, "normal", {
+        Id = "ProggyClean.ttf",
+        Font = game:HttpGet("https://github.com/97y1oHW/4991/raw/refs/heads/main/v3/Minecraftia-Regular.ttf")
+    })
+
+    fonts = {
+        ["TahomaBold"] = Font.new(ProggyTiny, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+        ["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+    }
+end
 
 
 local function intro()
@@ -391,11 +389,7 @@ local Library = {
     RiskColor = Color3.fromRGB(255, 50, 50);
     Black = Color3.new(0, 0, 0);
 
-    Fonts = {
-        ProggyClean = Font.new("rbxassetid://YOUR_FONT_ID");
-        -- Mesela başka fontlar da ekleyebilirsin:
-        -- JetBrains = Font.new("rbxassetid://ANOTHER_ID");
-    };
+    Fonts = {};
 
     OpenedFrames = {};
     DependencyBoxes = {};
@@ -403,6 +397,8 @@ local Library = {
     ScreenGui = ScreenGui;
 };
 
+
+Library.Fonts = fonts;  -- Use the fonts table we created above
 
 local RainbowStep = 0
 local Hue = 0
@@ -504,7 +500,7 @@ end;
 function Library:CreateLabel(Properties, IsHud)
     local _Instance = Library:Create('TextLabel', {
         BackgroundTransparency = 1;
-        Font = Library.Font;
+        FontFace = Library.Fonts.ProggyClean;  -- Use FontFace instead of Font
         TextColor3 = Library.FontColor;
         TextSize = 16;
         TextStrokeTransparency = 0;
@@ -518,6 +514,7 @@ function Library:CreateLabel(Properties, IsHud)
 
     return Library:Create(_Instance, Properties);
 end;
+
 
 function Library:MakeDraggable(Instance, Cutoff)
     Instance.Active = true;
@@ -663,9 +660,18 @@ function Library:MapValue(Value, MinA, MaxA, MinB, MaxB)
     return (1 - ((Value - MinA) / (MaxA - MinA))) * MinB + ((Value - MinA) / (MaxA - MinA)) * MaxB;
 end;
 
-function Library:GetTextBounds(Text, Font, Size, Resolution)
-    local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
-    return Bounds.X, Bounds.Y
+function Library:GetTextBounds(Text, FontFace, Size, Resolution)
+    -- Create a temporary TextLabel to measure
+    local temp = Instance.new("TextLabel")
+    temp.Text = Text
+    temp.FontFace = FontFace
+    temp.TextSize = Size
+    temp.Parent = game:GetService("CoreGui")
+    
+    local bounds = temp.TextBounds
+    temp:Destroy()
+    
+    return bounds.X, bounds.Y
 end;
 
 function Library:GetDarkerColor(Color)
@@ -995,7 +1001,7 @@ local HueBox = Library:Create('TextBox', {
     BackgroundTransparency = 1;
     Position = UDim2.new(0, 5, 0, 0);
     Size = UDim2.new(1, -5, 1, 0);
-    FontFace = fonts["ProggyClean"];
+    FontFace = fonts["ProggyClean"];  -- This is correct
     PlaceholderColor3 = Color3.fromRGB(190, 190, 190);
     PlaceholderText = 'Hex color';
     Text = '#FFFFFF';
@@ -1006,6 +1012,7 @@ local HueBox = Library:Create('TextBox', {
     ZIndex = 20;
     Parent = HueBoxInner;
 });
+
 
 
         Library:ApplyTextStroke(HueBox);
@@ -2163,21 +2170,16 @@ end;
 
 local Box = Library:Create('TextBox', {
     BackgroundTransparency = 1;
-
     Position = UDim2.fromOffset(0, 0);
     Size = UDim2.fromScale(5, 1);
-
-   FontFace = fonts["ProggyClean"];
-
+    FontFace = fonts["ProggyClean"];  -- This is correct
     PlaceholderColor3 = Color3.fromRGB(190, 190, 190);
     PlaceholderText = Info.Placeholder or '';
-
     Text = Info.Default or '';
     TextColor3 = Library.FontColor;
     TextSize = 14;
     TextStrokeTransparency = 0;
     TextXAlignment = Enum.TextXAlignment.Left;
-
     ZIndex = 7;
     Parent = Container;
 });
@@ -3462,16 +3464,15 @@ function Library:SetWatermarkVisibility(Bool)
 end;
 
 function Library:SetWatermark(Text)
-local X, Y = Library:GetTextBounds(Text, fonts["ProggyClean"], 14);
-
+    local X, Y = Library:GetTextBounds(Text, Library.Fonts.ProggyClean, 14);
     Library.Watermark.Size = UDim2.new(0, X + 15, 0, (Y * 1.5) + 3);
     Library:SetWatermarkVisibility(true)
-
     Library.WatermarkText.Text = Text;
 end;
 
+
 function Library:Notify(Text, Time)
-local XSize, YSize = Library:GetTextBounds(Text, fonts["ProggyClean"], 14);
+local XSize, YSize = Library:GetTextBounds(Text, Library.Fonts.ProggyClean, 14);
 
 
     YSize = YSize + 7
