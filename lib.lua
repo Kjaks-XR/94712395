@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.11"
+local version = "0.19"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2281,22 +2281,13 @@ end;
         Parent = Container;
     })
 
-local ToggleOuterOuter = Library:Create('Frame', {
-    BackgroundColor3 = Color3.fromRGB(20, 20, 20);
-    BorderColor3 = Color3.fromRGB(24, 24, 24);
-    Size = UDim2.new(0, 13, 0, 13);
-    ZIndex = 5;
-    Parent = ToggleOuter;
-})
 
 
     Library:AddToRegistry(ToggleOuter, {
         BorderColor3 = 'Black';
     })
 
-    Library:AddToRegistry(ToggleOuterOuter, {
-        BorderColor3 = 'Black';
-    })
+
 
     local ToggleInner = Library:Create('Frame', {
         BackgroundColor3 = Toggle.Value and Library.AccentColor or Color3.new(0, 0, 0),
