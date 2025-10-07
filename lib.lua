@@ -8,16 +8,14 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.19"
+local version = "0.19 custom fonted"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
 
 
-local function intro()
 
 
-wait(2)
 local TweenService = game:GetService("TweenService")
 local CoreGuiService = game:GetService("CoreGui")
 
@@ -67,6 +65,14 @@ local fonts = {}; do
                 ["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
             }
         end
+
+
+
+local function intro()
+
+
+wait(2)
+
 print("downloaded fonts")
 
 local CreateTween = function(name, speed, style, direction, loop, reverse, delay)
@@ -375,20 +381,24 @@ local Library = {
     RegistryMap = {};
 
     HudRegistry = {};
-    InactiveColor = Color3.fromRGB(60, 60, 60),
-    InactiveColorDark =  Color3.fromRGB(60, 60, 60),
+    InactiveColor = Color3.fromRGB(60, 60, 60);
+    InactiveColorDark = Color3.fromRGB(60, 60, 60);
     FontColor = Color3.fromRGB(255, 255, 255);
     MainColor = Color3.fromRGB(28, 28, 28);
     BackgroundColor = Color3.fromRGB(42, 42, 42);
     AccentColor = Color3.fromRGB(219, 101, 75);
     OutlineColor = Color3.fromRGB(50, 50, 50);
-    RiskColor = Color3.fromRGB(255, 50, 50),
+    RiskColor = Color3.fromRGB(255, 50, 50);
     Black = Color3.new(0, 0, 0);
-    Font = Enum.Font.Code,
+
+    Fonts = {
+        ProggyClean = Font.new("rbxassetid://YOUR_FONT_ID");
+        -- Mesela başka fontlar da ekleyebilirsin:
+        -- JetBrains = Font.new("rbxassetid://ANOTHER_ID");
+    };
 
     OpenedFrames = {};
     DependencyBoxes = {};
-
     Signals = {};
     ScreenGui = ScreenGui;
 };
@@ -981,21 +991,22 @@ task.spawn(Pulse)
             Parent = HueBoxInner;
         });
 
-        local HueBox = Library:Create('TextBox', {
-            BackgroundTransparency = 1;
-            Position = UDim2.new(0, 5, 0, 0);
-            Size = UDim2.new(1, -5, 1, 0);
-            Font = Library.Font;
-            PlaceholderColor3 = Color3.fromRGB(190, 190, 190);
-            PlaceholderText = 'Hex color',
-            Text = '#FFFFFF',
-            TextColor3 = Library.FontColor;
-            TextSize = 14;
-            TextStrokeTransparency = 0;
-            TextXAlignment = Enum.TextXAlignment.Left;
-            ZIndex = 20,
-            Parent = HueBoxInner;
-        });
+local HueBox = Library:Create('TextBox', {
+    BackgroundTransparency = 1;
+    Position = UDim2.new(0, 5, 0, 0);
+    Size = UDim2.new(1, -5, 1, 0);
+    FontFace = fonts["ProggyClean"];
+    PlaceholderColor3 = Color3.fromRGB(190, 190, 190);
+    PlaceholderText = 'Hex color';
+    Text = '#FFFFFF';
+    TextColor3 = Library.FontColor;
+    TextSize = 14;
+    TextStrokeTransparency = 0;
+    TextXAlignment = Enum.TextXAlignment.Left;
+    ZIndex = 20;
+    Parent = HueBoxInner;
+});
+
 
         Library:ApplyTextStroke(HueBox);
 
@@ -1764,7 +1775,7 @@ do
         });
 
         if DoesWrap then
-            local Y = select(2, Library:GetTextBounds(Text, Library.Font, 14, Vector2.new(TextLabel.AbsoluteSize.X, math.huge)))
+            local Y = select(2, Library:GetTextBounds(Text, Library.Fonts.ProggyClean, 14, Vector2.new(TextLabel.AbsoluteSize.X, math.huge)));
             TextLabel.Size = UDim2.new(1, -4, 0, Y)
         else
             Library:Create('UIListLayout', {
@@ -1783,7 +1794,8 @@ do
             TextLabel.Text = Text
 
             if DoesWrap then
-                local Y = select(2, Library:GetTextBounds(Text, Library.Font, 14, Vector2.new(TextLabel.AbsoluteSize.X, math.huge)))
+                local Y = select(2, Library:GetTextBounds(Text, Library.Fonts.ProggyClean, 14, Vector2.new(TextLabel.AbsoluteSize.X, math.huge)));
+
                 TextLabel.Size = UDim2.new(1, -4, 0, Y)
             end
 
@@ -2149,25 +2161,27 @@ end;
             Parent = TextBoxInner;
         })
 
-        local Box = Library:Create('TextBox', {
-            BackgroundTransparency = 1;
+local Box = Library:Create('TextBox', {
+    BackgroundTransparency = 1;
 
-            Position = UDim2.fromOffset(0, 0),
-            Size = UDim2.fromScale(5, 1),
+    Position = UDim2.fromOffset(0, 0);
+    Size = UDim2.fromScale(5, 1);
 
-            Font = Library.Font;
-            PlaceholderColor3 = Color3.fromRGB(190, 190, 190);
-            PlaceholderText = Info.Placeholder or '';
+   FontFace = fonts["ProggyClean"];
 
-            Text = Info.Default or '';
-            TextColor3 = Library.FontColor;
-            TextSize = 14;
-            TextStrokeTransparency = 0;
-            TextXAlignment = Enum.TextXAlignment.Left;
+    PlaceholderColor3 = Color3.fromRGB(190, 190, 190);
+    PlaceholderText = Info.Placeholder or '';
 
-            ZIndex = 7;
-            Parent = Container;
-        });
+    Text = Info.Default or '';
+    TextColor3 = Library.FontColor;
+    TextSize = 14;
+    TextStrokeTransparency = 0;
+    TextXAlignment = Enum.TextXAlignment.Left;
+
+    ZIndex = 7;
+    Parent = Container;
+});
+
 
         Library:ApplyTextStroke(Box);
 
@@ -3448,7 +3462,8 @@ function Library:SetWatermarkVisibility(Bool)
 end;
 
 function Library:SetWatermark(Text)
-    local X, Y = Library:GetTextBounds(Text, Library.Font, 14);
+local X, Y = Library:GetTextBounds(Text, fonts["ProggyClean"], 14);
+
     Library.Watermark.Size = UDim2.new(0, X + 15, 0, (Y * 1.5) + 3);
     Library:SetWatermarkVisibility(true)
 
@@ -3456,7 +3471,8 @@ function Library:SetWatermark(Text)
 end;
 
 function Library:Notify(Text, Time)
-    local XSize, YSize = Library:GetTextBounds(Text, Library.Font, 14);
+local XSize, YSize = Library:GetTextBounds(Text, fonts["ProggyClean"], 14);
+
 
     YSize = YSize + 7
 
@@ -3678,7 +3694,7 @@ function Library:CreateWindow(...)
             Tabboxes = {};
         };
 
-        local TabButtonWidth = Library:GetTextBounds(Name, Library.Font, 16);
+local TabButtonWidth = Library:GetTextBounds(Name, fonts["ProggyClean"], 16);
 
         local TabButton = Library:Create('Frame', {
             BackgroundColor3 = Library.BackgroundColor;
