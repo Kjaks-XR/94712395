@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.19"
+local version = "0.11"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2351,18 +2351,27 @@ function Toggle:Display()
     local outerColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(30, 30, 30))
     local textColor = Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
 
-    TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-        BackgroundColor3 = bgColor,
-        BorderColor3 = borderColor
-    }):Play()
+    -- Set immediate color without tween on first call for proper initialization
+    if not Toggle._initialized then
+        ToggleInner.BackgroundColor3 = bgColor
+        ToggleInner.BorderColor3 = borderColor
+        ToggleOuter.BorderColor3 = outerColor
+        ToggleLabel.TextColor3 = textColor
+        Toggle._initialized = true
+    else
+        TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = bgColor,
+            BorderColor3 = borderColor
+        }):Play()
 
-    TweenService:Create(ToggleOuter, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-        BorderColor3 = outerColor
-    }):Play()
+        TweenService:Create(ToggleOuter, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BorderColor3 = outerColor
+        }):Play()
 
-    TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-        TextColor3 = textColor
-    }):Play()
+        TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            TextColor3 = textColor
+        }):Play()
+    end
 end
 
 
