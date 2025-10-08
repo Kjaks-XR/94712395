@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.11"
+local version = "0.3"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2258,7 +2258,9 @@ end;
         return Textbox;
     end;
 
-    function Funcs:AddToggle(Idx, Info)
+
+
+function Funcs:AddToggle(Idx, Info)
     assert(Info.Text, 'AddInput: Missing `Text` string.')
 
     local Toggle = {
@@ -2281,13 +2283,9 @@ end;
         Parent = Container;
     })
 
-
-
     Library:AddToRegistry(ToggleOuter, {
         BorderColor3 = 'Black';
     })
-
-
 
     local ToggleInner = Library:Create('Frame', {
         BackgroundColor3 = Toggle.Value and Library.AccentColor or Color3.new(0, 0, 0),
@@ -2307,6 +2305,11 @@ end;
         ZIndex = 6;
         Parent = ToggleOuter;
     })
+    
+    -- Set initial color based on toggle state BEFORE adding UIListLayout
+    if not Toggle.Value then
+        ToggleLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    end
 
     Library:Create('UIListLayout', {
         Padding = UDim.new(0, 4);
@@ -2345,20 +2348,12 @@ end;
         Toggle:Display()
     end
 
-function Toggle:Display()
-    local bgColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(25, 25, 25)
-    local borderColor = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(40, 40, 40)
-    local outerColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(30, 30, 30))
-    local textColor = Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
+    function Toggle:Display()
+        local bgColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(25, 25, 25)
+        local borderColor = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(40, 40, 40)
+        local outerColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(30, 30, 30))
+        local textColor = Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
 
-    -- Set immediate color without tween on first call for proper initialization
-    if not Toggle._initialized then
-        ToggleInner.BackgroundColor3 = bgColor
-        ToggleInner.BorderColor3 = borderColor
-        ToggleOuter.BorderColor3 = outerColor
-        ToggleLabel.TextColor3 = textColor
-        Toggle._initialized = true
-    else
         TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
             BackgroundColor3 = bgColor,
             BorderColor3 = borderColor
@@ -2368,12 +2363,83 @@ function Toggle:Display()
             BorderColor3 = outerColor
         }):Play()
 
-        TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-            TextColor3 = textColor
-        }):Play()
+        if not Toggle.Risky then
+            TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                TextColor3 = textColor
+            }):Play()
+        end
     end
+
+    function Toggle:OnChanged(Func)
+        Toggle.Changed = Func;
+        Func(Toggle.Value)
+    end
+
+    function Toggle:SetValue(Bool)
+        Bool = (not not Bool);
+        Toggle.Value = Bool;
+        Toggle:Display()
+
+        for _, Addon in next, Toggle.Addons do
+            if Addon.Type == 'KeyPicker' and Addon.SyncToggleState then
+                Addon.Toggled = Bool
+                Addon:Update()
+            end
+        end
+
+        Library:SafeCallback(Toggle.Callback, Toggle.Value)
+        Library:SafeCallback(Toggle.Changed, Toggle.Value)
+        Library:UpdateDependencyBoxes()
+    end
+
+    ToggleRegion.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
+            Toggle:SetValue(not Toggle.Value)
+            Library:AttemptSave()
+        end
+    end)
+
+    if Toggle.Risky then
+        Library:RemoveFromRegistry(ToggleLabel)
+        ToggleLabel.TextColor3 = Library.RiskColor
+        Library:AddToRegistry(ToggleLabel, { TextColor3 = 'RiskColor' })
+    else
+        -- For non-risky toggles, set the correct initial color
+        Library:RemoveFromRegistry(ToggleLabel)
+        if Toggle.Value then
+            ToggleLabel.TextColor3 = Library.FontColor
+            Library:AddToRegistry(ToggleLabel, { TextColor3 = 'FontColor' })
+        else
+            ToggleLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+            Library:AddToRegistry(ToggleLabel, { TextColor3 = function() 
+                return Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
+            end })
+        end
+    end
+
+    -- Set all initial visual states without animation
+    local bgColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(25, 25, 25)
+    local borderColor = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(40, 40, 40)
+    local outerColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(30, 30, 30)
+    
+    ToggleInner.BackgroundColor3 = bgColor
+    ToggleInner.BorderColor3 = borderColor
+    ToggleOuter.BorderColor3 = outerColor
+
+    Groupbox:AddBlank(Info.BlankSize or 5 + 2)
+    Groupbox:Resize()
+
+    Toggle.TextLabel = ToggleLabel
+    Toggle.Container = Container
+    setmetatable(Toggle, BaseAddons)
+
+    Toggles[Idx] = Toggle
+    Library:UpdateDependencyBoxes()
+
+    return Toggle
 end
 
+	
 
 
     function Toggle:OnChanged(Func)
@@ -3299,7 +3365,7 @@ end;
     BaseGroupbox.__namecall = function(Table, Key, ...)
         return Funcs[Key](...);
     end;
-end;
+
 
 -- < Create other UI elements >
 do
