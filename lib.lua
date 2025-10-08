@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.3"
+local version = "0.02"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2440,57 +2440,6 @@ function Funcs:AddToggle(Idx, Info)
 end
 
 	
-
-
-    function Toggle:OnChanged(Func)
-        Toggle.Changed = Func;
-        Func(Toggle.Value)
-    end
-
-    function Toggle:SetValue(Bool)
-        Bool = (not not Bool);
-        Toggle.Value = Bool;
-        Toggle:Display()
-
-        for _, Addon in next, Toggle.Addons do
-            if Addon.Type == 'KeyPicker' and Addon.SyncToggleState then
-                Addon.Toggled = Bool
-                Addon:Update()
-            end
-        end
-
-        Library:SafeCallback(Toggle.Callback, Toggle.Value)
-        Library:SafeCallback(Toggle.Changed, Toggle.Value)
-        Library:UpdateDependencyBoxes()
-    end
-
-    ToggleRegion.InputBegan:Connect(function(Input)
-        if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
-            Toggle:SetValue(not Toggle.Value)
-            Library:AttemptSave()
-        end
-    end)
-
-    if Toggle.Risky then
-        Library:RemoveFromRegistry(ToggleLabel)
-        ToggleLabel.TextColor3 = Library.RiskColor
-        Library:AddToRegistry(ToggleLabel, { TextColor3 = 'RiskColor' })
-    end
-
-    Toggle:Display()
-    Groupbox:AddBlank(Info.BlankSize or 5 + 2)
-    Groupbox:Resize()
-
-    Toggle.TextLabel = ToggleLabel
-    Toggle.Container = Container
-    setmetatable(Toggle, BaseAddons)
-
-    Toggles[Idx] = Toggle
-    Library:UpdateDependencyBoxes()
-
-    return Toggle
-end
-
 
 
 function Funcs:AddSlider(Idx, Info)
