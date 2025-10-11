@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.003"
+local version = "0.02	B	X"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -193,7 +193,7 @@ local function DualPulse()
 	local propsOuter = { ImageTransparency = 0.5 }
 	local propsInner = { ImageTransparency = 0.7 }
 	
-	TweenService:Create(glowOuter, infoOuter, propsOuter):Play()
+	--TweenService:Create(glowOuter, infoOuter, propsOuter):Play()
 	TweenService:Create(glowInner, infoInner, propsInner):Play()
 end
 
@@ -2277,6 +2277,9 @@ function Funcs:AddButton(...)
     return Button;
 end;
 
+
+	
+
     function Funcs:AddDivider()
         local Groupbox = self;
         local Container = self.Container
@@ -2825,24 +2828,40 @@ function Funcs:AddSlider(Idx, Info)
             end
         end
 
-        function Slider:Display()
-            local Suffix = Info.Suffix or '';
+function Slider:Display()
+    local Suffix = Info.Suffix or '';
+    local targetValue = Slider.Value;
+    local currentDisplayValue = tonumber(DisplayLabel.Text:match("%d+")) or 0;
 
+    local steps = 10;
+    local increment = (targetValue - currentDisplayValue) / steps;
+
+    task.spawn(function()
+        for i = 1, steps do
+            task.wait(0.02);
+            currentDisplayValue = currentDisplayValue + increment;
             if Info.Compact then
-                DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix
+                DisplayLabel.Text = Info.Text .. ': ' .. math.floor(currentDisplayValue) .. Suffix;
             elseif Info.HideMax then
-                DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix)
+                DisplayLabel.Text = string.format('%s', math.floor(currentDisplayValue) .. Suffix);
             else
-                DisplayLabel.Text = string.format('%s/%s', Slider.Value .. Suffix, Slider.Max .. Suffix);
+                DisplayLabel.Text = string.format('%d/%d', math.floor(currentDisplayValue), Slider.Max) .. Suffix;
             end
+        end
+        if Info.Compact then
+            DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix;
+        elseif Info.HideMax then
+            DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix);
+        else
+            DisplayLabel.Text = string.format('%d/%d', Slider.Value, Slider.Max) .. Suffix;
+        end
+    end);
 
-            local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
-            
-            -- Smooth tween ile boyut değişimi
-            Slider:TweenFill(UDim2.new(0, X, 1, 0));
+    local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
+    Slider:TweenFill(UDim2.new(0, X, 1, 0));
+    HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
+end;
 
-            HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
-        end;
 
         function Slider:OnChanged(Func)
             Slider.Changed = Func;
