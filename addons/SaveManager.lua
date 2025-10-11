@@ -1,22 +1,4 @@
-print"save manager loaded 0.1 for series B"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+print"save manager loaded 0.2 for series B - FIXED"
 
 local httpService = game:GetService('HttpService')
 
@@ -36,17 +18,17 @@ local SaveManager = {} do
 		},
 		Slider = {
 			Save = function(idx, object)
-				return { type = 'Slider', idx = idx, value = tostring(object.Value) }
+				return { type = 'Slider', idx = idx, value = object.Value }
 			end,
 			Load = function(idx, data)
 				if Options[idx] then 
-					Options[idx]:SetValue(data.value)
+					Options[idx]:SetValue(tonumber(data.value) or data.value)
 				end
 			end,
 		},
 		Dropdown = {
 			Save = function(idx, object)
-				return { type = 'Dropdown', idx = idx, value = object.Value, mutli = object.Multi }
+				return { type = 'Dropdown', idx = idx, value = object.Value, multi = object.Multi }
 			end,
 			Load = function(idx, data)
 				if Options[idx] then 
@@ -128,29 +110,50 @@ local SaveManager = {} do
 		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
 		if not success then return false, 'decode error' end
 
-		local originalStates = {}
+		-- Store original callbacks
+		local originalCallbacks = {}
+		
 		for idx, toggle in next, Toggles do
-			originalStates[idx] = toggle.OnChange
+			originalCallbacks[idx] = toggle.OnChange
 			toggle.OnChange = nil
 		end
 
 		for idx, option in next, Options do
-			originalStates[idx] = option.OnChange
+			originalCallbacks[idx] = option.OnChange
 			option.OnChange = nil
 		end
 
+		-- Load all values
 		for _, option in next, decoded.objects do
 			if self.Parser[option.type] then
-				self.Parser[option.type].Load(option.idx, option)
+				task.spawn(function()
+					pcall(function()
+						self.Parser[option.type].Load(option.idx, option)
+					end)
+				end)
 			end
 		end
 
+		-- Wait a frame for all values to apply
+		task.wait()
+
+		-- Restore callbacks and trigger them
 		for idx, toggle in next, Toggles do
-			toggle.OnChange = originalStates[idx]
+			toggle.OnChange = originalCallbacks[idx]
+			if toggle.OnChange and toggle.Value ~= nil then
+				task.spawn(function()
+					pcall(toggle.OnChange, toggle.Value)
+				end)
+			end
 		end
 
 		for idx, option in next, Options do
-			option.OnChange = originalStates[idx]
+			option.OnChange = originalCallbacks[idx]
+			if option.OnChange and option.Value ~= nil then
+				task.spawn(function()
+					pcall(option.OnChange, option.Value)
+				end)
+			end
 		end
 
 		return true
