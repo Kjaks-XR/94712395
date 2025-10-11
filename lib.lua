@@ -2283,11 +2283,6 @@ local ToggleOuter = Library:Create('Frame', {
     Parent = Container;
 })
 
-local stroke = Instance.new("UIStroke")
-stroke.Thickness = 1;
-stroke.Color = Color3.fromRGB(30, 30, 30);
-stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-stroke.Parent = ToggleOuter;
 
 
 		
