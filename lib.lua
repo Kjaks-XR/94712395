@@ -13,60 +13,61 @@ warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
 
-
 local function intro()
-
 
 wait(2)
 local TweenService = game:GetService("TweenService")
 local CoreGuiService = game:GetService("CoreGui")
 
 local TweenTable = {
-	Default = TweenInfo.new(0.17, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, false, 0)
+	Default = TweenInfo.new(0.17, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, false, 0),
+	Smooth = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, 0, false, 0),
+	Bounce = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, false, 0),
+	Fast = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, false, 0)
 }
 
 local fonts = {}; do
-            function Register_Font(Name, Weight, Style, Asset)
-                if not isfile(Asset.Id) then
-                    writefile(Asset.Id, Asset.Font)
-                end
+	function Register_Font(Name, Weight, Style, Asset)
+		if not isfile(Asset.Id) then
+			writefile(Asset.Id, Asset.Font)
+		end
 
-                if isfile(Name .. ".font") then
-                    delfile(Name .. ".font")
-                end
+		if isfile(Name .. ".font") then
+			delfile(Name .. ".font")
+		end
 
-                local Data = {
-                    name = Name,
-                    faces = {
-                        {
-                            name = "Regular",
-                            weight = Weight,
-                            style = Style,
-                            assetId = getcustomasset(Asset.Id),
-                        },
-                    },
-                }
+		local Data = {
+			name = Name,
+			faces = {
+				{
+					name = "Regular",
+					weight = Weight,
+					style = Style,
+					assetId = getcustomasset(Asset.Id),
+				},
+			},
+		}
 
-                writefile(Name .. ".font", game:GetService("HttpService"):JSONEncode(Data))
+		writefile(Name .. ".font", game:GetService("HttpService"):JSONEncode(Data))
 
-                return getcustomasset(Name .. ".font");
-            end
+		return getcustomasset(Name .. ".font");
+	end
 
-            local ProggyTiny = Register_Font("ProggyTiny", 200, "Normal", {
-                Id = "ProggyTiny.ttf",
-                Font = game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/tahoma_bold.ttf"),
-            })
+	local ProggyTiny = Register_Font("ProggyTiny", 200, "Normal", {
+		Id = "ProggyTiny.ttf",
+		Font = game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/tahoma_bold.ttf"),
+	})
 
-            local ProggyClean = Register_Font("ProggyClean", 200, "normal", {
-                Id = "ProggyClean.ttf",
-                Font = game:HttpGet("https://github.com/97y1oHW/4991/raw/refs/heads/main/v3/Minecraftia-Regular.ttf")
-            })
+	local ProggyClean = Register_Font("ProggyClean", 200, "normal", {
+		Id = "ProggyClean.ttf",
+		Font = game:HttpGet("https://github.com/97y1oHW/4991/raw/refs/heads/main/v3/Minecraftia-Regular.ttf")
+	})
 
-            fonts = {
-                ["TahomaBold"] = Font.new(ProggyTiny, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-                ["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-            }
-        end
+	fonts = {
+		["TahomaBold"] = Font.new(ProggyTiny, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+		["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+	}
+end
 print("downloaded fonts")
 
 local CreateTween = function(name, speed, style, direction, loop, reverse, delay)
@@ -80,7 +81,7 @@ local CreateTween = function(name, speed, style, direction, loop, reverse, delay
 	TweenTable[name] = TweenInfo.new(speed, style, direction, loop, reverse, delay)
 end
 
-CreateTween("xsxRotation", 0.17)
+CreateTween("xsxRotation", 0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
 local introduction = Instance.new("ScreenGui")
 local edge = Instance.new("Frame")
@@ -97,10 +98,13 @@ local xsx = Instance.new("TextLabel")
 local text = Instance.new("TextLabel")
 local pageLayout = Instance.new("UIListLayout")
 local n3TextLabel = Instance.new("TextLabel")
+local specialEditionBadge = Instance.new("TextLabel")
+
 local soundintro = Instance.new("Sound")
 soundintro.SoundId = "rbxassetid://9788118106"
-    soundintro.Volume = 1
-    soundintro:Play()
+soundintro.Volume = 1
+soundintro:Play()
+
 introduction.Name = "introduction"
 introduction.Parent = CoreGuiService
 introduction.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -108,61 +112,147 @@ introduction.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 edge.Name = "edge"
 edge.Parent = introduction
 edge.AnchorPoint = Vector2.new(0.5, 0.5)
-edge.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+edge.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
 edge.BackgroundTransparency = 1
-edge.Position = UDim2.new(0.511773348, 0, 0.5, 0)
-edge.Size = UDim2.new(0, 300, 0, 308)
+edge.BorderSizePixel = 0
+edge.Position = UDim2.new(0.5, 0, 0.5, 0)
+edge.Size = UDim2.new(0, 320, 0, 340)
 
-edgeCorner.CornerRadius = UDim.new(0, 2)
+edgeCorner.CornerRadius = UDim.new(0, 8)
 edgeCorner.Name = "edgeCorner"
 edgeCorner.Parent = edge
+--[[
+-- Multi-layered glow system for premium look
+local glowOuter = Instance.new("ImageLabel", edge)
+glowOuter.Name = "GlowOuter"
+glowOuter.Image = "rbxassetid://18245826428"
+glowOuter.ScaleType = Enum.ScaleType.Slice
+glowOuter.SliceCenter = Rect.new(10, 10, 60, 60)
+glowOuter.ImageColor3 = Color3.fromRGB(120, 80, 200)
+glowOuter.ImageTransparency = 0.2
+glowOuter.BackgroundTransparency = 1
+glowOuter.Size = UDim2.new(1, 60, 1, 60)
+glowOuter.Position = UDim2.new(0, -30, 0, -30)
+glowOuter.ZIndex = -2
+--]]
 
+local glowInner = Instance.new("ImageLabel", edge)
+glowInner.Name = "GlowInner"
+glowInner.Image = "rbxassetid://18245826428"
+glowInner.ScaleType = Enum.ScaleType.Slice
+glowInner.SliceCenter = Rect.new(10, 10, 60, 60)
+glowInner.ImageColor3 = Color3.fromRGB(159, 115, 255)
+glowInner.ImageTransparency = 0.4
+glowInner.BackgroundTransparency = 1
+glowInner.Size = UDim2.new(1, 30, 1, 30)
+glowInner.Position = UDim2.new(0, -15, 0, -15)
+glowInner.ZIndex = -1
 
-local TweenService = game:GetService("TweenService");
+-- Animated particles effect
+local particlesFrame = Instance.new("Frame", background)
+particlesFrame.Name = "ParticlesFrame"
+particlesFrame.BackgroundTransparency = 1
+particlesFrame.Size = UDim2.new(1, 0, 1, 0)
+particlesFrame.ClipsDescendants = true
+particlesFrame.ZIndex = 10
 
-local glow = Instance.new("ImageLabel", edge);
-glow.Name = "GlowEffect";
-glow.Image = "rbxassetid://18245826428";
-glow.ScaleType = Enum.ScaleType.Slice;
-glow.SliceCenter = Rect.new(10, 10, 60, 60);
-glow.ImageColor3 = Color3.fromRGB(80, 60, 150);
-glow.ImageTransparency = 0.3;
-glow.BackgroundTransparency = 1;
-glow.Size = UDim2.new(1, 40, 1, 40);
-glow.Position = UDim2.new(0, -20, 0, -20);
-glow.ZIndex = -1;
+local function createParticle()
+	local particle = Instance.new("Frame", particlesFrame)
+	particle.BackgroundColor3 = Color3.fromRGB(159, 115, 255)
+	particle.BackgroundTransparency = 0.7
+	particle.BorderSizePixel = 0
+	particle.Size = UDim2.new(0, math.random(2, 4), 0, math.random(2, 4))
+	particle.Position = UDim2.new(math.random(), 0, 1.2, 0)
+	
+	local corner = Instance.new("UICorner", particle)
+	corner.CornerRadius = UDim.new(1, 0)
+	
+	local duration = math.random(3, 6)
+	local targetY = -0.2
+	local targetX = particle.Position.X.Scale + (math.random(-20, 20) / 100)
+	
+	TweenService:Create(particle, TweenInfo.new(duration, Enum.EasingStyle.Linear), {
+		Position = UDim2.new(targetX, 0, targetY, 0),
+		BackgroundTransparency = 1
+	}):Play()
+	
+	game:GetService("Debris"):AddItem(particle, duration)
+end
 
-local function Pulse()
-	local info = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true);
-	local props = { ImageTransparency = 0.6 };
-	local tween = TweenService:Create(glow, info, props);
-	tween:Play();
-end;
+task.spawn(function()
+	for i = 1, 20 do
+		createParticle()
+		wait(0.15)
+	end
+end)
 
-task.spawn(Pulse)
+local function DualPulse()
+	local infoOuter = TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+	local infoInner = TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+	
+	local propsOuter = { ImageTransparency = 0.5 }
+	local propsInner = { ImageTransparency = 0.7 }
+	
+	TweenService:Create(glowOuter, infoOuter, propsOuter):Play()
+	TweenService:Create(glowInner, infoInner, propsInner):Play()
+end
 
-
+task.spawn(DualPulse)
 
 background.Name = "background"
 background.Parent = edge
 background.AnchorPoint = Vector2.new(0.5, 0.5)
 background.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 background.BackgroundTransparency = 1
+background.BorderSizePixel = 0
 background.ClipsDescendants = true
 background.Position = UDim2.new(0.5, 0, 0.5, 0)
-background.Size = UDim2.new(0, 298, 0, 306)
+background.Size = UDim2.new(0, 316, 0, 336)
 
 backgroundGradient.Color = ColorSequence.new{
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(34, 34, 34)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(52, 42, 53))
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(28, 28, 32)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(40, 35, 50)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(52, 42, 58))
 }
-backgroundGradient.Rotation = 90
+backgroundGradient.Rotation = 135
 backgroundGradient.Name = "backgroundGradient"
 backgroundGradient.Parent = background
 
-backgroundCorner.CornerRadius = UDim.new(0, 2)
+-- Animated gradient rotation
+task.spawn(function()
+	while background.Parent do
+		for i = 135, 495, 2 do
+			if not background.Parent then break end
+			backgroundGradient.Rotation = i
+			wait(0.05)
+		end
+	end
+end)
+
+backgroundCorner.CornerRadius = UDim.new(0, 8)
 backgroundCorner.Name = "backgroundCorner"
 backgroundCorner.Parent = background
+
+-- Add scanline effect
+local scanline = Instance.new("Frame", background)
+scanline.Name = "Scanline"
+scanline.BackgroundColor3 = Color3.fromRGB(159, 115, 255)
+scanline.BackgroundTransparency = 0.9
+scanline.BorderSizePixel = 0
+scanline.Size = UDim2.new(1, 0, 0, 2)
+scanline.Position = UDim2.new(0, 0, 0, 0)
+scanline.ZIndex = 5
+
+task.spawn(function()
+	while scanline.Parent do
+		TweenService:Create(scanline, TweenInfo.new(2, Enum.EasingStyle.Linear), {
+			Position = UDim2.new(0, 0, 1, 0)
+		}):Play()
+		wait(2)
+		scanline.Position = UDim2.new(0, 0, 0, 0)
+		wait(0.5)
+	end
+end)
 
 barFolder.Name = "barFolder"
 barFolder.Parent = background
@@ -170,8 +260,24 @@ barFolder.Parent = background
 bar.Name = "bar"
 bar.Parent = barFolder
 bar.BackgroundColor3 = Color3.fromRGB(159, 115, 255)
-bar.BackgroundTransparency = 0.200
-bar.Size = UDim2.new(0, 0, 0, 1)
+bar.BackgroundTransparency = 0
+bar.Size = UDim2.new(0, 0, 0, 2)
+
+-- Add shimmer effect to bar
+local barShimmer = Instance.new("Frame", bar)
+barShimmer.Name = "Shimmer"
+barShimmer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+barShimmer.BackgroundTransparency = 0.5
+barShimmer.BorderSizePixel = 0
+barShimmer.Size = UDim2.new(0, 50, 1, 0)
+barShimmer.Position = UDim2.new(0, 0, 0, 0)
+
+local shimmerGradient = Instance.new("UIGradient", barShimmer)
+shimmerGradient.Transparency = NumberSequence.new{
+	NumberSequenceKeypoint.new(0, 1),
+	NumberSequenceKeypoint.new(0.5, 0),
+	NumberSequenceKeypoint.new(1, 1)
+}
 
 barCorner.CornerRadius = UDim.new(0, 2)
 barCorner.Name = "barCorner"
@@ -197,50 +303,126 @@ xsx.Name = "xsx"
 xsx.Parent = background
 xsx.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 xsx.BackgroundTransparency = 1
-xsx.Size = UDim2.new(0, 80, 0, 21)
+xsx.Position = UDim2.new(0, 10, 0, 5)
+xsx.Size = UDim2.new(0, 120, 0, 21)
 xsx.FontFace = fonts["ProggyClean"]
-xsx.Text = "XWARE V3"
-xsx.TextColor3 = Color3.fromRGB(124, 124, 124)
-xsx.TextSize = 10
+xsx.Text = "XWARE V3.4B"
+xsx.TextColor3 = Color3.fromRGB(159, 115, 255)
+xsx.TextSize = 11
 xsx.TextTransparency = 1
+xsx.TextXAlignment = Enum.TextXAlignment.Left
 
 text.Name = "text"
 text.Parent = background
 text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 text.BackgroundTransparency = 1
-text.Position = UDim2.new(0.912751675, 0, 0, 0)
-text.Size = UDim2.new(0, 26, 0, 21)
+text.Position = UDim2.new(1, -40, 0, 5)
+text.Size = UDim2.new(0, 30, 0, 21)
 text.FontFace = fonts["ProggyClean"]
 text.Text = "PD"
-text.TextColor3 = Color3.fromRGB(124, 124, 124)
-text.TextSize = 10
+text.TextColor3 = Color3.fromRGB(255, 200, 100)
+text.TextSize = 11
 text.TextTransparency = 1
 text.RichText = true
+text.TextXAlignment = Enum.TextXAlignment.Right
 
 n3TextLabel.Name = "n3TextLabel"
 n3TextLabel.Parent = background
 n3TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 n3TextLabel.BackgroundTransparency = 1
-n3TextLabel.Position = UDim2.new(0.16, 8, 0.24, -8)
+n3TextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+n3TextLabel.Position = UDim2.new(0.50, 0, 0.4, 0)
 n3TextLabel.Size = UDim2.new(0, 200, 0, 100)
 n3TextLabel.FontFace = fonts["ProggyClean"]
-n3TextLabel.Text = "<b><font size=\"60\">X</font><font color=\"rgb(159, 115, 255)\"><font size=\"60\">3</font></font></b>"
-n3TextLabel.TextColor3 = Color3.fromRGB(124, 124, 124)
-n3TextLabel.TextSize = 60
+n3TextLabel.Text = "<b><font size=\"70\">X</font><font color=\"rgb(159, 115, 255)\"><font size=\"70\">3</font></font></b>"
+n3TextLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+n3TextLabel.TextSize = 70
 n3TextLabel.TextTransparency = 1
 n3TextLabel.TextScaled = true
 n3TextLabel.RichText = true
 
+
+specialEditionBadge.Name = "SpecialEditionBadge"
+specialEditionBadge.Parent = background
+specialEditionBadge.BackgroundColor3 = Color3.fromRGB(40, 35, 60) -- Slightly purplish dark background
+specialEditionBadge.BackgroundTransparency = 0.9 -- Slight transparency for effect
+specialEditionBadge.Position = UDim2.new(0.5, -80, 0.58, 0)
+specialEditionBadge.Size = UDim2.new(0, 160, 0, 22)
+specialEditionBadge.FontFace = fonts["ProggyClean"]
+specialEditionBadge.Text = "B SERIES"
+specialEditionBadge.TextColor3 = Color3.fromRGB(159, 115, 255) -- Purplish text color
+specialEditionBadge.TextSize = 9
+specialEditionBadge.TextTransparency = 1
+
+local badgeCorner = Instance.new("UICorner", specialEditionBadge)
+badgeCorner.CornerRadius = UDim.new(0, 4)
+
+local badgeStroke = Instance.new("UIStroke", specialEditionBadge)
+badgeStroke.Color = Color3.fromRGB(159, 115, 255) -- Purplish stroke
+badgeStroke.Thickness = 1
+badgeStroke.Transparency = 1
+
+local badgeDecorLeft = Instance.new("TextLabel", specialEditionBadge)
+badgeDecorLeft.BackgroundTransparency = 1
+badgeDecorLeft.Position = UDim2.new(0, -12, 0.5, -6)
+badgeDecorLeft.Size = UDim2.new(0, 12, 0, 12)
+badgeDecorLeft.Text = ""
+badgeDecorLeft.TextColor3 = Color3.fromRGB(159, 115, 255) -- Purplish decor
+badgeDecorLeft.TextSize = 10
+badgeDecorLeft.TextTransparency = 1
+badgeDecorLeft.FontFace = fonts["ProggyClean"]
+
+local badgeDecorRight = Instance.new("TextLabel", specialEditionBadge)
+badgeDecorRight.BackgroundTransparency = 1
+badgeDecorRight.Position = UDim2.new(1, 0, 0.5, -6)
+badgeDecorRight.Size = UDim2.new(0, 12, 0, 12)
+badgeDecorRight.Text = ""
+badgeDecorRight.TextColor3 = Color3.fromRGB(159, 115, 255) -- Purplish decor
+badgeDecorRight.TextSize = 10
+badgeDecorRight.TextTransparency = 1
+badgeDecorRight.FontFace = fonts["ProggyClean"]
+
+local badgeCorner = Instance.new("UICorner", specialEditionBadge)
+badgeCorner.CornerRadius = UDim.new(0, 4)
+
+local badgeStroke = Instance.new("UIStroke", specialEditionBadge)
+badgeStroke.Color = Color3.fromRGB(159, 115, 255)
+badgeStroke.Thickness = 1
+badgeStroke.Transparency = 1
+
+-- Add decorative corners to badge
+local badgeDecorLeft = Instance.new("TextLabel", specialEditionBadge)
+badgeDecorLeft.BackgroundTransparency = 1
+badgeDecorLeft.Position = UDim2.new(0, -12, 0.5, -6)
+badgeDecorLeft.Size = UDim2.new(0, 12, 0, 12)
+badgeDecorLeft.Text = ""
+badgeDecorLeft.TextColor3 = Color3.fromRGB(255, 215, 120)
+badgeDecorLeft.TextSize = 10
+badgeDecorLeft.TextTransparency = 1
+badgeDecorLeft.FontFace = fonts["ProggyClean"]
+
+local badgeDecorRight = Instance.new("TextLabel", specialEditionBadge)
+badgeDecorRight.BackgroundTransparency = 1
+badgeDecorRight.Position = UDim2.new(1, 0, 0.5, -6)
+badgeDecorRight.Size = UDim2.new(0, 12, 0, 12)
+badgeDecorRight.Text = ""
+badgeDecorRight.TextColor3 = Color3.fromRGB(255, 215, 120)
+badgeDecorRight.TextSize = 10
+badgeDecorRight.TextTransparency = 1
+badgeDecorRight.FontFace = fonts["ProggyClean"]
+
+-- Blinking cursor effect
 task.spawn(function()
-	while true do
-		pcall(function()
-			task.wait(1);
-			xsx.Text = 'XWare V3.4';
-			task.wait(1);
-			xsx.Text = 'XWare V3.4_';
-		end);
-	end;
-end);
+	local states = {'XWare V3.4 B', 'XWare V3.4 B_'}
+	local index = 1
+	while xsx.Parent do
+		wait(0.6)
+		if xsx.Parent then
+			xsx.Text = states[index]
+			index = index % 2 + 1
+		end
+	end
+end)
 
 pageLayout.Name = "pageLayout"
 pageLayout.Parent = introduction
@@ -248,97 +430,158 @@ pageLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
 pageLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 
--- Terminal frame & text layout
+-- Terminal frame with enhanced styling
 local terminalTextFrame = Instance.new("Frame")
 terminalTextFrame.Name = "terminalTextFrame"
 terminalTextFrame.Parent = background
 terminalTextFrame.BackgroundTransparency = 1
-terminalTextFrame.Position = UDim2.new(0.5, -120, 0.65, 0)
-terminalTextFrame.Size = UDim2.new(0, 240, 0, 60)
+terminalTextFrame.Position = UDim2.new(0.5, -130, 0.68, 0)
+terminalTextFrame.Size = UDim2.new(0, 260, 0, 80)
+terminalTextFrame.ClipsDescendants = true
 
 local terminalTextLayout = Instance.new("UIListLayout")
 terminalTextLayout.Name = "terminalTextLayout"
 terminalTextLayout.Parent = terminalTextFrame
 terminalTextLayout.SortOrder = Enum.SortOrder.LayoutOrder
-terminalTextLayout.Padding = UDim.new(0, 2)
+terminalTextLayout.Padding = UDim.new(0, 3)
 
-local function addTerminalLine(textContent)
+local function addTerminalLine(textContent, color)
 	local newText = Instance.new("TextLabel")
 	newText.Parent = terminalTextFrame
 	newText.BackgroundTransparency = 1
 	newText.FontFace = fonts["ProggyClean"]
 	newText.Text = textContent
-	newText.TextColor3 = Color3.fromRGB(124, 124, 124)
-	newText.TextSize = 12
+	newText.TextColor3 = color or Color3.fromRGB(159, 115, 255)
+	newText.TextSize = 11
 	newText.TextTransparency = 1
-	newText.Size = UDim2.new(1, 0, 0, 12)
-	TweenService:Create(newText, TweenTable["xsxRotation"], {TextTransparency = 0}):Play()
+	newText.Size = UDim2.new(1, 0, 0, 13)
+	newText.TextXAlignment = Enum.TextXAlignment.Left
+	
+	TweenService:Create(newText, TweenTable["Fast"], {TextTransparency = 0}):Play()
 
 	coroutine.wrap(function()
-		wait(1.73) -- erken sil baba
-		TweenService:Create(newText, TweenTable["xsxRotation"], {TextTransparency = 1}):Play()
-		wait(5)
+		wait(2.5)
+		TweenService:Create(newText, TweenTable["Fast"], {TextTransparency = 1}):Play()
+		wait(0.5)
 		newText:Destroy()
 	end)()
 end
 
 local terminalLines = {
-	"     [ X ] > INITIALIZING LIBRARY.....",
-	"[ X ] > CATCHING IMAGES.....",
-    "  [ X ] > READING CONFIG FILES..",
-	"   [ X ] > LOADING UI MODULES.....",
-	"[ X ] > BOOTING X3.........."
+	{text = "> INITIALIZING CORE", color = Color3.fromRGB(159, 115, 255)},
+	{text = "> VERIFYING B VERSION", color = Color3.fromRGB(255, 215, 120)},
+	{text = "> CONFIGURING UI FRAMEWORK", color = Color3.fromRGB(159, 115, 255)},
+	{text = "> AUTHENTICATING BUILD V3.4B", color = Color3.fromRGB(100, 255, 150)},
+	{text = "> INITIALIZATION COMPLETE", color = Color3.fromRGB(100, 255, 150)}
 }
 
 coroutine.wrap(function()
 	for _, line in ipairs(terminalLines) do
-		addTerminalLine(line)
-		wait(0.4)
+		addTerminalLine(line.text, line.color)
+		wait(0.35)
 	end
 end)()
 
-local MinusAmount = -15
+-- Logo rotation with smooth deceleration
+local RotationSpeed = -20
 coroutine.wrap(function()
-	while true do
-		MinusAmount = MinusAmount + 0.4
-		TweenService:Create(xsxLogo, TweenTable["xsxRotation"], {Rotation = xsxLogo.Rotation - MinusAmount}):Play()
+	while xsxLogo.Parent do
+		RotationSpeed = RotationSpeed + 0.3
+		xsxLogo.Rotation = xsxLogo.Rotation - RotationSpeed * 0.1
 		wait()
 	end
 end)()
 
-TweenService:Create(edge, TweenTable["xsxRotation"], {BackgroundTransparency = 0}):Play()
-TweenService:Create(background, TweenTable["xsxRotation"], {BackgroundTransparency = 0}):Play()
-wait(0.2)
-TweenService:Create(bar, TweenTable["xsxRotation"], {Size = UDim2.new(0, 298, 0, 1)}):Play()
-wait(0.2)
-TweenService:Create(xsx, TweenTable["xsxRotation"], {TextTransparency = 0}):Play()
-TweenService:Create(text, TweenTable["xsxRotation"], {TextTransparency = 0}):Play()
-TweenService:Create(n3TextLabel, TweenTable["xsxRotation"], {TextTransparency = 0}):Play()
+-- Entrance animations with enhanced timing
+TweenService:Create(edge, TweenTable["Smooth"], {BackgroundTransparency = 0}):Play()
+TweenService:Create(background, TweenTable["Smooth"], {BackgroundTransparency = 0}):Play()
 wait(0.3)
-TweenService:Create(xsxLogo, TweenTable["xsxRotation"], {ImageTransparency = 0}):Play()
-wait(math.random(3,9))
-TweenService:Create(xsxLogo, TweenTable["xsxRotation"], {ImageTransparency = 1}):Play()
+
+-- Bar animation with shimmer
+TweenService:Create(bar, TweenTable["Smooth"], {Size = UDim2.new(0, 316, 0, 2)}):Play()
+task.spawn(function()
+	wait(0.2)
+	TweenService:Create(barShimmer, TweenInfo.new(0.6, Enum.EasingStyle.Linear), {
+		Position = UDim2.new(1, 0, 0, 0)
+	}):Play()
+end)
+
+wait(0.3)
+TweenService:Create(xsx, TweenTable["Bounce"], {TextTransparency = 0}):Play()
+wait(0.1)
+TweenService:Create(text, TweenTable["Bounce"], {TextTransparency = 0}):Play()
 wait(0.2)
-TweenService:Create(n3TextLabel, TweenTable["xsxRotation"], {TextTransparency = 1}):Play()
+TweenService:Create(n3TextLabel, TweenTable["Bounce"], {TextTransparency = 0}):Play()
+wait(0.15)
+TweenService:Create(specialEditionBadge, TweenTable["Bounce"], {
+	TextTransparency = 0,
+	BackgroundTransparency = 0.9
+}):Play()
+TweenService:Create(badgeStroke, TweenTable["Bounce"], {Transparency = 0.5}):Play()
+TweenService:Create(badgeDecorLeft, TweenTable["Bounce"], {TextTransparency = 0}):Play()
+TweenService:Create(badgeDecorRight, TweenTable["Bounce"], {TextTransparency = 0}):Play()
+
+-- Badge pulse effect
+task.spawn(function()
+	wait(1)
+	while specialEditionBadge.Parent do
+		TweenService:Create(specialEditionBadge, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			TextColor3 = Color3.fromRGB(255, 230, 150)
+		}):Play()
+		TweenService:Create(badgeDecorLeft, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			TextColor3 = Color3.fromRGB(255, 230, 150)
+		}):Play()
+		TweenService:Create(badgeDecorRight, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			TextColor3 = Color3.fromRGB(255, 230, 150)
+		}):Play()
+		wait(1)
+		TweenService:Create(specialEditionBadge, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			TextColor3 = Color3.fromRGB(255, 215, 120)
+		}):Play()
+		TweenService:Create(badgeDecorLeft, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			TextColor3 = Color3.fromRGB(255, 215, 120)
+		}):Play()
+		TweenService:Create(badgeDecorRight, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			TextColor3 = Color3.fromRGB(255, 215, 120)
+		}):Play()
+		wait(1)
+	end
+end)
+
+wait(0.3)
+TweenService:Create(xsxLogo, TweenTable["Bounce"], {ImageTransparency = 0}):Play()
+
+-- Hold the intro for dramatic effect
+wait(math.random(4, 7))
+
+-- Exit animations with proper sequencing
+TweenService:Create(xsxLogo, TweenTable["Smooth"], {
+	ImageTransparency = 1,
+	Rotation = xsxLogo.Rotation + 180
+}):Play()
+wait(0.15)
+TweenService:Create(specialEditionBadge, TweenTable["Fast"], {
+	TextTransparency = 1,
+	BackgroundTransparency = 1
+}):Play()
+TweenService:Create(badgeStroke, TweenTable["Fast"], {Transparency = 1}):Play()
+wait(0.15)
+TweenService:Create(n3TextLabel, TweenTable["Fast"], {TextTransparency = 1}):Play()
 wait(0.1)
-TweenService:Create(text, TweenTable["xsxRotation"], {TextTransparency = 1}):Play()
+TweenService:Create(text, TweenTable["Fast"], {TextTransparency = 1}):Play()
 wait(0.1)
-TweenService:Create(xsx, TweenTable["xsxRotation"], {TextTransparency = 1}):Play()
-wait(0.1)
-TweenService:Create(bar, TweenTable["xsxRotation"], {Size = UDim2.new(0, 0, 0, 1)}):Play()
-wait(0.1)
-TweenService:Create(background, TweenTable["xsxRotation"], {BackgroundTransparency = 1}):Play()
-TweenService:Create(edge, TweenTable["xsxRotation"], {BackgroundTransparency = 1}):Play()
+TweenService:Create(xsx, TweenTable["Fast"], {TextTransparency = 1}):Play()
+wait(0.15)
+TweenService:Create(bar, TweenTable["Smooth"], {Size = UDim2.new(0, 0, 0, 2)}):Play()
 wait(0.2)
+TweenService:Create(background, TweenTable["Smooth"], {BackgroundTransparency = 1}):Play()
+TweenService:Create(edge, TweenTable["Smooth"], {BackgroundTransparency = 1}):Play()
+--TweenService:Create(glowOuter, TweenTable["Smooth"], {ImageTransparency = 1}):Play()
+TweenService:Create(glowInner, TweenTable["Smooth"], {ImageTransparency = 1}):Play()
+wait(0.5)
 introduction:Destroy()
 
 end
-
-
-
-
-
-
 
 intro()
 
