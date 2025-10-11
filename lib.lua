@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.01"
+local version = "0.02"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2275,12 +2275,20 @@ function Funcs:AddToggle(Idx, Info)
     local Groupbox = self
     local Container = Groupbox.Container
 
+	local ToggleOuterOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(30, 30, 30);
+        BorderColor3 = Color3.new(30, 30, 30);
+        Size = UDim2.new(0, 13, 0, 13);
+        ZIndex = 7;
+        Parent = Container;
+    })
+
     local ToggleOuter = Library:Create('Frame', {
         BackgroundColor3 = Color3.new(0, 0, 0);
         BorderColor3 = Color3.new(0, 0, 0);
         Size = UDim2.new(0, 13, 0, 13);
         ZIndex = 5;
-        Parent = Container;
+        Parent = ToggleOuterOuter;
     })
 
     Library:AddToRegistry(ToggleOuter, {
