@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.001"
+local version = "0.003"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2571,6 +2571,11 @@ local ToggleOuter = Library:Create('Frame', {
         ZIndex = 8;
         Parent = ToggleOuter;
     })
+
+		if type(Info.Tooltip) == 'string' then
+    Library:AddToolTip(Info.Tooltip, ToggleRegion)
+end
+		
 
     ToggleRegion.MouseEnter:Connect(function()
         Toggle.IsHovered = true;
