@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.02	B	X"
+local version = "0.01	B	X"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2042,6 +2042,100 @@ do
 
         return Label;
     end;
+
+
+function Funcs:AddVariableLabel(Text, Variable, UpdateInterval)
+    local VarLabel = {}
+    
+    local Groupbox = self
+    local Container = Groupbox.Container
+    
+    UpdateInterval = UpdateInterval or 0.1 -- Default update every 0.1 seconds
+    
+    local TextLabel = Library:CreateLabel({
+        Size = UDim2.new(1, -4, 0, 15)
+        TextSize = 14
+        Text = Text
+        TextWrapped = false
+        TextXAlignment = Enum.TextXAlignment.Left
+        ZIndex = 5
+        Parent = Container
+    })
+    
+    Library:Create('UIListLayout', {
+        Padding = UDim.new(0, 4)
+        FillDirection = Enum.FillDirection.Horizontal
+        HorizontalAlignment = Enum.HorizontalAlignment.Right
+        SortOrder = Enum.SortOrder.LayoutOrder
+        Parent = TextLabel
+    })
+    
+    VarLabel.TextLabel = TextLabel
+    VarLabel.Container = Container
+    VarLabel.Variable = Variable
+    VarLabel.BaseText = Text
+    VarLabel.Updating = true
+    
+    -- Function to update the label
+    function VarLabel:Update()
+        if type(VarLabel.Variable) == "function" then
+            -- If variable is a function, call it to get the value
+            local success, result = pcall(VarLabel.Variable)
+            if success then
+                TextLabel.Text = VarLabel.BaseText .. tostring(result)
+            else
+                TextLabel.Text = VarLabel.BaseText .. "Error"
+            end
+        else
+            -- If it's a direct value
+            TextLabel.Text = VarLabel.BaseText .. tostring(VarLabel.Variable)
+        end
+        
+        Groupbox:Resize()
+    end
+    
+    -- Set new variable/function to track
+    function VarLabel:SetVariable(NewVariable)
+        VarLabel.Variable = NewVariable
+        VarLabel:Update()
+    end
+    
+    -- Change the base text
+    function VarLabel:SetText(NewText)
+        VarLabel.BaseText = NewText
+        VarLabel:Update()
+    end
+    
+    -- Stop updating
+    function VarLabel:Stop()
+        VarLabel.Updating = false
+    end
+    
+    -- Resume updating
+    function VarLabel:Resume()
+        VarLabel.Updating = true
+    end
+    
+    -- Start the update loop
+    task.spawn(function()
+        while VarLabel.TextLabel and VarLabel.TextLabel.Parent and VarLabel.Updating do
+            VarLabel:Update()
+            task.wait(UpdateInterval)
+        end
+    end)
+    
+    -- Initial update
+    VarLabel:Update()
+    
+    setmetatable(VarLabel, BaseAddons)
+    
+    Groupbox:AddBlank(5)
+    Groupbox:Resize()
+    
+    return VarLabel
+end
+
+	
 
   local TweenService = game:GetService('TweenService')
 
