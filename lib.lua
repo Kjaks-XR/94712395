@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.01	B	X"
+local version = "0.01	B	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2053,21 +2053,21 @@ function Funcs:AddVariableLabel(Text, Variable, UpdateInterval)
     UpdateInterval = UpdateInterval or 0.1 -- Default update every 0.1 seconds
     
     local TextLabel = Library:CreateLabel({
-        Size = UDim2.new(1, -4, 0, 15)
-        TextSize = 14
-        Text = Text
-        TextWrapped = false
-        TextXAlignment = Enum.TextXAlignment.Left
-        ZIndex = 5
-        Parent = Container
+        Size = UDim2.new(1, -4, 0, 15),
+        TextSize = 14,
+        Text = Text,
+        TextWrapped = false,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 5,
+        Parent = Container,
     })
     
     Library:Create('UIListLayout', {
-        Padding = UDim.new(0, 4)
-        FillDirection = Enum.FillDirection.Horizontal
-        HorizontalAlignment = Enum.HorizontalAlignment.Right
-        SortOrder = Enum.SortOrder.LayoutOrder
-        Parent = TextLabel
+        Padding = UDim.new(0, 4),
+        FillDirection = Enum.FillDirection.Horizontal,
+        HorizontalAlignment = Enum.HorizontalAlignment.Right,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = TextLabel,
     })
     
     VarLabel.TextLabel = TextLabel
