@@ -5,6 +5,67 @@ local httpService = game:GetService('HttpService')
 local SaveManager = {} do
 	SaveManager.Folder = 'LinoriaLibSettings'
 	SaveManager.Ignore = {}
+	
+	-- Obfuscation characters
+	local NOISE_CHARS = ">£#$½{{[]}@"
+	
+	-- Helper function to encode to base64
+	local function base64Encode(str)
+		local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+		return ((str:gsub('.', function(x)
+			local r, b = '', x:byte()
+			for i = 8, 1, -1 do r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0') end
+			return r
+		end) .. '0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+			if (#x < 6) then return '' end
+			local c = 0
+			for i = 1, 6 do c = c + (x:sub(i, i) == '1' and 2 ^ (6 - i) or 0) end
+			return b:sub(c + 1, c + 1)
+		end)) .. ({'', '==', '='})[#str % 3 + 1]
+	end
+	
+	-- Helper function to decode from base64
+	local function base64Decode(str)
+		local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+		str = str:gsub('[^' .. b .. '=]', '')
+		return (str:gsub('.', function(x)
+			if (x == '=') then return '' end
+			local r, b = '', b:find(x) - 1
+			for i = 6, 1, -1 do r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0') end
+			return r
+		end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
+			if (#x ~= 8) then return '' end
+			local c = 0
+			for i = 1, 8 do c = c + (x:sub(i, i) == '1' and 2 ^ (8 - i) or 0) end
+			return string.char(c)
+		end))
+	end
+	
+	-- Inject random noise into string
+	local function injectNoise(str)
+		local result = ''
+		for i = 1, #str do
+			result = result .. str:sub(i, i)
+			-- Randomly add noise characters (30% chance)
+			if math.random(100) <= 30 then
+				result = result .. NOISE_CHARS:sub(math.random(1, #NOISE_CHARS), math.random(1, #NOISE_CHARS))
+			end
+		end
+		return result
+	end
+	
+	-- Remove noise from string
+	local function removeNoise(str)
+		local result = ''
+		for i = 1, #str do
+			local char = str:sub(i, i)
+			if not NOISE_CHARS:find(char, 1, true) then
+				result = result .. char
+			end
+		end
+		return result
+	end
+	
 	SaveManager.Parser = {
 		Toggle = {
 			Save = function(idx, object) 
@@ -98,7 +159,11 @@ local SaveManager = {} do
 		local success, encoded = pcall(httpService.JSONEncode, httpService, data)
 		if not success then return false, 'failed to encode data' end
 
-		writefile(fullPath, encoded)
+		-- Encode to base64 and inject noise
+		local base64 = base64Encode(encoded)
+		local obfuscated = injectNoise(base64)
+
+		writefile(fullPath, obfuscated)
 		return true
 	end
 
@@ -107,7 +172,13 @@ local SaveManager = {} do
 		local file = self.Folder .. '/settings/' .. name .. '.json'
 		if not isfile(file) then return false, 'invalid file' end
 
-		local success, decoded = pcall(httpService.JSONDecode, httpService, readfile(file))
+		local fileContent = readfile(file)
+		
+		-- Remove noise and decode from base64
+		local cleaned = removeNoise(fileContent)
+		local decoded_str = base64Decode(cleaned)
+		
+		local success, decoded = pcall(httpService.JSONDecode, httpService, decoded_str)
 		if not success then return false, 'decode error' end
 
 		-- Store original callbacks
