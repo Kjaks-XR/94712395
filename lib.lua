@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.02	A	X    HOT-FIX"
+local version = "0.02	B	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2859,7 +2859,6 @@ local DisplayLabel = Library:CreateLabel({
     Parent = SliderInner;
 });
 
-		Slider:Display();
 
         Library:OnHighlight(SliderOuter, SliderOuter,
             { BorderColor3 = 'AccentColor' },
