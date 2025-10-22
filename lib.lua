@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.01	B	X    HOT-FIX"
+local version = "0.02	A	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2147,14 +2147,16 @@ function Funcs:AddButton(...)
             Parent = Outer;
         });
 
-        local Label = Library:CreateLabel({
-            Size = UDim2.new(1, 0, 1, 0);
-            TextSize = 14;
-            Text = Button.Text;
-            TextColor3 = Color3.fromRGB(150, 150, 150); -- Start with gray text
-            ZIndex = 6;
-            Parent = Inner;
-        });
+
+local Label = Library:CreateLabel({
+    Size = UDim2.new(1, 0, 1, 0);
+    TextSize = 14;
+    Text = Button.Text;
+    TextColor3 = Color3.fromRGB(150, 150, 150); -- START GREY, NOT WHITE
+    ZIndex = 6;
+    Parent = Inner;
+});
+
 
         Library:Create('UIGradient', {
             Color = ColorSequence.new({
@@ -2779,23 +2781,23 @@ function Funcs:AddSlider(Idx, Info)
         local Groupbox = self;
         local Container = Groupbox.Container;
 
-        local TitleLabel
-        if not Info.Compact then
-            TitleLabel = Library:CreateLabel({
-                Size = UDim2.new(1, 0, 0, 10);
-                TextSize = 14;
-                Text = Info.Text;
-                TextXAlignment = Enum.TextXAlignment.Left;
-                TextYAlignment = Enum.TextYAlignment.Bottom;
-                ZIndex = 5;
-                Parent = Container;
-            });
+local TitleLabel
+if not Info.Compact then
+    TitleLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 10);
+        TextSize = 14;
+        Text = Info.Text;
+        TextXAlignment = Enum.TextXAlignment.Left;
+        TextYAlignment = Enum.TextYAlignment.Bottom;
+        ZIndex = 5;
+        Parent = Container;
+    });
 
-            -- Başlangıçta gri renk ayarla
-            TitleLabel.TextColor3 = Color3.fromRGB(128, 128, 128);
+    -- START WITH GREY COLOR
+    TitleLabel.TextColor3 = Color3.fromRGB(128, 128, 128);
 
-            Groupbox:AddBlank(3);
-        end
+    Groupbox:AddBlank(3);
+end
 
         local SliderOuter = Library:Create('Frame', {
             BackgroundColor3 = Color3.new(0, 0, 0);
@@ -2849,13 +2851,15 @@ function Funcs:AddSlider(Idx, Info)
             BackgroundColor3 = 'AccentColor';
         });
 
-        local DisplayLabel = Library:CreateLabel({
-            Size = UDim2.new(1, 0, 1, 0);
-            TextSize = 14;
-            Text = 'Infinite';
-            ZIndex = 9;
-            Parent = SliderInner;
-        });
+local DisplayLabel = Library:CreateLabel({
+    Size = UDim2.new(1, 0, 1, 0);
+    TextSize = 14;
+    -- Don't set Text = 'Infinite', let Display() set it
+    ZIndex = 9;
+    Parent = SliderInner;
+});
+
+		Slider:Display();
 
         Library:OnHighlight(SliderOuter, SliderOuter,
             { BorderColor3 = 'AccentColor' },
@@ -2892,37 +2896,20 @@ function Funcs:AddSlider(Idx, Info)
 
 function Slider:Display()
     local Suffix = Info.Suffix or '';
-    local targetValue = Slider.Value;
-    local currentDisplayValue = tonumber(DisplayLabel.Text:match("%d+")) or 0;
-
-    local steps = 10;
-    local increment = (targetValue - currentDisplayValue) / steps;
-
-    task.spawn(function()
-        for i = 1, steps do
-            task.wait(0.02);
-            currentDisplayValue = currentDisplayValue + increment;
-            if Info.Compact then
-                DisplayLabel.Text = Info.Text .. ': ' .. math.floor(currentDisplayValue) .. Suffix;
-            elseif Info.HideMax then
-                DisplayLabel.Text = string.format('%s', math.floor(currentDisplayValue) .. Suffix);
-            else
-                DisplayLabel.Text = string.format('%d/%d', math.floor(currentDisplayValue), Slider.Max) .. Suffix;
-            end
-        end
-        if Info.Compact then
-            DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix;
-        elseif Info.HideMax then
-            DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix);
-        else
-            DisplayLabel.Text = string.format('%d/%d', Slider.Value, Slider.Max) .. Suffix;
-        end
-    end);
+    
+    if Info.Compact then
+        DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix;
+    elseif Info.HideMax then
+        DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix);
+    else
+        DisplayLabel.Text = string.format('%d/%d', Slider.Value, Slider.Max) .. Suffix;
+    end
 
     local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
     Slider:TweenFill(UDim2.new(0, X, 1, 0));
     HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
 end;
+
 
 
         function Slider:OnChanged(Func)
