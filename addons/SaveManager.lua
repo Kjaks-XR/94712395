@@ -1,4 +1,4 @@
-print"save manager loaded 0.2 for series B - FIXED - 	S"
+print"save manager loaded 0.2 for series B - FIXED"
 
 local httpService = game:GetService('HttpService')
 
@@ -6,8 +6,8 @@ local SaveManager = {} do
 	SaveManager.Folder = 'LinoriaLibSettings'
 	SaveManager.Ignore = {}
 	
-	-- Obfuscation characters
-	local NOISE_CHARS = ">£#$½{{[]}@"
+	-- Obfuscation characters - much wider variety
+	local NOISE_CHARS = ">£#$½{{[]}@_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~!¥¢¡¿§¶†‡€™®©℗←↑→↓↔"
 	
 	-- Helper function to encode to base64
 	local function base64Encode(str)
@@ -46,8 +46,8 @@ local SaveManager = {} do
 		local result = ''
 		for i = 1, #str do
 			result = result .. str:sub(i, i)
-			-- Randomly add 1-3 noise characters
-			local noiseCount = math.random(1, 3)
+			-- Randomly add 2-8 noise characters with random intervals
+			local noiseCount = math.random(2, 8)
 			for _ = 1, noiseCount do
 				local randomChar = NOISE_CHARS:sub(math.random(1, #NOISE_CHARS), math.random(1, #NOISE_CHARS))
 				result = result .. randomChar
@@ -204,9 +204,6 @@ local SaveManager = {} do
 				end)
 			end
 		end
-
-		-- Wait a frame for all values to apply
-		task.wait()
 
 		-- Restore callbacks (do NOT trigger them during load)
 		for idx, toggle in next, Toggles do
