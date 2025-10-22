@@ -1,4 +1,4 @@
-print"save manager loaded 0.2 for series B - FIXED	S"
+print"save manager loaded 0.2 for series B - FIXED 	S"
 
 local httpService = game:GetService('HttpService')
 
@@ -75,7 +75,7 @@ local SaveManager = {} do
 		local key = math.random(1, 255)
 		local result = string.char(key)
 		for i = 1, #str do
-			result = result .. string.char(str:byte(i) ~ key)
+			result = result .. string.char(bit32.bxor(str:byte(i), key))
 		end
 		return result
 	end
@@ -86,7 +86,7 @@ local SaveManager = {} do
 		local key = str:byte(1)
 		local result = ''
 		for i = 2, #str do
-			result = result .. string.char(str:byte(i) ~ key)
+			result = result .. string.char(bit32.bxor(str:byte(i), key))
 		end
 		return result
 	end
