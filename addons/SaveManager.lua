@@ -1,4 +1,4 @@
-print"save manager loaded 0.2 for series B - FIXED 	S"
+print"save manager loaded 0.2 for series B - FIXED"
 
 local httpService = game:GetService('HttpService')
 
@@ -91,14 +91,36 @@ local SaveManager = {} do
 		return result
 	end
 	
+	-- Hex encode
+	local function hexEncode(str)
+		local result = ''
+		for i = 1, #str do
+			result = result .. string.format('%02x', str:byte(i))
+		end
+		return result
+	end
+	
+	-- Hex decode
+	local function hexDecode(str)
+		local result = ''
+		for i = 1, #str, 2 do
+			local hex = str:sub(i, i + 1)
+			result = result .. string.char(tonumber(hex, 16))
+		end
+		return result
+	end
+	
 	SaveManager.Parser = {
 		Toggle = {
 			Save = function(idx, object) 
 				return { type = 'Toggle', idx = idx, value = object.Value } 
 			end,
 			Load = function(idx, data)
-				if Toggles[idx] then 
+				if Toggles[idx] then
+					local oldOnChange = Toggles[idx].OnChange
+					Toggles[idx].OnChange = nil
 					Toggles[idx]:SetValue(data.value)
+					Toggles[idx].OnChange = oldOnChange
 				end
 			end,
 		},
@@ -107,8 +129,11 @@ local SaveManager = {} do
 				return { type = 'Slider', idx = idx, value = object.Value }
 			end,
 			Load = function(idx, data)
-				if Options[idx] then 
+				if Options[idx] then
+					local oldOnChange = Options[idx].OnChange
+					Options[idx].OnChange = nil
 					Options[idx]:SetValue(tonumber(data.value) or data.value)
+					Options[idx].OnChange = oldOnChange
 				end
 			end,
 		},
@@ -192,8 +217,11 @@ local SaveManager = {} do
 		
 		-- Layer 3: Bytecode encode
 		local bytecoded = bytecodeEncode(obfuscated)
+		
+		-- Layer 4: Hex encode
+		local hexed = hexEncode(bytecoded)
 
-		writefile(fullPath, bytecoded)
+		writefile(fullPath, hexed)
 		return true
 	end
 
@@ -204,8 +232,11 @@ local SaveManager = {} do
 
 		local fileContent = readfile(file)
 		
+		-- Layer 4: Hex decode
+		local decoded_hex = hexDecode(fileContent)
+		
 		-- Layer 3: Bytecode decode
-		local decoded_bytecode = bytecodeDecode(fileContent)
+		local decoded_bytecode = bytecodeDecode(decoded_hex)
 		
 		-- Layer 2: Remove noise
 		local cleaned = removeNoise(decoded_bytecode)
