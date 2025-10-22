@@ -1,4 +1,4 @@
-print"save manager loaded 0.2 for series B - FIXED"
+print"save manager loaded 0.2 for series B - FIXED - 	S"
 
 local httpService = game:GetService('HttpService')
 
@@ -46,9 +46,11 @@ local SaveManager = {} do
 		local result = ''
 		for i = 1, #str do
 			result = result .. str:sub(i, i)
-			-- Randomly add noise characters (30% chance)
-			if math.random(100) <= 30 then
-				result = result .. NOISE_CHARS:sub(math.random(1, #NOISE_CHARS), math.random(1, #NOISE_CHARS))
+			-- Randomly add 1-3 noise characters
+			local noiseCount = math.random(1, 3)
+			for _ = 1, noiseCount do
+				local randomChar = NOISE_CHARS:sub(math.random(1, #NOISE_CHARS), math.random(1, #NOISE_CHARS))
+				result = result .. randomChar
 			end
 		end
 		return result
@@ -181,7 +183,7 @@ local SaveManager = {} do
 		local success, decoded = pcall(httpService.JSONDecode, httpService, decoded_str)
 		if not success then return false, 'decode error' end
 
-		-- Store original callbacks
+		-- Store original callbacks and disable them all
 		local originalCallbacks = {}
 		
 		for idx, toggle in next, Toggles do
@@ -194,13 +196,11 @@ local SaveManager = {} do
 			option.OnChange = nil
 		end
 
-		-- Load all values
+		-- Load all values without triggering callbacks
 		for _, option in next, decoded.objects do
 			if self.Parser[option.type] then
-				task.spawn(function()
-					pcall(function()
-						self.Parser[option.type].Load(option.idx, option)
-					end)
+				pcall(function()
+					self.Parser[option.type].Load(option.idx, option)
 				end)
 			end
 		end
@@ -208,23 +208,13 @@ local SaveManager = {} do
 		-- Wait a frame for all values to apply
 		task.wait()
 
-		-- Restore callbacks and trigger them
+		-- Restore callbacks (do NOT trigger them during load)
 		for idx, toggle in next, Toggles do
 			toggle.OnChange = originalCallbacks[idx]
-			if toggle.OnChange and toggle.Value ~= nil then
-				task.spawn(function()
-					pcall(toggle.OnChange, toggle.Value)
-				end)
-			end
 		end
 
 		for idx, option in next, Options do
 			option.OnChange = originalCallbacks[idx]
-			if option.OnChange and option.Value ~= nil then
-				task.spawn(function()
-					pcall(option.OnChange, option.Value)
-				end)
-			end
 		end
 
 		return true
