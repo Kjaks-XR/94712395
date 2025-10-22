@@ -1,4 +1,4 @@
-print"save manager loaded 0.2 for series B - FIXED"
+print"save manager loaded 0.2 for series B - FIXED	S"
 
 local httpService = game:GetService('HttpService')
 
@@ -6,8 +6,8 @@ local SaveManager = {} do
 	SaveManager.Folder = 'LinoriaLibSettings'
 	SaveManager.Ignore = {}
 	
-	-- Obfuscation characters - much wider variety
-	local NOISE_CHARS = ">£#$½{{[]}@_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~!¥¢¡¿§¶†‡€™®©℗←↑→↓↔"
+	-- Obfuscation characters - wide variety but moderate
+	local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†‡€™"
 	
 	-- Helper function to encode to base64
 	local function base64Encode(str)
@@ -41,16 +41,18 @@ local SaveManager = {} do
 		end))
 	end
 	
-	-- Inject random noise into string
+	-- Inject random noise into string (moderate amount)
 	local function injectNoise(str)
 		local result = ''
 		for i = 1, #str do
 			result = result .. str:sub(i, i)
-			-- Randomly add 2-8 noise characters with random intervals
-			local noiseCount = math.random(2, 8)
-			for _ = 1, noiseCount do
-				local randomChar = NOISE_CHARS:sub(math.random(1, #NOISE_CHARS), math.random(1, #NOISE_CHARS))
-				result = result .. randomChar
+			-- Randomly add 1-2 noise characters (15% chance)
+			if math.random(100) <= 15 then
+				local noiseCount = math.random(1, 2)
+				for _ = 1, noiseCount do
+					local randomChar = NOISE_CHARS:sub(math.random(1, #NOISE_CHARS), math.random(1, #NOISE_CHARS))
+					result = result .. randomChar
+				end
 			end
 		end
 		return result
@@ -64,6 +66,27 @@ local SaveManager = {} do
 			if not NOISE_CHARS:find(char, 1, true) then
 				result = result .. char
 			end
+		end
+		return result
+	end
+	
+	-- Simple bytecode layer (XOR encryption with random key)
+	local function bytecodeEncode(str)
+		local key = math.random(1, 255)
+		local result = string.char(key)
+		for i = 1, #str do
+			result = result .. string.char(str:byte(i) ~ key)
+		end
+		return result
+	end
+	
+	-- Bytecode decode
+	local function bytecodeDecode(str)
+		if #str < 1 then return '' end
+		local key = str:byte(1)
+		local result = ''
+		for i = 2, #str do
+			result = result .. string.char(str:byte(i) ~ key)
 		end
 		return result
 	end
@@ -161,11 +184,16 @@ local SaveManager = {} do
 		local success, encoded = pcall(httpService.JSONEncode, httpService, data)
 		if not success then return false, 'failed to encode data' end
 
-		-- Encode to base64 and inject noise
+		-- Layer 1: Base64 encode
 		local base64 = base64Encode(encoded)
+		
+		-- Layer 2: Inject noise
 		local obfuscated = injectNoise(base64)
+		
+		-- Layer 3: Bytecode encode
+		local bytecoded = bytecodeEncode(obfuscated)
 
-		writefile(fullPath, obfuscated)
+		writefile(fullPath, bytecoded)
 		return true
 	end
 
@@ -176,14 +204,19 @@ local SaveManager = {} do
 
 		local fileContent = readfile(file)
 		
-		-- Remove noise and decode from base64
-		local cleaned = removeNoise(fileContent)
+		-- Layer 3: Bytecode decode
+		local decoded_bytecode = bytecodeDecode(fileContent)
+		
+		-- Layer 2: Remove noise
+		local cleaned = removeNoise(decoded_bytecode)
+		
+		-- Layer 1: Base64 decode
 		local decoded_str = base64Decode(cleaned)
 		
 		local success, decoded = pcall(httpService.JSONDecode, httpService, decoded_str)
 		if not success then return false, 'decode error' end
 
-		-- Store original callbacks and disable them all
+		-- Disable all callbacks before loading
 		local originalCallbacks = {}
 		
 		for idx, toggle in next, Toggles do
@@ -196,7 +229,7 @@ local SaveManager = {} do
 			option.OnChange = nil
 		end
 
-		-- Load all values without triggering callbacks
+		-- Load all values silently (no callbacks triggered)
 		for _, option in next, decoded.objects do
 			if self.Parser[option.type] then
 				pcall(function()
@@ -205,7 +238,7 @@ local SaveManager = {} do
 			end
 		end
 
-		-- Restore callbacks (do NOT trigger them during load)
+		-- Restore callbacks (without triggering them)
 		for idx, toggle in next, Toggles do
 			toggle.OnChange = originalCallbacks[idx]
 		end
