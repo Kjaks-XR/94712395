@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.02	B	X    HOT-FIX"
+local version = "0.03	B	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -3874,6 +3874,127 @@ function Library:Notify(Text, Time)
     end);
 end;
 
+
+
+function Library:FadeOutTab(TabFrame)
+    local function FadeElement(Element)
+        if Element:IsA('ImageLabel') then
+            TweenService:Create(Element, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
+                { ImageTransparency = 1 }):Play();
+        elseif Element:IsA('TextLabel') or Element:IsA('TextBox') then
+            TweenService:Create(Element, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
+                { TextTransparency = 1 }):Play();
+        elseif Element:IsA('Frame') or Element:IsA('ScrollingFrame') then
+            TweenService:Create(Element, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
+                { BackgroundTransparency = 1 }):Play();
+        elseif Element:IsA('UIStroke') then
+            TweenService:Create(Element, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
+                { Transparency = 1 }):Play();
+        end;
+    end;
+
+    for _, Element in next, TabFrame:GetDescendants() do
+        FadeElement(Element);
+    end;
+    FadeElement(TabFrame);
+
+    task.wait(0.2);
+    TabFrame.Visible = false;
+end;
+
+function Library:FadeInTab(TabFrame)
+    -- Transparent durumdan başlat
+    local function SetTransparent(Element)
+        if Element:IsA('ImageLabel') then
+            Element.ImageTransparency = 1;
+        elseif Element:IsA('TextLabel') or Element:IsA('TextBox') then
+            Element.TextTransparency = 1;
+        elseif Element:IsA('Frame') or Element:IsA('ScrollingFrame') then
+            Element.BackgroundTransparency = 1;
+        elseif Element:IsA('UIStroke') then
+            Element.Transparency = 1;
+        end;
+    end;
+
+    -- Tüm elementleri transparan yap
+    for _, Element in next, TabFrame:GetDescendants() do
+        SetTransparent(Element);
+    end;
+    SetTransparent(TabFrame);
+
+    -- Şimdi fade-in animasyonunu başlat
+    local function FadeElement(Element)
+        if Element:IsA('ImageLabel') then
+            TweenService:Create(Element, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+                { ImageTransparency = 0 }):Play();
+        elseif Element:IsA('TextLabel') or Element:IsA('TextBox') then
+            TweenService:Create(Element, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+                { TextTransparency = 0 }):Play();
+        elseif Element:IsA('Frame') or Element:IsA('ScrollingFrame') then
+            TweenService:Create(Element, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+                { BackgroundTransparency = 0 }):Play();
+        elseif Element:IsA('UIStroke') then
+            TweenService:Create(Element, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+                { Transparency = 0 }):Play();
+        end;
+    end;
+
+    for _, Element in next, TabFrame:GetDescendants() do
+        FadeElement(Element);
+    end;
+    FadeElement(TabFrame);
+end;
+
+-- Alternatif: Daha performanslı versiyon (nested elements animasyonunu sırayla yap)
+
+function Library:FadeOutTabStaggered(TabFrame)
+    local Elements = TabFrame:GetDescendants();
+    
+    for i, Element in next, Elements do
+        local delay = (i - 1) * 0.02;
+        task.delay(delay, function()
+            if Element:IsA('TextLabel') or Element:IsA('TextBox') then
+                TweenService:Create(Element, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
+                    { TextTransparency = 1 }):Play();
+            elseif Element:IsA('Frame') or Element:IsA('ScrollingFrame') then
+                TweenService:Create(Element, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
+                    { BackgroundTransparency = 1 }):Play();
+            end;
+        end);
+    end;
+
+    task.wait(0.25);
+    TabFrame.Visible = false;
+end;
+
+function Library:FadeInTabStaggered(TabFrame)
+    local Elements = TabFrame:GetDescendants();
+    
+    -- Önce hepsi transparan
+    for _, Element in next, Elements do
+        if Element:IsA('TextLabel') or Element:IsA('TextBox') then
+            Element.TextTransparency = 1;
+        elseif Element:IsA('Frame') or Element:IsA('ScrollingFrame') then
+            Element.BackgroundTransparency = 1;
+        end;
+    end;
+
+    -- Sonra sırayla fade-in
+    for i, Element in next, Elements do
+        local delay = (i - 1) * 0.02;
+        task.delay(delay, function()
+            if Element:IsA('TextLabel') or Element:IsA('TextBox') then
+                TweenService:Create(Element, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+                    { TextTransparency = 0 }):Play();
+            elseif Element:IsA('Frame') or Element:IsA('ScrollingFrame') then
+                TweenService:Create(Element, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+                    { BackgroundTransparency = 0 }):Play();
+            end;
+        end);
+    end;
+end;
+
+
 function Library:CreateWindow(...)
     local Arguments = { ... }
     local Config = { AnchorPoint = Vector2.zero }
@@ -4101,23 +4222,31 @@ function Library:CreateWindow(...)
             end);
         end;
 
-        function Tab:ShowTab()
-            for _, Tab in next, Window.Tabs do
-                Tab:HideTab();
-            end;
 
-            Blocker.BackgroundTransparency = 0;
-            TabButton.BackgroundColor3 = Library.MainColor;
-            Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'MainColor';
-            TabFrame.Visible = true;
+function Tab:ShowTab()
+    for _, OtherTab in next, Window.Tabs do
+        if OtherTab ~= Tab then
+            OtherTab:HideTab();
         end;
+    end;
 
-        function Tab:HideTab()
-            Blocker.BackgroundTransparency = 1;
-            TabButton.BackgroundColor3 = Library.BackgroundColor;
-            Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'BackgroundColor';
-            TabFrame.Visible = false;
-        end;
+    Blocker.BackgroundTransparency = 0;
+    TabButton.BackgroundColor3 = Library.MainColor;
+    Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'MainColor';
+    
+    -- Fade-in animasyonu başlat
+    Library:FadeInTab(TabFrame);
+    TabFrame.Visible = true;
+end;
+
+function Tab:HideTab()
+    Blocker.BackgroundTransparency = 1;
+    TabButton.BackgroundColor3 = Library.BackgroundColor;
+    Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'BackgroundColor';
+    
+    -- Fade-out animasyonu
+    Library:FadeOutTab(TabFrame);
+end;
 
         function Tab:SetLayoutOrder(Position)
             TabButton.LayoutOrder = Position;
