@@ -3813,104 +3813,104 @@ function Library:Notify(Text, Time, NotifyType)
     YSize = YSize + 7
     
     local NotifyOuter = Library:Create('Frame', {
-        BorderColor3 = Color3.new(0, 0, 0)
-        Position = UDim2.new(0, 100, 0, 10)
-        Size = UDim2.new(0, 0, 0, YSize)
-        ClipsDescendants = true
-        ZIndex = 100
-        Parent = Library.NotificationArea
+        BorderColor3 = Color3.new(0, 0, 0),
+        Position = UDim2.new(0, 100, 0, 10),
+        Size = UDim2.new(0, 0, 0, YSize),
+        ClipsDescendants = true,
+        ZIndex = 100,
+        Parent = Library.NotificationArea,
     })
     
     local NotifyInner = Library:Create('Frame', {
-        BackgroundColor3 = Colors.main
-        BorderColor3 = Colors.accent
-        BorderMode = Enum.BorderMode.Inset
-        Size = UDim2.new(1, 0, 1, 0)
-        ZIndex = 101
-        Parent = NotifyOuter
+        BackgroundColor3 = Colors.main,
+        BorderColor3 = Colors.accent,
+        BorderMode = Enum.BorderMode.Inset,
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 101,
+        Parent = NotifyOuter,
     })
     
     local InnerFrame = Library:Create('Frame', {
-        BackgroundColor3 = Color3.new(1, 1, 1)
-        BorderSizePixel = 0
-        Position = UDim2.new(0, 1, 0, 1)
-        Size = UDim2.new(1, -2, 1, -2)
-        ZIndex = 102
-        Parent = NotifyInner
+        BackgroundColor3 = Color3.new(1, 1, 1),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 1, 0, 1),
+        Size = UDim2.new(1, -2, 1, -2),
+        ZIndex = 102,
+        Parent = NotifyInner,
     })
     
     local Gradient = Library:Create('UIGradient', {
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Colors.main)),
             ColorSequenceKeypoint.new(1, Colors.main),
-        })
-        Rotation = -90
-        Parent = InnerFrame
+        }),
+        Rotation = -90,
+        Parent = InnerFrame,
     })
     
     local CornerRadius = Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6)
-        Parent = NotifyInner
+        CornerRadius = UDim.new(0, 6),
+        Parent = NotifyInner,
     })
     
     -- Icon placeholder (circle with color)
     local IconBg = Library:Create('Frame', {
-        BackgroundColor3 = Colors.accent
-        BorderSizePixel = 0
-        Position = UDim2.new(0, 2, 0.5, -8)
-        Size = UDim2.new(0, 16, 0, 16)
-        ZIndex = 103
-        Parent = InnerFrame
+        BackgroundColor3 = Colors.accent,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 2, 0.5, -8),
+        Size = UDim2.new(0, 16, 0, 16),
+        ZIndex = 103,
+        Parent = InnerFrame,
     })
     
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 4)
-        Parent = IconBg
+        CornerRadius = UDim.new(0, 4),
+        Parent = IconBg,
     })
     
     local NotifyLabel = Library:CreateLabel({
-        Position = UDim2.new(0, 22, 0, 0)
-        Size = UDim2.new(1, -26, 1, 0)
-        Text = Text
-        TextXAlignment = Enum.TextXAlignment.Left
-        TextSize = 14
-        ZIndex = 103
-        Parent = InnerFrame
+        Position = UDim2.new(0, 22, 0, 0),
+        Size = UDim2.new(1, -26, 1, 0),
+        Text = Text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextSize = 14,
+        ZIndex = 103,
+        Parent = InnerFrame,
     })
     
     -- Animated left accent bar
     local LeftColor = Library:Create('Frame', {
-        BackgroundColor3 = Colors.accent
-        BorderSizePixel = 0
-        Position = UDim2.new(0, -1, 0, -1)
-        Size = UDim2.new(0, 3, 1, 2)
-        ZIndex = 104
-        Parent = NotifyOuter
+        BackgroundColor3 = Colors.accent,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, -1, 0, -1),
+        Size = UDim2.new(0, 3, 1, 2),
+        ZIndex = 104,
+        Parent = NotifyOuter,
     })
     
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 2)
-        Parent = LeftColor
+        CornerRadius = UDim.new(0, 2),
+        Parent = LeftColor,
     })
     
     -- Premium progress bar at bottom
     local ProgressBg = Library:Create('Frame', {
-        BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        BackgroundTransparency = 0.4
-        BorderSizePixel = 0
-        Position = UDim2.new(0, 0, 1, -3)
-        Size = UDim2.new(1, 0, 0, 3)
-        ZIndex = 105
-        Parent = NotifyInner
+        BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+        BackgroundTransparency = 0.4,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 0, 1, -3),
+        Size = UDim2.new(1, 0, 0, 3),
+        ZIndex = 105,
+        Parent = NotifyInner,
     })
     
     local ProgressBar = Library:Create('Frame', {
-        BackgroundColor3 = Colors.accent
-        BorderSizePixel = 0
-        Position = UDim2.new(0, 0, 0, 0)
-        Size = UDim2.new(1, 0, 1, 0)
-        ZIndex = 106
-        Parent = ProgressBg
+        BackgroundColor3 = Colors.accent,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 106,
+        Parent = ProgressBg,
     })
     
     -- Glow effect on progress bar
@@ -3919,9 +3919,9 @@ function Library:Notify(Text, Time, NotifyType)
             ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
             ColorSequenceKeypoint.new(0.5, Colors.accent),
             ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1)),
-        })
-        Rotation = 0
-        Parent = ProgressBar
+        }),
+        Rotation = 0,
+        Parent = ProgressBar,
     })
     
     -- Entry animation
