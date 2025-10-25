@@ -1663,12 +1663,14 @@ task.spawn(Pulse)
         });
 
 local ModeSelectOuter = Library:Create('Frame', {
-    BorderColor3 = Color3.new(0, 0, 0);
-    Size = UDim2.new(0, 60, 0, 47);
+    BorderColor3 = Color3.new(0,0,0);
+    Size = UDim2.new(0,60,0,47);
     Visible = false;
     ZIndex = 14;
-    Parent = ScreenGui;
+    Parent = PickOuter; -- artık ToggleLabel’in parent’ı
+    Position = UDim2.new(1,4,0,0); -- ToggleLabel’in sağında
 });
+
 
 local function UpdatePos()
     local absPos = ToggleLabel.AbsolutePosition
