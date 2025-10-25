@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.02	B	X    HOT-FIX"
+local version = "0.03	B	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2808,6 +2808,7 @@ if not Info.Compact then
 
     -- START WITH GREY COLOR
     TitleLabel.TextColor3 = Color3.fromRGB(128, 128, 128);
+			Slider.IsTouched = true -- Bunu ekle, baştan gri kabul etsin
 
     Groupbox:AddBlank(3);
 end
@@ -2965,6 +2966,7 @@ end;
 
         SliderInner.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
+					Slider:UpdateTextColor(false)
                 local mPos = Mouse.X;
                 local gPos = Fill.Size.X.Offset;
                 local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
