@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.01	B	X    HOT-FIX"
+local version = "0.02	B	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -1662,14 +1662,25 @@ task.spawn(Pulse)
             Parent = PickInner;
         });
 
-        local ModeSelectOuter = Library:Create('Frame', {
-            BorderColor3 = Color3.new(0, 0, 0);
-            Position = UDim2.fromOffset(ToggleLabel.AbsolutePosition.X + ToggleLabel.AbsoluteSize.X + 2, ToggleLabel.AbsolutePosition.Y + 1);
-            Size = UDim2.new(0, 60, 0, 45 + 2);
-            Visible = false;
-            ZIndex = 14;
-            Parent = ScreenGui;
-        });
+local ModeSelectOuter = Library:Create('Frame', {
+    BorderColor3 = Color3.new(0, 0, 0);
+    Size = UDim2.new(0, 60, 0, 47);
+    Visible = false;
+    ZIndex = 14;
+    Parent = ScreenGui;
+});
+
+local function UpdatePos()
+    local absPos = ToggleLabel.AbsolutePosition
+    local newX = math.min(absPos.X + ToggleLabel.AbsoluteSize.X + 4, workspace.CurrentCamera.ViewportSize.X - ModeSelectOuter.Size.X.Offset)
+    local newY = math.min(absPos.Y, workspace.CurrentCamera.ViewportSize.Y - ModeSelectOuter.Size.Y.Offset)
+    ModeSelectOuter.Position = UDim2.fromOffset(newX, newY)
+end
+
+ToggleLabel:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdatePos)
+ToggleLabel:GetPropertyChangedSignal('AbsoluteSize'):Connect(UpdatePos)
+UpdatePos()
+
 
         ToggleLabel:GetPropertyChangedSignal('AbsolutePosition'):Connect(function()
             ModeSelectOuter.Position = UDim2.fromOffset(ToggleLabel.AbsolutePosition.X + ToggleLabel.AbsoluteSize.X + 4, ToggleLabel.AbsolutePosition.Y + 1);
