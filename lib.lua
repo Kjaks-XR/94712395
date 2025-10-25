@@ -3796,7 +3796,7 @@ function Library:SetWatermark(Text)
 
     Library.WatermarkText.Text = Text;
 end;
-this notfying thing is too boring
+
 
 function Library:Notify(Text, Time)
     local XSize, YSize = Library:GetTextBounds(Text, Library.Font, 14);
