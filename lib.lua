@@ -3796,97 +3796,160 @@ function Library:SetWatermark(Text)
 
     Library.WatermarkText.Text = Text;
 end;
-
-function Library:Notify(Text, Time)
-    local XSize, YSize = Library:GetTextBounds(Text, Library.Font, 14);
-
+function Library:Notify(Text, Time, NotifyType)
+    NotifyType = NotifyType or 'default' -- 'default', 'success', 'error', 'warning', 'info'
+    
+    local TypeColors = {
+        default = {main = Library.MainColor, accent = Library.AccentColor},
+        success = {main = Color3.fromRGB(76, 175, 80), accent = Color3.fromRGB(139, 195, 74)},
+        error = {main = Color3.fromRGB(244, 67, 54), accent = Color3.fromRGB(255, 87, 34)},
+        warning = {main = Color3.fromRGB(255, 152, 0), accent = Color3.fromRGB(255, 193, 7)},
+        info = {main = Color3.fromRGB(33, 150, 243), accent = Color3.fromRGB(0, 188, 212)},
+    }
+    
+    local Colors = TypeColors[NotifyType] or TypeColors.default
+    
+    local XSize, YSize = Library:GetTextBounds(Text, Library.Font, 14)
     YSize = YSize + 7
-
+    
     local NotifyOuter = Library:Create('Frame', {
-        BorderColor3 = Color3.new(0, 0, 0);
-        Position = UDim2.new(0, 100, 0, 10);
-        Size = UDim2.new(0, 0, 0, YSize);
-        ClipsDescendants = true;
-        ZIndex = 100;
-        Parent = Library.NotificationArea;
-    });
-
+        BorderColor3 = Color3.new(0, 0, 0)
+        Position = UDim2.new(0, 100, 0, 10)
+        Size = UDim2.new(0, 0, 0, YSize)
+        ClipsDescendants = true
+        ZIndex = 100
+        Parent = Library.NotificationArea
+    })
+    
     local NotifyInner = Library:Create('Frame', {
-        BackgroundColor3 = Library.MainColor;
-        BorderColor3 = Library.OutlineColor;
-        BorderMode = Enum.BorderMode.Inset;
-        Size = UDim2.new(1, 0, 1, 0);
-        ZIndex = 101;
-        Parent = NotifyOuter;
-    });
-
-    Library:AddToRegistry(NotifyInner, {
-        BackgroundColor3 = 'MainColor';
-        BorderColor3 = 'OutlineColor';
-    }, true);
-
+        BackgroundColor3 = Colors.main
+        BorderColor3 = Colors.accent
+        BorderMode = Enum.BorderMode.Inset
+        Size = UDim2.new(1, 0, 1, 0)
+        ZIndex = 101
+        Parent = NotifyOuter
+    })
+    
     local InnerFrame = Library:Create('Frame', {
-        BackgroundColor3 = Color3.new(1, 1, 1);
-        BorderSizePixel = 0;
-        Position = UDim2.new(0, 1, 0, 1);
-        Size = UDim2.new(1, -2, 1, -2);
-        ZIndex = 102;
-        Parent = NotifyInner;
-    });
-
+        BackgroundColor3 = Color3.new(1, 1, 1)
+        BorderSizePixel = 0
+        Position = UDim2.new(0, 1, 0, 1)
+        Size = UDim2.new(1, -2, 1, -2)
+        ZIndex = 102
+        Parent = NotifyInner
+    })
+    
     local Gradient = Library:Create('UIGradient', {
         Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
-            ColorSequenceKeypoint.new(1, Library.MainColor),
-        });
-        Rotation = -90;
-        Parent = InnerFrame;
-    });
-
-    Library:AddToRegistry(Gradient, {
-        Color = function()
-            return ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
-                ColorSequenceKeypoint.new(1, Library.MainColor),
-            });
-        end
-    });
-
+            ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Colors.main)),
+            ColorSequenceKeypoint.new(1, Colors.main),
+        })
+        Rotation = -90
+        Parent = InnerFrame
+    })
+    
+    local CornerRadius = Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 6)
+        Parent = NotifyInner
+    })
+    
+    -- Icon placeholder (circle with color)
+    local IconBg = Library:Create('Frame', {
+        BackgroundColor3 = Colors.accent
+        BorderSizePixel = 0
+        Position = UDim2.new(0, 2, 0.5, -8)
+        Size = UDim2.new(0, 16, 0, 16)
+        ZIndex = 103
+        Parent = InnerFrame
+    })
+    
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 4)
+        Parent = IconBg
+    })
+    
     local NotifyLabel = Library:CreateLabel({
-        Position = UDim2.new(0, 4, 0, 0);
-        Size = UDim2.new(1, -4, 1, 0);
-        Text = Text;
-        TextXAlignment = Enum.TextXAlignment.Left;
-        TextSize = 14;
-        ZIndex = 103;
-        Parent = InnerFrame;
-    });
-
+        Position = UDim2.new(0, 22, 0, 0)
+        Size = UDim2.new(1, -26, 1, 0)
+        Text = Text
+        TextXAlignment = Enum.TextXAlignment.Left
+        TextSize = 14
+        ZIndex = 103
+        Parent = InnerFrame
+    })
+    
+    -- Animated left accent bar
     local LeftColor = Library:Create('Frame', {
-        BackgroundColor3 = Library.AccentColor;
-        BorderSizePixel = 0;
-        Position = UDim2.new(0, -1, 0, -1);
-        Size = UDim2.new(0, 3, 1, 2);
-        ZIndex = 104;
-        Parent = NotifyOuter;
-    });
-
-    Library:AddToRegistry(LeftColor, {
-        BackgroundColor3 = 'AccentColor';
-    }, true);
-
-    pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true);
-
+        BackgroundColor3 = Colors.accent
+        BorderSizePixel = 0
+        Position = UDim2.new(0, -1, 0, -1)
+        Size = UDim2.new(0, 3, 1, 2)
+        ZIndex = 104
+        Parent = NotifyOuter
+    })
+    
+    Library:Create('UICorner', {
+        CornerRadius = UDim.new(0, 2)
+        Parent = LeftColor
+    })
+    
+    -- Premium progress bar at bottom
+    local ProgressBg = Library:Create('Frame', {
+        BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        BackgroundTransparency = 0.4
+        BorderSizePixel = 0
+        Position = UDim2.new(0, 0, 1, -3)
+        Size = UDim2.new(1, 0, 0, 3)
+        ZIndex = 105
+        Parent = NotifyInner
+    })
+    
+    local ProgressBar = Library:Create('Frame', {
+        BackgroundColor3 = Colors.accent
+        BorderSizePixel = 0
+        Position = UDim2.new(0, 0, 0, 0)
+        Size = UDim2.new(1, 0, 1, 0)
+        ZIndex = 106
+        Parent = ProgressBg
+    })
+    
+    -- Glow effect on progress bar
+    local Glow = Library:Create('UIGradient', {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+            ColorSequenceKeypoint.new(0.5, Colors.accent),
+            ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1)),
+        })
+        Rotation = 0
+        Parent = ProgressBar
+    })
+    
+    -- Entry animation
+    pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize + 8 + 20, 0, YSize), 'Out', 'Quad', 0.3, true)
+    
+    -- Fade in icon
+    local IconTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    local IconTween = game:GetService('TweenService'):Create(IconBg, IconTweenInfo, {BackgroundTransparency = 0})
+    IconTween:Play()
+    
     task.spawn(function()
-        wait(Time or 5);
-
-        pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true);
-
-        wait(0.4);
-
-        NotifyOuter:Destroy();
-    end);
-end;
+        local displayTime = Time or 5
+        
+        -- Smooth progress bar drain using TweenService
+        local progressInfo = TweenInfo.new(displayTime, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut)
+        local progressTween = game:GetService('TweenService'):Create(ProgressBar, progressInfo, {Size = UDim2.new(0, 0, 1, 0)})
+        progressTween:Play()
+        
+        task.wait(displayTime)
+        
+        if NotifyOuter.Parent then
+            -- Exit animation
+            pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, 0, 0, YSize), 'In', 'Quad', 0.3, true)
+            task.wait(0.3)
+            NotifyOuter:Destroy()
+        end
+    end)
+end
 
 function Library:CreateWindow(...)
     local Arguments = { ... }
