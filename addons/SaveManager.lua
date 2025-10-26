@@ -1,4 +1,4 @@
-print"save manager loaded 0.3 for series B - FIXED"
+print"save manager loaded 0.2 for series B - FIXED"
 
 local httpService = game:GetService('HttpService')
 
@@ -233,62 +233,67 @@ local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†�
 	writefile(fullPath, final)
 		return true
 	end
+function SaveManager:LoadSafe(name)
+	if (not name) then return false, 'no config file is selected' end
+	local file = self.Folder .. '/settings/' .. name .. '.json'
+	if not isfile(file) then return false, 'invalid file' end
 
-	function SaveManager:LoadSafe(name)
-		if (not name) then return false, 'no config file is selected' end
-		local file = self.Folder .. '/settings/' .. name .. '.json'
-		if not isfile(file) then return false, 'invalid file' end
-
-		local fileContent = readfile(file)
-		
-		-- Layer 4: Hex decode
-		local decoded_hex = hexDecode(fileContent)
-		
-		-- Layer 3: Bytecode decode
-		local decoded_bytecode = bytecodeDecode(decoded_hex)
-		
-		-- Layer 2: Remove noise
-		local cleaned = removeNoise(decoded_bytecode)
-		
-		-- Layer 1: Base64 decode
-		local decoded_str = base64Decode(cleaned)
-		
-		local success, decoded = pcall(httpService.JSONDecode, httpService, decoded_str)
-		if not success then return false, 'decode error' end
-
-		-- Disable all callbacks before loading
-		local originalCallbacks = {}
-		
-		for idx, toggle in next, Toggles do
-			originalCallbacks[idx] = toggle.OnChange
-			toggle.OnChange = nil
-		end
-
-		for idx, option in next, Options do
-			originalCallbacks[idx] = option.OnChange
-			option.OnChange = nil
-		end
-
-		-- Load all values silently (no callbacks triggered)
-		for _, option in next, decoded.objects do
-			if self.Parser[option.type] then
-				pcall(function()
-					self.Parser[option.type].Load(option.idx, option)
-				end)
-			end
-		end
-
-		-- Restore callbacks (without triggering them)
-		for idx, toggle in next, Toggles do
-			toggle.OnChange = originalCallbacks[idx]
-		end
-
-		for idx, option in next, Options do
-			option.OnChange = originalCallbacks[idx]
-		end
-
-		return true
+	local fileContent = readfile(file)
+	
+	-- Remove signature from end
+	local signature = '0197384-97GH-S'
+	if fileContent:sub(-#signature) == signature then
+		fileContent = fileContent:sub(1, -#signature - 1)
 	end
+	
+	-- Layer 4: Hex decode
+	local decoded_hex = hexDecode(fileContent)
+	
+	-- Layer 3: Bytecode decode
+	local decoded_bytecode = bytecodeDecode(decoded_hex)
+	
+	-- Layer 2: Remove noise
+	local cleaned = removeNoise(decoded_bytecode)
+	
+	-- Layer 1: Base64 decode
+	local decoded_str = base64Decode(cleaned)
+	
+	local success, decoded = pcall(httpService.JSONDecode, httpService, decoded_str)
+	if not success then return false, 'decode error' end
+
+	-- Disable all callbacks before loading
+	local originalCallbacks = {}
+	
+	for idx, toggle in next, Toggles do
+		originalCallbacks[idx] = toggle.OnChange
+		toggle.OnChange = nil
+	end
+
+	for idx, option in next, Options do
+		originalCallbacks[idx] = option.OnChange
+		option.OnChange = nil
+	end
+
+	-- Load all values silently (no callbacks triggered)
+	for _, option in next, decoded.objects do
+		if self.Parser[option.type] then
+			pcall(function()
+				self.Parser[option.type].Load(option.idx, option)
+			end)
+		end
+	end
+
+	-- Restore callbacks (without triggering them)
+	for idx, toggle in next, Toggles do
+		toggle.OnChange = originalCallbacks[idx]
+	end
+
+	for idx, option in next, Options do
+		option.OnChange = originalCallbacks[idx]
+	end
+
+	return true
+end
 
 	function SaveManager:IgnoreThemeSettings()
 		self:SetIgnoreIndexes({ 
