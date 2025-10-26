@@ -7,7 +7,7 @@ local SaveManager = {} do
 	SaveManager.Ignore = {}
 	
 	-- Obfuscation characters - wide variety but moderate
-	local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†‡€™"
+local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†‡€™áàâäãåæçéèêëíìîïñóòôöõøœßúùûüýÿ"
 	
 	-- Helper function to encode to base64
 	local function base64Encode(str)
@@ -221,7 +221,9 @@ local SaveManager = {} do
 		-- Layer 4: Hex encode
 		local hexed = hexEncode(bytecoded)
 
-		writefile(fullPath, hexed)
+
+	local final = hexed .. '0197384-97GH-S' -- sonuna imza ekledik
+	writefile(fullPath, final)
 		return true
 	end
 
