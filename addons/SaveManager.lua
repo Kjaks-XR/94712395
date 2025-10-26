@@ -1,4 +1,4 @@
-print"save manager loaded 0.2 for series B - FIXED"
+print"save manager loaded 0.3 for series B - FIXED"
 
 local httpService = game:GetService('HttpService')
 
@@ -40,20 +40,27 @@ local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†�
 			return string.char(c)
 		end))
 	end
-	
-	-- Inject random noise into string (moderate amount)
+		-- Inject randomized noise with no predictable patterns
 	local function injectNoise(str)
 		local result = ''
-		for i = 1, #str do
+		local i = 1
+		while i <= #str do
 			result = result .. str:sub(i, i)
-			-- Randomly add 1-2 noise characters (15% chance)
-			if math.random(100) <= 15 then
-				local noiseCount = math.random(1, 2)
+			
+			-- Vary noise insertion: use random intervals instead of fixed probability
+			-- This prevents repeating patterns from emerging
+			local insertChance = math.random(100)
+			
+			if insertChance <= 18 then
+				-- Randomly decide: insert 0-4 noise chars at random intervals
+				local noiseCount = math.random(0, 4)
 				for _ = 1, noiseCount do
-					local randomChar = NOISE_CHARS:sub(math.random(1, #NOISE_CHARS), math.random(1, #NOISE_CHARS))
-					result = result .. randomChar
+					local randomIdx = math.random(1, #NOISE_CHARS)
+					result = result .. NOISE_CHARS:sub(randomIdx, randomIdx)
 				end
 			end
+			
+			i = i + 1
 		end
 		return result
 	end
