@@ -1,3 +1,4 @@
+
 local InputService = game:GetService('UserInputService');
 local TextService = game:GetService('TextService');
 local CoreGui = game:GetService('CoreGui');
@@ -8,7 +9,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.02	B	X    HOT-FIX"
+local version = "0.04	B	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -747,29 +748,20 @@ function Library:MakeDraggable(Instance, Cutoff)
         end;
     end)
 end;
-local TweenService = game:GetService("TweenService");
 
 function Library:AddToolTip(InfoStr, HoverInstance)
     local X, Y = Library:GetTextBounds(InfoStr, Library.Font, 14);
     local Tooltip = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor,
         BorderColor3 = Library.OutlineColor,
+
         Size = UDim2.fromOffset(X + 5, Y + 4),
         ZIndex = 100,
         Parent = Library.ScreenGui,
+
         Visible = false,
-        BackgroundTransparency = 1, -- Başlangıçta görünmez
-        BorderSizePixel = 0, -- Border için ayrı bir frame kullanacağız
     })
-    
-    -- Border için ayrı frame (border'ın da fade olması için)
-    local Border = Library:Create('UIStroke', {
-        Color = Library.OutlineColor,
-        Thickness = 1,
-        Transparency = 1,
-        Parent = Tooltip
-    })
-    
+
     local Label = Library:CreateLabel({
         Position = UDim2.fromOffset(3, 1),
         Size = UDim2.fromOffset(X, Y);
@@ -778,89 +770,40 @@ function Library:AddToolTip(InfoStr, HoverInstance)
         TextColor3 = Library.FontColor,
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = Tooltip.ZIndex + 1,
-        TextTransparency = 1, -- Başlangıçta görünmez
+
         Parent = Tooltip;
     });
-    
+
     Library:AddToRegistry(Tooltip, {
         BackgroundColor3 = 'MainColor';
+        BorderColor3 = 'OutlineColor';
     });
-    
-    Library:AddToRegistry(Border, {
-        Color = 'OutlineColor';
-    });
-    
+
     Library:AddToRegistry(Label, {
         TextColor3 = 'FontColor',
     });
-    
+
     local IsHovering = false
-    local TweenService = game:GetService("TweenService")
-    local FadeTweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    
-    local function FadeIn()
-        Tooltip.Visible = true
-        
-        local frameTween = TweenService:Create(Tooltip, FadeTweenInfo, {
-            BackgroundTransparency = 0
-        })
-        
-        local borderTween = TweenService:Create(Border, FadeTweenInfo, {
-            Transparency = 0
-        })
-        
-        local labelTween = TweenService:Create(Label, FadeTweenInfo, {
-            TextTransparency = 0
-        })
-        
-        frameTween:Play()
-        borderTween:Play()
-        labelTween:Play()
-    end
-    
-    local function FadeOut()
-        local frameTween = TweenService:Create(Tooltip, FadeTweenInfo, {
-            BackgroundTransparency = 1
-        })
-        
-        local borderTween = TweenService:Create(Border, FadeTweenInfo, {
-            Transparency = 1
-        })
-        
-        local labelTween = TweenService:Create(Label, FadeTweenInfo, {
-            TextTransparency = 1
-        })
-        
-        frameTween:Play()
-        borderTween:Play()
-        labelTween:Play()
-        
-        -- Tween bittiğinde frame'i gizle
-        frameTween.Completed:Connect(function()
-            if not IsHovering then
-                Tooltip.Visible = false
-            end
-        end)
-    end
-    
+
     HoverInstance.MouseEnter:Connect(function()
         if Library:MouseIsOverOpenedFrame() then
             return
         end
-        
+
         IsHovering = true
+
         Tooltip.Position = UDim2.fromOffset(Mouse.X + 15, Mouse.Y + 12)
-        FadeIn()
-        
+        Tooltip.Visible = true
+
         while IsHovering do
             RunService.Heartbeat:Wait()
             Tooltip.Position = UDim2.fromOffset(Mouse.X + 15, Mouse.Y + 12)
         end
     end)
-    
+
     HoverInstance.MouseLeave:Connect(function()
         IsHovering = false
-        FadeOut()
+        Tooltip.Visible = false
     end)
 end
 
