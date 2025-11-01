@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.03	B	X    HOT-FIX"
+local version = "0.04	B	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2606,6 +2606,12 @@ local ToggleOuter = Library:Create('Frame', {
     Parent = Container;
 })
 
+local Stroke = Instance.new('UIStroke')
+Stroke.Thickness = 1
+Stroke.Color = Color3.fromRGB(60, 60, 60)
+Stroke.Transparency = 0
+Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Stroke.Parent = ToggleOuter
 
 
 		
