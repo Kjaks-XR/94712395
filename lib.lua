@@ -1,4 +1,3 @@
-
 local InputService = game:GetService('UserInputService');
 local TextService = game:GetService('TextService');
 local CoreGui = game:GetService('CoreGui');
@@ -9,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.03	B	X    HOT-FIX"
+local version = "0.04	B	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -2583,6 +2582,7 @@ end;
     end;
 
 
+
 function Funcs:AddToggle(Idx, Info)
     assert(Info.Text, 'AddInput: Missing `Text` string.')
 
@@ -2598,65 +2598,35 @@ function Funcs:AddToggle(Idx, Info)
     local Groupbox = self
     local Container = Groupbox.Container
 
-    local ToggleOuter = Library:Create('Frame', {
-        BackgroundColor3 = Color3.fromRGB(0, 0, 0);
-        BorderColor3 = Color3.fromRGB(0, 0, 0);
-        Size = UDim2.new(0, 13, 0, 13);
-        ZIndex = 5;
-        Parent = Container;
-    })
+local ToggleOuter = Library:Create('Frame', {
+    BackgroundColor3 = Color3.fromRGB(0, 0, 0);
+    BorderColor3 = Color3.fromRGB(0, 0, 0);
+    Size = UDim2.new(0, 13, 0, 13);
+    ZIndex = 5;
+    Parent = Container;
+})
 
-    -- Outer stroke (subtle glow effect)
-    local OuterStroke = Instance.new('UIStroke')
-    OuterStroke.Thickness = 1.5
-    OuterStroke.Color = Toggle.Value and Library.AccentColor or Color3.fromRGB(45, 45, 45)
-    OuterStroke.Transparency = Toggle.Value and 0.3 or 0.6
-    OuterStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    OuterStroke.Parent = ToggleOuter
+local Stroke = Instance.new('UIStroke')
+Stroke.Thickness = 1
+Stroke.Color = Color3.fromRGB(60, 60, 60)
+Stroke.Transparency = 0
+Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Stroke.Parent = ToggleOuter
 
-    -- Inner stroke (sharp border)
-    local InnerStroke = Instance.new('UIStroke')
-    InnerStroke.Thickness = 1
-    InnerStroke.Color = Toggle.Value and Library.AccentColor or Color3.fromRGB(60, 60, 60)
-    InnerStroke.Transparency = 0
-    InnerStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    InnerStroke.Parent = ToggleOuter
 
-    -- Add subtle corner rounding for premium feel
-    local Corner = Instance.new('UICorner')
-    Corner.CornerRadius = UDim.new(0, 2)
-    Corner.Parent = ToggleOuter
-
+		
     Library:AddToRegistry(ToggleOuter, {
         BorderColor3 = 'Black';
     })
 
     local ToggleInner = Library:Create('Frame', {
-        BackgroundColor3 = Toggle.Value and Library.AccentColor or Color3.fromRGB(18, 18, 18),
-        BorderColor3 = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(35, 35, 35);
+        BackgroundColor3 = Toggle.Value and Library.AccentColor or Color3.new(0, 0, 0),
+        BorderColor3 = Toggle.Value and Library.AccentColorDark or Library.InactiveColorDark;
         BorderMode = Enum.BorderMode.Inset;
         Size = UDim2.new(1, 0, 1, 0);
         ZIndex = 6;
         Parent = ToggleOuter;
     })
-
-    -- Add corner to inner frame as well
-    local InnerCorner = Instance.new('UICorner')
-    InnerCorner.CornerRadius = UDim.new(0, 1)
-    InnerCorner.Parent = ToggleInner
-
-    -- Add subtle gradient overlay for depth
-    local Gradient = Instance.new('UIGradient')
-    Gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 200, 200))
-    })
-    Gradient.Rotation = 90
-    Gradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.92),
-        NumberSequenceKeypoint.new(1, 0.97)
-    })
-    Gradient.Parent = ToggleInner
 
     local ToggleLabel = Library:CreateLabel({
         Size = UDim2.new(0, 216, 1, 0);
@@ -2668,9 +2638,9 @@ function Funcs:AddToggle(Idx, Info)
         Parent = ToggleOuter;
     })
     
-    -- Set initial color based on toggle state
+    -- Set initial color based on toggle state BEFORE adding UIListLayout
     if not Toggle.Value then
-        ToggleLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
+        ToggleLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
     end
 
     Library:Create('UIListLayout', {
@@ -2688,27 +2658,16 @@ function Funcs:AddToggle(Idx, Info)
         Parent = ToggleOuter;
     })
 
-    if type(Info.Tooltip) == 'string' then
-        Library:AddToolTip(Info.Tooltip, ToggleRegion)
-    end
+		if type(Info.Tooltip) == 'string' then
+    Library:AddToolTip(Info.Tooltip, ToggleRegion)
+end
+		
 
     ToggleRegion.MouseEnter:Connect(function()
         Toggle.IsHovered = true;
         if not Toggle.Value then
-            -- Smooth hover animation with glow effect
-            TweenService:Create(InnerStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Color = Library.AccentColor,
-                Transparency = 0.3
-            }):Play();
-            
-            TweenService:Create(OuterStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Color = Library.AccentColor,
-                Transparency = 0.5,
-                Thickness = 2
-            }):Play();
-
-            TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            TweenService:Create(ToggleOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BorderColor3 = Library.AccentColor
             }):Play();
         end
     end)
@@ -2716,19 +2675,8 @@ function Funcs:AddToggle(Idx, Info)
     ToggleRegion.MouseLeave:Connect(function()
         Toggle.IsHovered = false;
         if not Toggle.Value then
-            TweenService:Create(InnerStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Color = Color3.fromRGB(60, 60, 60),
-                Transparency = 0
-            }):Play();
-            
-            TweenService:Create(OuterStroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Color = Color3.fromRGB(45, 45, 45),
-                Transparency = 0.6,
-                Thickness = 1.5
-            }):Play();
-
-            TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+            TweenService:Create(ToggleOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                BorderColor3 = Color3.new(0, 0, 0)
             }):Play();
         end
     end)
@@ -2738,36 +2686,27 @@ function Funcs:AddToggle(Idx, Info)
     end
 
     function Toggle:Display()
-        local bgColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(18, 18, 18)
-        local borderColor = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(35, 35, 35)
-        local textColor = Toggle.Value and Library.FontColor or Color3.fromRGB(140, 140, 140)
-        
-        local innerStrokeColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(60, 60, 60))
-        local innerStrokeTransparency = Toggle.Value and 0 or (Toggle.IsHovered and 0.3 or 0)
-        
-        local outerStrokeColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(45, 45, 45))
-        local outerStrokeTransparency = Toggle.Value and 0.2 or (Toggle.IsHovered and 0.5 or 0.6)
-        local outerStrokeThickness = Toggle.Value and 2 or (Toggle.IsHovered and 2 or 1.5)
+        local bgColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(25, 25, 25)
+        local borderColor = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(40, 40, 40)
+        local outerColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(30, 30, 30))
+        local textColor = Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
 
-        -- Smooth premium animations
-        TweenService:Create(ToggleInner, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
             BackgroundColor3 = bgColor,
             BorderColor3 = borderColor
         }):Play()
 
-        TweenService:Create(InnerStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Color = innerStrokeColor,
-            Transparency = innerStrokeTransparency
+        TweenService:Create(ToggleOuter, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            BorderColor3 = outerColor
         }):Play()
 
-        TweenService:Create(OuterStroke, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Color = outerStrokeColor,
-            Transparency = outerStrokeTransparency,
-            Thickness = outerStrokeThickness
-        }):Play()
+			TweenService:Create(Stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+    Color = Toggle.Value and Library.AccentColor or Color3.fromRGB(60, 60, 60)
+}):Play()
+
 
         if not Toggle.Risky then
-            TweenService:Create(ToggleLabel, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                 TextColor3 = textColor
             }):Play()
         end
@@ -2807,39 +2746,33 @@ function Funcs:AddToggle(Idx, Info)
         ToggleLabel.TextColor3 = Library.RiskColor
         Library:AddToRegistry(ToggleLabel, { TextColor3 = 'RiskColor' })
     else
+        -- For non-risky toggles, set the correct initial color
         Library:RemoveFromRegistry(ToggleLabel)
         if Toggle.Value then
             ToggleLabel.TextColor3 = Library.FontColor
             Library:AddToRegistry(ToggleLabel, { TextColor3 = 'FontColor' })
         else
-            ToggleLabel.TextColor3 = Color3.fromRGB(140, 140, 140)
+            ToggleLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
             Library:AddToRegistry(ToggleLabel, { TextColor3 = function() 
-                return Toggle.Value and Library.FontColor or Color3.fromRGB(140, 140, 140)
+                return Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
             end })
         end
     end
 
-    -- Set initial visual states
-    local bgColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(18, 18, 18)
-    local borderColor = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(35, 35, 35)
+    -- Set all initial visual states without animation
+    local bgColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(25, 25, 25)
+    local borderColor = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(40, 40, 40)
+    local outerColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(30, 30, 30)
     
     ToggleInner.BackgroundColor3 = bgColor
     ToggleInner.BorderColor3 = borderColor
-    
-    InnerStroke.Color = Toggle.Value and Library.AccentColor or Color3.fromRGB(60, 60, 60)
-    InnerStroke.Transparency = Toggle.Value and 0 or 0
-    
-    OuterStroke.Color = Toggle.Value and Library.AccentColor or Color3.fromRGB(45, 45, 45)
-    OuterStroke.Transparency = Toggle.Value and 0.2 or 0.6
-    OuterStroke.Thickness = Toggle.Value and 2 or 1.5
+    ToggleOuter.BorderColor3 = outerColor
 
     Groupbox:AddBlank(Info.BlankSize or 5 + 2)
     Groupbox:Resize()
 
     Toggle.TextLabel = ToggleLabel
     Toggle.Container = Container
-    Toggle.InnerStroke = InnerStroke
-    Toggle.OuterStroke = OuterStroke
     setmetatable(Toggle, BaseAddons)
 
     Toggles[Idx] = Toggle
@@ -2847,6 +2780,7 @@ function Funcs:AddToggle(Idx, Info)
 
     return Toggle
 end
+
 	
 
 
