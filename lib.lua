@@ -2700,6 +2700,11 @@ end
             BorderColor3 = outerColor
         }):Play()
 
+			TweenService:Create(Stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+    Color = Toggle.Value and Library.AccentColor or Color3.fromRGB(60, 60, 60)
+}):Play()
+
+
         if not Toggle.Risky then
             TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
                 TextColor3 = textColor
