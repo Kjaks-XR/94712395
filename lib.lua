@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.04	B	X    HOT-FIX"
+local version = "0.05	B	X    HOT-FIX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -747,62 +747,58 @@ function Library:MakeDraggable(Instance, Cutoff)
         end;
     end)
 end;
+local TweenService = game:GetService("TweenService");
 
 function Library:AddToolTip(InfoStr, HoverInstance)
     local X, Y = Library:GetTextBounds(InfoStr, Library.Font, 14);
     local Tooltip = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor,
         BorderColor3 = Library.OutlineColor,
-
         Size = UDim2.fromOffset(X + 5, Y + 4),
         ZIndex = 100,
         Parent = Library.ScreenGui,
-
         Visible = false,
-    })
+        BackgroundTransparency = 1;
+    });
 
     local Label = Library:CreateLabel({
         Position = UDim2.fromOffset(3, 1),
         Size = UDim2.fromOffset(X, Y);
         TextSize = 14;
-        Text = InfoStr,
-        TextColor3 = Library.FontColor,
+        Text = InfoStr;
+        TextColor3 = Library.FontColor;
+        TextTransparency = 1;
         TextXAlignment = Enum.TextXAlignment.Left;
-        ZIndex = Tooltip.ZIndex + 1,
-
+        ZIndex = Tooltip.ZIndex + 1;
         Parent = Tooltip;
     });
 
-    Library:AddToRegistry(Tooltip, {
-        BackgroundColor3 = 'MainColor';
-        BorderColor3 = 'OutlineColor';
-    });
-
-    Library:AddToRegistry(Label, {
-        TextColor3 = 'FontColor',
-    });
+    Library:AddToRegistry(Tooltip, { BackgroundColor3 = 'MainColor'; BorderColor3 = 'OutlineColor'; });
+    Library:AddToRegistry(Label, { TextColor3 = 'FontColor'; });
 
     local IsHovering = false
 
     HoverInstance.MouseEnter:Connect(function()
-        if Library:MouseIsOverOpenedFrame() then
-            return
-        end
-
+        if Library:MouseIsOverOpenedFrame() then return end
         IsHovering = true
-
         Tooltip.Position = UDim2.fromOffset(Mouse.X + 15, Mouse.Y + 12)
         Tooltip.Visible = true
 
+        TweenService:Create(Tooltip, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play();
+        TweenService:Create(Label, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play();
+
         while IsHovering do
-            RunService.Heartbeat:Wait()
-            Tooltip.Position = UDim2.fromOffset(Mouse.X + 15, Mouse.Y + 12)
+            RunService.Heartbeat:Wait();
+            Tooltip.Position = UDim2.fromOffset(Mouse.X + 15, Mouse.Y + 12);
         end
     end)
 
     HoverInstance.MouseLeave:Connect(function()
         IsHovering = false
-        Tooltip.Visible = false
+        TweenService:Create(Tooltip, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play();
+        TweenService:Create(Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1}):Play();
+        task.wait(0.15);
+        Tooltip.Visible = false;
     end)
 end
 
