@@ -2819,7 +2819,7 @@ if not Info.Compact then
 
     -- START WITH GREY COLOR
     TitleLabel.TextColor3 = Color3.fromRGB(128, 128, 128);
-			Slider.IsTouched = true -- Bunu ekle, baştan gri kabul etsin
+    Slider.IsTouched = false -- Start as not touched
 
     Groupbox:AddBlank(3);
 end
@@ -2921,19 +2921,24 @@ local DisplayLabel = Library:CreateLabel({
 function Slider:Display()
     local Suffix = Info.Suffix or '';
     
+    -- Format the value properly to avoid showing 0 for small decimals
+    local displayValue = Slider.Value
+    if Slider.Rounding > 0 then
+        displayValue = string.format('%.' .. Slider.Rounding .. 'f', Slider.Value)
+    end
+    
     if Info.Compact then
-        DisplayLabel.Text = Info.Text .. ': ' .. Slider.Value .. Suffix;
+        DisplayLabel.Text = Info.Text .. ': ' .. displayValue .. Suffix;
     elseif Info.HideMax then
-        DisplayLabel.Text = string.format('%s', Slider.Value .. Suffix);
+        DisplayLabel.Text = string.format('%s', displayValue .. Suffix);
     else
-        DisplayLabel.Text = string.format('%d/%d', Slider.Value, Slider.Max) .. Suffix;
+        DisplayLabel.Text = string.format('%s/%s', displayValue .. Suffix, Slider.Max .. Suffix);
     end
 
     local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
     Slider:TweenFill(UDim2.new(0, X, 1, 0));
     HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
 end;
-
 
 
         function Slider:OnChanged(Func)
