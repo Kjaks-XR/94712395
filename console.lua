@@ -143,7 +143,7 @@ do -- Set properties
     objects["Instance4"]["BackgroundTransparency"] = 1;
     objects["Instance4"]["ImageRectOffset"] = Vector2.new(0, 0);
     objects["Instance4"]["AnchorPoint"] = Vector2.new(0, 0.5);
-    objects["Instance4"]["Image"] = "rbxassetid://17245903072";
+    objects["Instance4"]["Image"] = "rbxassetid://";
     objects["Instance4"]["TileSize"] = UDim2.new(1, 0, 1, 0);
     objects["Instance4"]["ImageRectSize"] = Vector2.new(0, 0);
     objects["Instance4"]["SizeConstraint"] = Enum.SizeConstraint.RelativeXY;
