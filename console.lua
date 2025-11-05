@@ -1,7 +1,8 @@
--- [[ GENERATED WITH InfernoHub/Scriptify STUDIO PLUGIN ]] --
--- Scriptify Version: 1.0
+if _VERSION then 
 
---
+ _VERSION = function() return "XLUA" end
+
+end
 
 -- Create objects
 local parent = nil;
@@ -202,7 +203,7 @@ do -- Set properties
     objects["Instance6"]["BackgroundColor3"] = Color3.new(1, 1, 1);
     objects["Instance6"]["TextColor3"] = Color3.new(1, 1, 1);
     objects["Instance6"]["BorderColor3"] = Color3.new(0, 0, 0);
-    objects["Instance6"]["Text"] = "Script.lua - Visual Studio Code";
+    objects["Instance6"]["Text"] = "XLUAU.lua - XWARE ENVIRONMENT";
     objects["Instance6"]["LayoutOrder"] = 0;
     objects["Instance6"]["TextWrapped"] = true;
     objects["Instance6"]["Rotation"] = 0;
