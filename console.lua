@@ -1146,15 +1146,16 @@ script.Parent.Visible = false
 script.Parent.Parent.Parent = getfenv().gethui and getfenv().gethui() or game:GetService("CoreGui") or game:GetService("Players").LocalPlayer.PlayerGui
 script.Parent.Size = size
 
-local codeBox = script:FindFirstChild("CodeBox") and require(script.CodeBox) or loadstring(game:HttpGet("https://raw.githubusercontent.com/InfernusScripts/Null-Fire/main/Core/Libraries/CodeBox/Main.lua"))()
+local codeBox = script:FindFirstChild("CodeBox") and require(script.CodeBox) or loadstring(game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/codeboxsynl.lua"))()
 local textBox = codeBox:fromTextBox(script.Parent.Contents.CodeEditor, codeBox.Themes.VSCode, getfenv().getgenv and getfenv().getgenv())
-textBox.Text = [[-- VSCode by @cherry_peashooter on discord --
+textBox.Text = [[
 
-local function HelloWorld(content)
-    print(content == "print" and "Hello, World!" or content);
-end
+--DESIGNED FOR XWARE V3.4B
+--DOCS CAN BE FOUND IN DC
 
-HelloWorld("print")]]
+            print(_VERSION)
+            
+            ]]
 
 textBox.ShowFooter = true
 script.Parent.Visible = true
