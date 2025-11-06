@@ -13,20 +13,7 @@ warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
 
-local function intro()
 
-wait(2)
-local TweenService = game:GetService("TweenService")
-local CoreGuiService = game:GetService("CoreGui")
-
-local TweenTable = {
-	Default = TweenInfo.new(0.17, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, false, 0),
-	Smooth = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, 0, false, 0),
-	Bounce = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, false, 0),
-	Fast = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, false, 0),
-	Premium = TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut, 0, false, 0),
-	Elegant = TweenInfo.new(1.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, 0, false, 0)
-}
 
 local fonts = {}; do
 	function Register_Font(Name, Weight, Style, Asset)
@@ -70,7 +57,29 @@ local fonts = {}; do
 		["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
 	}
 end
+
+
 print("downloaded fonts")
+
+
+
+
+
+
+local function intro()
+
+wait(2)
+local TweenService = game:GetService("TweenService")
+local CoreGuiService = game:GetService("CoreGui")
+
+local TweenTable = {
+	Default = TweenInfo.new(0.17, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, false, 0),
+	Smooth = TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, 0, false, 0),
+	Bounce = TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, false, 0),
+	Fast = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, false, 0),
+	Premium = TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut, 0, false, 0),
+	Elegant = TweenInfo.new(1.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, 0, false, 0)
+}
 
 local CreateTween = function(name, speed, style, direction, loop, reverse, delay)
 	speed = speed or 0.17
@@ -565,10 +574,6 @@ intro()
 
 
 
-
-
-
-
 local ScreenGui = Instance.new('ScreenGui');
 ProtectGui(ScreenGui);
 
@@ -595,7 +600,7 @@ local Library = {
     OutlineColor = Color3.fromRGB(50, 50, 50);
     RiskColor = Color3.fromRGB(255, 50, 50),
     Black = Color3.new(0, 0, 0);
-    Font = Enum.Font.Code,
+    Font = fonts["ProggyClean"],  -- Use your custom font
 
     OpenedFrames = {};
     DependencyBoxes = {};
@@ -705,9 +710,9 @@ end;
 function Library:CreateLabel(Properties, IsHud)
     local _Instance = Library:Create('TextLabel', {
         BackgroundTransparency = 1;
-        Font = Library.Font;
+        FontFace = Library.Font;  -- Changed from Font to FontFace
         TextColor3 = Library.FontColor;
-        TextSize = 16;
+        TextSize = 11;
         TextStrokeTransparency = 0;
     });
 
@@ -764,7 +769,7 @@ function Library:AddToolTip(InfoStr, HoverInstance)
     local Label = Library:CreateLabel({
         Position = UDim2.fromOffset(3, 1),
         Size = UDim2.fromOffset(X, Y);
-        TextSize = 14;
+        TextSize = 11;
         Text = InfoStr,
         TextColor3 = Library.FontColor,
         TextXAlignment = Enum.TextXAlignment.Left;
@@ -865,9 +870,16 @@ function Library:MapValue(Value, MinA, MaxA, MinB, MaxB)
 end;
 
 function Library:GetTextBounds(Text, Font, Size, Resolution)
-    local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
+    local Params = Instance.new("GetTextBoundsParams")
+    Params.Text = Text
+    Params.Font = Font
+    Params.Size = Size
+    Params.Width = (Resolution or Vector2.new(1920, 1080)).X
+    
+    local Bounds = TextService:GetTextBoundsAsync(Params)
     return Bounds.X, Bounds.Y
 end;
+
 
 function Library:GetDarkerColor(Color)
     local H, S, V = Color3.toHSV(Color);
@@ -1196,12 +1208,12 @@ task.spawn(Pulse)
             BackgroundTransparency = 1;
             Position = UDim2.new(0, 5, 0, 0);
             Size = UDim2.new(1, -5, 1, 0);
-            Font = Library.Font;
+            FontFace = Library.Font;
             PlaceholderColor3 = Color3.fromRGB(190, 190, 190);
             PlaceholderText = 'Hex color',
             Text = '#FFFFFF',
             TextColor3 = Library.FontColor;
-            TextSize = 14;
+            TextSize = 11;
             TextStrokeTransparency = 0;
             TextXAlignment = Enum.TextXAlignment.Left;
             ZIndex = 20,
@@ -1266,7 +1278,7 @@ task.spawn(Pulse)
             Size = UDim2.new(1, 0, 0, 14);
             Position = UDim2.fromOffset(5, 5);
             TextXAlignment = Enum.TextXAlignment.Left;
-            TextSize = 14;
+            TextSize = 11;
             Text = ColorPicker.Title,--Info.Default;
             TextWrapped = false;
             ZIndex = 16;
@@ -1355,7 +1367,7 @@ task.spawn(Pulse)
                 local Button = Library:CreateLabel({
                     Active = false;
                     Size = UDim2.new(1, 0, 0, 15);
-                    TextSize = 13;
+                    TextSize = 12;
                     Text = Str;
                     ZIndex = 16;
                     Parent = self.Inner;
@@ -1655,7 +1667,7 @@ task.spawn(Pulse)
 
         local DisplayLabel = Library:CreateLabel({
             Size = UDim2.new(1, 0, 1, 0);
-            TextSize = 13;
+            TextSize = 12;
             Text = Info.Default;
             TextWrapped = true;
             ZIndex = 8;
@@ -1711,7 +1723,7 @@ UpdatePos()
         local ContainerLabel = Library:CreateLabel({
             TextXAlignment = Enum.TextXAlignment.Left;
             Size = UDim2.new(1, 0, 0, 18);
-            TextSize = 13;
+            TextSize = 11;
             Visible = false;
             ZIndex = 110;
             Parent = Library.KeybindContainer;
@@ -1726,7 +1738,7 @@ UpdatePos()
             local Label = Library:CreateLabel({
                 Active = false;
                 Size = UDim2.new(1, 0, 0, 15);
-                TextSize = 13;
+                TextSize = 11;
                 Text = Mode;
                 ZIndex = 16;
                 Parent = ModeSelectInner;
@@ -2035,7 +2047,7 @@ function Funcs:AddVariableLabel(Text, Variable, UpdateInterval)
     
     local TextLabel = Library:CreateLabel({
         Size = UDim2.new(1, -4, 0, 15),
-        TextSize = 14,
+        TextSize = 11,
         Text = Text,
         TextWrapped = false,
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -2163,7 +2175,7 @@ function Funcs:AddButton(...)
 
 local Label = Library:CreateLabel({
     Size = UDim2.new(1, 0, 1, 0);
-    TextSize = 14;
+    TextSize = 11;
     Text = Button.Text;
     TextColor3 = Color3.fromRGB(150, 150, 150); -- START GREY, NOT WHITE
     ZIndex = 6;
@@ -2478,7 +2490,7 @@ end;
             Position = UDim2.fromOffset(0, 0),
             Size = UDim2.fromScale(5, 1),
 
-            Font = Library.Font;
+            FontFace = Library.Font;
             PlaceholderColor3 = Color3.fromRGB(190, 190, 190);
             PlaceholderText = Info.Placeholder or '';
 
@@ -2631,7 +2643,7 @@ Stroke.Parent = ToggleOuter
     local ToggleLabel = Library:CreateLabel({
         Size = UDim2.new(0, 216, 1, 0);
         Position = UDim2.new(1, 6, 0, 0);
-        TextSize = 14;
+        TextSize = 12;
         Text = Info.Text;
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = 6;
@@ -2809,7 +2821,7 @@ local TitleLabel
 if not Info.Compact then
     TitleLabel = Library:CreateLabel({
         Size = UDim2.new(1, 0, 0, 10);
-        TextSize = 14;
+        TextSize = 12;
         Text = Info.Text;
         TextXAlignment = Enum.TextXAlignment.Left;
         TextYAlignment = Enum.TextYAlignment.Bottom;
@@ -2878,7 +2890,7 @@ end
 
 local DisplayLabel = Library:CreateLabel({
     Size = UDim2.new(1, 0, 1, 0);
-    TextSize = 14;
+    TextSize = 12;
     -- Don't set Text = 'Infinite', let Display() set it
     ZIndex = 9;
     Parent = SliderInner;
@@ -3147,7 +3159,7 @@ function Funcs:AddDropdown(Idx, Info)
     local ItemList = Library:CreateLabel({
         Position = UDim2.new(0, 5, 0, 0);
         Size = UDim2.new(1, -5, 1, 0);
-        TextSize = 14;
+        TextSize = 12;
         Text = '--';
         TextXAlignment = Enum.TextXAlignment.Left;
         TextWrapped = true;
@@ -3300,7 +3312,7 @@ function Funcs:AddDropdown(Idx, Info)
                 Active = false;
                 Size = UDim2.new(1, -6, 1, 0);
                 Position = UDim2.new(0, 6, 0, 0);
-                TextSize = 14;
+                TextSize = 12;
                 Text = Value;
                 TextXAlignment = Enum.TextXAlignment.Left;
                 ZIndex = 25;
@@ -3734,7 +3746,7 @@ do
     local WatermarkLabel = Library:CreateLabel({
         Position = UDim2.new(0, 5, 0, 0);
         Size = UDim2.new(1, -4, 1, 0);
-        TextSize = 14;
+        TextSize = 13;
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = 203;
         Parent = InnerFrame;
@@ -3881,7 +3893,7 @@ function Library:Notify(Text, Time)
         Size = UDim2.new(1, -4, 1, 0);
         Text = Text;
         TextXAlignment = Enum.TextXAlignment.Left;
-        TextSize = 14;
+        TextSize = 12;
         ZIndex = 103;
         Parent = InnerFrame;
     });
@@ -4201,7 +4213,7 @@ function Library:CreateWindow(...)
             local GroupboxLabel = Library:CreateLabel({
                 Size = UDim2.new(1, 0, 0, 18);
                 Position = UDim2.new(0, 4, 0, 2);
-                TextSize = 14;
+                TextSize = 13;
                 Text = Info.Name;
                 TextXAlignment = Enum.TextXAlignment.Left;
                 ZIndex = 5;
