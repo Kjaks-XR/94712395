@@ -63,7 +63,7 @@ do -- Set properties
     objects["Instance0"]["ClipToDeviceSafeArea"] = true;
     objects["Instance0"]["Parent"] = parent;
     objects["Instance0"]["IgnoreGuiInset"] = true;
-    objects["Instance0"]["Name"] = "VSCode";
+    objects["Instance0"]["Name"] = "CodeEditor";
     objects["Instance0"]["DisplayOrder"] = 2147483647;
 
     objects["Instance1"]["Visible"] = true;
