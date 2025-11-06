@@ -2,7 +2,7 @@ getgenv().LoadedXCWareConsole = true
 
 if _VERSION then 
 
- _VERSION = function() return "XLUA" end
+ _VERSION = "XLUAU"
 
 end
 
@@ -1154,12 +1154,17 @@ script.Parent.Size = size
 local codeBox = script:FindFirstChild("CodeBox") and require(script.CodeBox) or loadstring(game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/codeboxsynl.lua"))()
 local textBox = codeBox:fromTextBox(script.Parent.Contents.CodeEditor, codeBox.Themes.VSCode, getfenv().getgenv and getfenv().getgenv())
 textBox.Text = [[
+-- Console Version: V0.1
+-- DESIGNED FOR XWARE V3.4B
+-- DOCUMENTATION IS NOT AVAILABLE ON DISCORD
+-- MAKE FULLSCREEN TO PREVENT CHAT FROM OVERLAPPING THE INTERFACE
 
---DESIGNED FOR XWARE V3.4B
---DOCS CAN BE FOUND IN DC
-
-            print(_VERSION)
-            
+   
+if _VERSION then
+   
+   print(_VERSION)
+   
+end           
             ]]
 
 textBox.ShowFooter = true
@@ -1227,7 +1232,7 @@ end)
 
 local close = script.Parent.TopbarZone.Buttons.Close
 close.MouseButton1Click:Connect(function()
-    script.Parent:Destroy()
+  --  script.Parent:Destroy()
 end)
 
 local ratio = script.Parent.UIAspectRatioConstraint
