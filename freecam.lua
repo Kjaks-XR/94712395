@@ -1,3 +1,4 @@
+getgenv().freecamloaded = true
 local pi    = math.pi
 local abs   = math.abs
 local clamp = math.clamp
