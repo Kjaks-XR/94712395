@@ -1,8 +1,12 @@
+getgenv().LoadedXCWareConsole = true
+
 if _VERSION then 
 
  _VERSION = function() return "XLUA" end
 
 end
+
+
 
 -- Create objects
 local parent = nil;
