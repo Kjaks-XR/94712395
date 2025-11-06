@@ -1,5 +1,5 @@
--- Player List UI Script for Roblox
--- Place this in StarterGui as a LocalScript
+getgenv().plrlistui = true
+
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
