@@ -1159,13 +1159,12 @@ textBox.Text = [[
 -- DOCUMENTATION IS NOT AVAILABLE ON DISCORD
 -- MAKE FULLSCREEN TO PREVENT CHAT FROM OVERLAPPING THE INTERFACE
 
-   
 if _VERSION then
-   
+
    print(_VERSION)
-   
-end           
-            ]]
+
+end
+]]
 
 textBox.ShowFooter = true
 script.Parent.Visible = true
