@@ -36,18 +36,51 @@ local ThemeManager = {} do
 		self:ThemeUpdate()
 	end
 
-	function ThemeManager:ThemeUpdate()
-		-- This allows us to force apply themes without loading the themes tab :)
-		local options = { "FontColor", "MainColor", "AccentColor", "BackgroundColor", "OutlineColor" }
-		for i, field in next, options do
-			if Options and Options[field] then
-				self.Library[field] = Options[field].Value
-			end
-		end
+function Library:ForceColorRefresh()
+    for _, reg in pairs(Library.Registry) do
+        if reg.Instance and reg.Properties then
+            for prop, colorRef in pairs(reg.Properties) do
+                if type(colorRef) == "string" and Library[colorRef] then
+                    reg.Instance[prop] = Library[colorRef]
+                elseif type(colorRef) == "function" then
+                    reg.Instance[prop] = colorRef()
+                end
+            end
+        end
+    end
 
-		self.Library.AccentColorDark = self.Library:GetDarkerColor(self.Library.AccentColor);
-		self.Library:UpdateColorsUsingRegistry()
-	end
+    -- Bonus: Toggle, Button, Slider, TextBox gibi özel objeleri de canlı güncelle
+    for _, toggle in pairs(Library.Toggles or {}) do
+        if toggle.Type == "Toggle" then
+            local frame = toggle.Frame or toggle.Main
+            if frame then
+                frame.BackgroundColor3 = toggle.Value and Library.AccentColor or Library.MainColor
+                frame.BorderColor3 = Library.OutlineColor
+            end
+        end
+    end
+
+    for _, option in pairs(Library.Options or {}) do
+        if option.Instance and option.Color then
+            option.Instance.BackgroundColor3 = Library.MainColor
+            option.Instance.BorderColor3 = Library.OutlineColor
+        end
+    end
+end
+	
+function ThemeManager:ThemeUpdate()
+    local options = { "FontColor", "MainColor", "AccentColor", "BackgroundColor", "OutlineColor" }
+    for _, field in next, options do
+        if Options and Options[field] then
+            self.Library[field] = Options[field].Value
+        end
+    end
+
+    self.Library.AccentColorDark = self.Library:GetDarkerColor(self.Library.AccentColor)
+    self.Library:UpdateColorsUsingRegistry()
+    self.Library:ForceColorRefresh() -- 🔥 burası sihir
+end
+
 
 	function ThemeManager:LoadDefault()		
 		local theme = 'Default'
