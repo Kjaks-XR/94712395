@@ -390,7 +390,12 @@ end
 			SaveManager.AutoloadLabel:SetText('Current autoload config: ' .. name)
 		end
 
-		SaveManager:SetIgnoreIndexes({ 'SaveManager_ConfigList', 'SaveManager_ConfigName' })
+		SaveManager:SetIgnoreIndexes({ 
+    "showplayerlistui",  -- Bu toggle load olmuyor
+    "SaveManager_ConfigList", 
+    "SaveManager_ConfigName",
+	"luaTabshow",
+})
 	end
 
 	SaveManager:BuildFolderTree()
