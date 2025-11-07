@@ -395,6 +395,7 @@ end
     "SaveManager_ConfigList", 
     "SaveManager_ConfigName",
 	"luaTabshow",
+	"freecamToggle",
 })
 	end
 
