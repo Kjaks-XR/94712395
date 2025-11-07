@@ -2794,6 +2794,19 @@ end
 end
 
 	
+local AccentColorDark = Library.AccentColorDark
+task.spawn(function()
+	while task.wait(0.1) do
+		if Library.AccentColorDark ~= AccentColorDark then
+			AccentColorDark = Library.AccentColorDark
+			for _, toggle in pairs(Toggles) do
+				if toggle.Display then
+					toggle:Display()
+				end
+			end
+		end
+	end
+end)
 
 
 function Funcs:AddSlider(Idx, Info)
