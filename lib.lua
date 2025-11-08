@@ -876,10 +876,17 @@ function Library:GetTextBounds(Text, Font, Size, Resolution)
     Params.Size = Size
     Params.Width = (Resolution or Vector2.new(1920, 1080)).X
     
-    local Bounds = TextService:GetTextBoundsAsync(Params)
-    return Bounds.X, Bounds.Y
-end;
-
+    local success, Bounds = pcall(function()
+        return TextService:GetTextBoundsAsync(Params)
+    end)
+    
+    if success then
+        return Bounds.X, Bounds.Y
+    else
+        warn("GetTextBounds failed:", Bounds)
+        return 0, 0
+    end
+end
 
 function Library:GetDarkerColor(Color)
     local H, S, V = Color3.toHSV(Color);
@@ -4735,6 +4742,72 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         Parent = ScreenGui;
     });
 
+
+
+local glow = Instance.new("ImageLabel", Outer)
+glow.Name = "GlowEffect"
+glow.Image = "rbxassetid://18245826428" -- Glow texture ID
+glow.ScaleType = Enum.ScaleType.Slice
+glow.SliceCenter = Rect.new(21, 21, 79, 79)
+glow.ImageColor3 = Library.AccentColor
+glow.ImageTransparency = 0.6
+glow.BackgroundTransparency = 1
+glow.Size = UDim2.new(1, 40, 1, 40)
+glow.Position = UDim2.new(0, -20, 0, -20)
+glow.ZIndex = -1
+
+-- Create pulsing animation
+local TweenService = game:GetService("TweenService")
+local startTransparency = 0.6
+local minTransparency = 0.3
+local pulseDuration = getgenv().glowwatermarkspeed or 5
+
+local pulseInfo = TweenInfo.new(
+	pulseDuration / 2,
+	Enum.EasingStyle.Sine,
+	Enum.EasingDirection.InOut
+)
+
+local function createPulseTween()
+	local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = minTransparency})
+	local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = startTransparency})
+	
+	tweenOut.Completed:Connect(function()
+		tweenIn:Play()
+	end)
+	
+	tweenIn.Completed:Connect(function()
+		tweenOut:Play()
+	end)
+	
+	tweenOut:Play()
+end
+
+-- Start pulsing animation
+createPulseTween()
+
+-- Watch for color changes and tween them
+local lastColor = Library.AccentColor
+local colorChangeConnection
+
+colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
+	if Library.AccentColor ~= lastColor then
+		lastColor = Library.AccentColor
+		
+		local colorTweenInfo = TweenInfo.new(
+			1,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out
+		)
+		
+		local colorTween = TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor})
+		colorTween:Play()
+	end
+end)
+
+
+
+
     local Inner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.AccentColor;
@@ -5330,6 +5403,76 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
         ZIndex = 50,
     })
     
+
+
+
+
+local glow = Instance.new("ImageLabel", PreviewOuter)
+glow.Name = "GlowEffect"
+glow.Image = "rbxassetid://18245826428" -- Glow texture ID
+glow.ScaleType = Enum.ScaleType.Slice
+glow.SliceCenter = Rect.new(21, 21, 79, 79)
+glow.ImageColor3 = Library.AccentColor
+glow.ImageTransparency = 0.6
+glow.BackgroundTransparency = 1
+glow.Size = UDim2.new(1, 40, 1, 40)
+glow.Position = UDim2.new(0, -20, 0, -20)
+glow.ZIndex = -1
+
+-- Create pulsing animation
+local TweenService = game:GetService("TweenService")
+local startTransparency = 0.6
+local minTransparency = 0.3
+local pulseDuration = getgenv().glowwatermarkspeed or 5
+
+local pulseInfo = TweenInfo.new(
+	pulseDuration / 2,
+	Enum.EasingStyle.Sine,
+	Enum.EasingDirection.InOut
+)
+
+local function createPulseTween()
+	local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = minTransparency})
+	local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = startTransparency})
+	
+	tweenOut.Completed:Connect(function()
+		tweenIn:Play()
+	end)
+	
+	tweenIn.Completed:Connect(function()
+		tweenOut:Play()
+	end)
+	
+	tweenOut:Play()
+end
+
+-- Start pulsing animation
+createPulseTween()
+
+-- Watch for color changes and tween them
+local lastColor = Library.AccentColor
+local colorChangeConnection
+
+colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
+	if Library.AccentColor ~= lastColor then
+		lastColor = Library.AccentColor
+		
+		local colorTweenInfo = TweenInfo.new(
+			1,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out
+		)
+		
+		local colorTween = TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor})
+		colorTween:Play()
+	end
+end)
+
+
+
+
+
+
     -- Create inner frame with accent border
     local PreviewInner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor,
@@ -5355,11 +5498,11 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
         while task.wait(1) do
             if lastMain ~= Library.MainColor or lastAccent ~= Library.AccentColor then
                 lastMain, lastAccent = Library.MainColor, Library.AccentColor
-                TweenService:Create(PreviewInner, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                TweenService:Create(PreviewInner, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = lastMain,
                     BorderColor3 = lastAccent
                 }):Play()
-                TweenService:Create(Highlight, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                TweenService:Create(Highlight, TweenInfo.new(4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = lastAccent
                 }):Play()
             end
