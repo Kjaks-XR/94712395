@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5XT FIX ATTEMPT 1"
+local version = "0.5XT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -869,15 +869,29 @@ function Library:MapValue(Value, MinA, MaxA, MinB, MaxB)
     return (1 - ((Value - MinA) / (MaxA - MinA))) * MinB + ((Value - MinA) / (MaxA - MinA)) * MaxB;
 end;
 
+
 function Library:GetTextBounds(Text, Font, Size, Resolution)
+  --print(Text,Font,Size,Resolution)
     local maxRetries = 5
     local retryCount = 0
     
     while retryCount < maxRetries do
         local success, result = pcall(function()
+            -- Validate font
+            if not Font then
+                error("Invalid font provided")
+            end
+            
             local Params = Instance.new("GetTextBoundsParams")
             Params.Text = Text
-            Params.Font = Font
+            
+            -- Use FontFace for custom fonts, Font for Enum.Font
+            if typeof(Font) == "FontFace" then
+                Params.FontFace = Font  -- ✅ Use FontFace for custom fonts
+            else
+                Params.Font = Font  -- For standard Enum.Font values
+            end
+            
             Params.Size = Size
             Params.Width = (Resolution or Vector2.new(1920, 1080)).X
             
@@ -889,12 +903,13 @@ function Library:GetTextBounds(Text, Font, Size, Resolution)
         end
         
         retryCount = retryCount + 1
-        wait(0.1)  -- Small delay before retrying
+        wait(0.1)
     end
     
-    warn("GetTextBounds failed after retries")
+    warn("GetTextBounds failed after retries with font:", Font)
     return 0, 0
 end
+
 
 
 function Library:GetDarkerColor(Color)
@@ -4705,6 +4720,12 @@ function Library:CreateWindow(...)
 
     return Window;
 end;
+
+
+
+
+
+
 
 
 
