@@ -870,28 +870,32 @@ function Library:MapValue(Value, MinA, MaxA, MinB, MaxB)
 end;
 
 function Library:GetTextBounds(Text, Font, Size, Resolution)
-    -- Wait for TextService to be ready
-    if not game:IsLoaded() then
-        game.Loaded:Wait()
+    local maxRetries = 5
+    local retryCount = 0
+    
+    while retryCount < maxRetries do
+        local success, result = pcall(function()
+            local Params = Instance.new("GetTextBoundsParams")
+            Params.Text = Text
+            Params.Font = Font
+            Params.Size = Size
+            Params.Width = (Resolution or Vector2.new(1920, 1080)).X
+            
+            return TextService:GetTextBoundsAsync(Params)
+        end)
+        
+        if success then
+            return result.X, result.Y
+        end
+        
+        retryCount = retryCount + 1
+        wait(0.1)  -- Small delay before retrying
     end
     
-    local Params = Instance.new("GetTextBoundsParams")
-    Params.Text = Text
-    Params.Font = Font
-    Params.Size = Size
-    Params.Width = (Resolution or Vector2.new(1920, 1080)).X
-    
-    local success, Bounds = pcall(function()
-        return TextService:GetTextBoundsAsync(Params)
-    end)
-    
-    if success then
-        return Bounds.X, Bounds.Y
-    else
-        warn("GetTextBounds failed:", Bounds)
-        return 5, 5
-    end
+    warn("GetTextBounds failed after retries")
+    return 0, 0
 end
+
 
 function Library:GetDarkerColor(Color)
     local H, S, V = Color3.toHSV(Color);
