@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.04	B	X    HOT-FIX"
+local version = "0.5XT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -3726,6 +3726,78 @@ do
         Parent = WatermarkOuter;
     });
 
+
+
+
+
+
+
+local glow = Instance.new("ImageLabel", WatermarkOuter)
+glow.Name = "GlowEffect"
+glow.Image = "rbxassetid://18245826428" -- Glow texture ID
+glow.ScaleType = Enum.ScaleType.Slice
+glow.SliceCenter = Rect.new(21, 21, 79, 79)
+glow.ImageColor3 = Library.AccentColor
+glow.ImageTransparency = 0.6
+glow.BackgroundTransparency = 1
+glow.Size = UDim2.new(1, 40, 1, 40)
+glow.Position = UDim2.new(0, -20, 0, -20)
+glow.ZIndex = -1
+
+-- Create pulsing animation
+local TweenService = game:GetService("TweenService")
+local startTransparency = 0.8
+local minTransparency = 0.5
+local pulseDuration = getgenv().glowwatermarkspeed or 4
+
+local pulseInfo = TweenInfo.new(
+	pulseDuration / 2,
+	Enum.EasingStyle.Sine,
+	Enum.EasingDirection.InOut
+)
+
+local function createPulseTween()
+	local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = minTransparency})
+	local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = startTransparency})
+	
+	tweenOut.Completed:Connect(function()
+		tweenIn:Play()
+	end)
+	
+	tweenIn.Completed:Connect(function()
+		tweenOut:Play()
+	end)
+	
+	tweenOut:Play()
+end
+
+-- Start pulsing animation
+createPulseTween()
+
+-- Watch for color changes and tween them
+local lastColor = Library.AccentColor
+local colorChangeConnection
+
+colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
+	if Library.AccentColor ~= lastColor then
+		lastColor = Library.AccentColor
+		
+		local colorTweenInfo = TweenInfo.new(
+			1,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out
+		)
+		
+		local colorTween = TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor})
+		colorTween:Play()
+	end
+end)
+
+
+
+
+
+
     Library:AddToRegistry(WatermarkInner, {
         BorderColor3 = 'AccentColor';
     });
@@ -4625,6 +4697,14 @@ end;
 
 
 
+
+
+
+
+
+
+
+
 function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
     Config = Config or {}
     local DynamicSize = Config.DynamicSize or false
@@ -4640,6 +4720,10 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         SelectedPlayer = nil;
         SelectedPlayerName = nil;
         SearchText = '';
+        FilterTeam = nil;
+        SortMethod = 'name'; -- 'name', 'team', 'distance'
+        OnlineCount = 0;
+        ShowOnlineIndicator = Config.ShowOnlineIndicator ~= false;
     }
     
     local Outer = Library:Create('Frame', {
@@ -4666,17 +4750,18 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         BorderColor3 = 'AccentColor';
     });
 
+    -- === Title with online count ===
     local TitleLabel = Library:CreateLabel({
         Position = UDim2.new(0, 7, 0, 0);
         Size = UDim2.new(0, 0, 0, 20);
-        Text = WindowName or 'Players Online';
+        Text = (WindowName or 'Players Online') .. ' [0]';
         TextXAlignment = Enum.TextXAlignment.Left;
         TextSize = 12;
         ZIndex = 1;
         Parent = Inner;
     });
 
-    -- === NEW: Search Bar ===
+    -- === Search Bar ===
     local SearchBoxOuter = Library:Create('Frame', {
         BackgroundColor3 = Color3.new(0, 0, 0);
         BorderColor3 = Color3.new(0, 0, 0);
@@ -4721,12 +4806,154 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         TextColor3 = 'FontColor';
     });
 
-    -- Player List Container
+    -- === Filter & Sort Bar ===
+    local ControlsOuter = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Library.OutlineColor;
+        Position = UDim2.new(0, 8, 0, 39);
+        Size = UDim2.new(1, -16, 0, 16);
+        ZIndex = 5;
+        Parent = Inner;
+    });
+
+    Library:AddToRegistry(ControlsOuter, {
+        BackgroundColor3 = 'BackgroundColor';
+        BorderColor3 = 'OutlineColor';
+    });
+
+    local ControlsLayout = Library:Create('UIListLayout', {
+        Padding = UDim.new(0, 2);
+        FillDirection = Enum.FillDirection.Horizontal;
+        SortOrder = Enum.SortOrder.LayoutOrder;
+        Parent = ControlsOuter;
+    });
+
+    -- Sort button
+    local SortButton = Library:Create('TextButton', {
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.OutlineColor;
+        Size = UDim2.new(0.5, -1, 1, 0);
+        Text = 'Sort';
+        TextColor3 = Library.FontColor;
+        TextSize = 9;
+        FontFace = Library.Font;
+        ZIndex = 6;
+        Parent = ControlsOuter;
+    });
+
+    Library:AddToRegistry(SortButton, {
+        BackgroundColor3 = 'MainColor';
+        BorderColor3 = 'OutlineColor';
+        TextColor3 = 'FontColor';
+    });
+
+    local function UpdateSortButtonText()
+        if PlayerListFrame.SortMethod == 'name' then
+            SortButton.Text = 'Sort: Name'
+        elseif PlayerListFrame.SortMethod == 'team' then
+            SortButton.Text = 'Sort: Team'
+        elseif PlayerListFrame.SortMethod == 'distance' then
+            SortButton.Text = 'Sort: Dist'
+        end
+    end
+
+    local SortMenu = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Library.OutlineColor;
+        Position = UDim2.new(0, 0, 1, 2);
+        Size = UDim2.fromOffset(60, 60);
+        Visible = false;
+        ZIndex = 10;
+        Parent = ControlsOuter;
+    });
+
+    Library:AddToRegistry(SortMenu, {
+        BackgroundColor3 = 'BackgroundColor';
+        BorderColor3 = 'OutlineColor';
+    });
+
+    local SortLayout = Library:Create('UIListLayout', {
+        FillDirection = Enum.FillDirection.Vertical;
+        SortOrder = Enum.SortOrder.LayoutOrder;
+        Parent = SortMenu;
+    });
+
+    for _, sortType in ipairs({'name', 'team', 'distance'}) do
+        local SortOption = Library:Create('TextButton', {
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Color3.new(0, 0, 0);
+            Size = UDim2.new(1, -1, 0, 18);
+            Text = sortType:sub(1, 1):upper() .. sortType:sub(2);
+            TextColor3 = Library.FontColor;
+            TextSize = 10;
+            FontFace = Library.Font;
+            ZIndex = 11;
+            Parent = SortMenu;
+        });
+
+        Library:AddToRegistry(SortOption, {
+            BackgroundColor3 = 'MainColor';
+            TextColor3 = 'FontColor';
+        });
+
+        SortOption.MouseButton1Click:Connect(function()
+            PlayerListFrame.SortMethod = sortType
+            UpdateSortButtonText()
+            PlayerListFrame:UpdatePlayerList()
+            SortMenu.Visible = false
+        end)
+    end
+
+    SortButton.MouseButton1Click:Connect(function()
+        SortMenu.Visible = not SortMenu.Visible
+    end)
+
+    UpdateSortButtonText()
+
+    -- === Clear Selection Button ===
+    local ClearButton = Library:Create('TextButton', {
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.OutlineColor;
+        Size = UDim2.new(0.5, -1, 1, 0);
+        Text = 'Clear';
+        TextColor3 = Library.FontColor;
+        TextSize = 9;
+        FontFace = Library.Font;
+        ZIndex = 6;
+        Parent = ControlsOuter;
+    });
+
+    Library:AddToRegistry(ClearButton, {
+        BackgroundColor3 = 'MainColor';
+        BorderColor3 = 'OutlineColor';
+        TextColor3 = 'FontColor';
+    });
+
+    ClearButton.MouseButton1Click:Connect(function()
+        if PlayerListFrame.SelectedPlayer then
+            local prevButton = PlayerListFrame.SelectedPlayer.Button
+            TweenService:Create(prevButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                BackgroundColor3 = Library.MainColor
+            }):Play()
+            
+            for _, child in next, prevButton:GetDescendants() do
+                if child:IsA('TextLabel') and child.Name ~= 'UITextSizeConstraint' then
+                    TweenService:Create(child, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                        TextColor3 = Library.FontColor
+                    }):Play()
+                end
+            end
+        end
+        PlayerListFrame.SelectedPlayer = nil
+        PlayerListFrame.SelectedPlayerName = nil
+    end)
+
+    -- === Player List Container ===
     local ListOuter = Library:Create('Frame', {
         BackgroundColor3 = Library.BackgroundColor;
         BorderColor3 = Library.OutlineColor;
-        Position = UDim2.new(0, 8, 0, 40);
-        Size = UDim2.new(1, -16, 1, -48);
+        Position = UDim2.new(0, 8, 0, 56);
+        Size = UDim2.new(1, -16, 1, -64);
         ZIndex = 1;
         Parent = Inner;
     });
@@ -4776,7 +5003,6 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
     });
 
     local PlayerButtons = {};
-    local TweenService = game:GetService('TweenService');
 
     local function IsPlayerFlagged(playerName)
         for _, name in next, getgenv().playerstoflag do
@@ -4787,9 +5013,69 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         return false
     end
 
+    local function GetPlayerClan(player)
+        local success, clan = pcall(function()
+            local clanFolder = game:GetService("ReplicatedStorage"):FindFirstChild("Players")
+            if not clanFolder then return nil end
+            
+            local playerFolder = clanFolder:FindFirstChild(player.Name)
+            if not playerFolder then return nil end
+            
+            local statusFolder = playerFolder:FindFirstChild("Status")
+            if not statusFolder then return nil end
+            
+            local journeyFolder = statusFolder:FindFirstChild("Journey")
+            if not journeyFolder then return nil end
+            
+            local clanFolderObj = journeyFolder:FindFirstChild("Clan")
+            if not clanFolderObj then return nil end
+            
+            local currentClan = clanFolderObj:GetAttribute("CurrentClan")
+            return currentClan
+        end)
+        
+        if success then return clan end
+        return nil
+    end
+
+    local function IsPlayerInLocalPlayerClan(player)
+        if player == LocalPlayer then return false end
+        
+        local localPlayerClan = GetPlayerClan(LocalPlayer)
+        if not localPlayerClan or localPlayerClan == "" then return false end
+        
+        local playerClan = GetPlayerClan(player)
+        if not playerClan or playerClan == "" then return false end
+        
+        return localPlayerClan == playerClan
+    end
+
     local function MatchesSearch(playerName)
         if PlayerListFrame.SearchText == '' then return true end
         return string.find(string.lower(playerName), string.lower(PlayerListFrame.SearchText), 1, true) ~= nil
+    end
+
+    local function GetPlayerDistance(player)
+        if player.Character and player.Character:FindFirstChild('HumanoidRootPart') then
+            local dist = (LocalPlayer.Character:FindFirstChild('HumanoidRootPart').Position - player.Character.HumanoidRootPart.Position).Magnitude
+            return dist
+        end
+        return math.huge
+    end
+
+    local function SortPlayers(playerList)
+        if PlayerListFrame.SortMethod == 'name' then
+            table.sort(playerList, function(a, b) return a.Name < b.Name end)
+        elseif PlayerListFrame.SortMethod == 'team' then
+            table.sort(playerList, function(a, b) 
+                local teamA = a.Team and a.Team.Name or 'No Team'
+                local teamB = b.Team and b.Team.Name or 'No Team'
+                if teamA ~= teamB then return teamA < teamB end
+                return a.Name < b.Name
+            end)
+        elseif PlayerListFrame.SortMethod == 'distance' then
+            table.sort(playerList, function(a, b) return GetPlayerDistance(a) < GetPlayerDistance(b) end)
+        end
     end
 
     function PlayerListFrame:UpdatePlayerList()
@@ -4799,10 +5085,13 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         PlayerButtons = {};
 
         local PlayerList = Players:GetPlayers();
-        table.sort(PlayerList, function(a, b) return a.Name < b.Name end);
+        SortPlayers(PlayerList)
+
+        local OnlineCount = 0
 
         local function CreatePlayerButton(Player, isLocal)
             if not MatchesSearch(Player.Name) then return end
+            OnlineCount = OnlineCount + 1
 
             local PlayerButton = Library:Create('Frame', {
                 BackgroundColor3 = Library.MainColor;
@@ -4832,7 +5121,22 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
                 displayName = displayName .. " [LOCAL]"
             end
             if IsPlayerFlagged(Player.Name) then
-                displayName = displayName .. " [<font color=\"rgb(255, 100, 100)\">★</font>]"
+                displayName = displayName .. " [<font color=\"rgb(255, 100, 100)\">✓</font>]"
+            end
+
+            -- Add distance if sorting by distance
+            if PlayerListFrame.SortMethod == 'distance' then
+                local dist = math.floor(GetPlayerDistance(Player))
+                displayName = displayName .. " (" .. dist .. "m)"
+            end
+
+            -- Check if player is in local player's clan and add green T
+            local isInClan = IsPlayerInLocalPlayerClan(Player)
+            if isInClan then
+                displayName = displayName .. " [<font color=\"rgb(100, 255, 100)\">T</font>]"
+            elseif Player.Team then
+                -- Add team if available (only if not in clan)
+                displayName = displayName .. " [" .. Player.Team.Name:sub(1, 1) .. "]"
             end
 
             local PlayerLabel = Library:CreateLabel({
@@ -4908,15 +5212,19 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
             end
         end
 
+        -- Update online count
+        PlayerListFrame.OnlineCount = OnlineCount
+        TitleLabel.Text = (WindowName or 'Players Online') .. ' [' .. OnlineCount .. ']'
+
         ScrollingFrame.CanvasSize = UDim2.fromOffset(0, ListLayout.AbsoluteContentSize.Y);
         
         if DynamicSize then
-            local newHeight = math.max(ListLayout.AbsoluteContentSize.Y + 88, Height);
+            local newHeight = math.max(ListLayout.AbsoluteContentSize.Y + 120, Height);
             Outer.Size = UDim2.fromOffset(Width, newHeight);
         end
     end
 
-    -- === NEW: Search functionality ===
+    -- === Search functionality ===
     SearchBox:GetPropertyChangedSignal('Text'):Connect(function()
         PlayerListFrame.SearchText = SearchBox.Text
         PlayerListFrame:UpdatePlayerList()
@@ -4924,6 +5232,14 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
 
     function PlayerListFrame:OnPlayerSelected(Callback)
         PlayerListFrame.OnPlayerSelected = Callback;
+    end
+
+    function PlayerListFrame:SetSortMethod(method)
+        if method == 'name' or method == 'team' or method == 'distance' then
+            PlayerListFrame.SortMethod = method
+            UpdateSortButtonText()
+            PlayerListFrame:UpdatePlayerList()
+        end
     end
 
     Library:GiveSignal(Players.PlayerAdded:Connect(function()
@@ -4991,12 +5307,6 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
 
     return PlayerListFrame;
 end
-
-
-
-
-
-
 
 
 local RunService = game:GetService("RunService")
