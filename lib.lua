@@ -3068,6 +3068,7 @@ end;
 
 
 
+
 function Funcs:AddDropdown(Idx, Info)
     if Info.SpecialType == 'Player' then
         Info.Values = GetPlayersString();
@@ -4616,6 +4617,572 @@ function Library:CreateWindow(...)
 
     return Window;
 end;
+
+
+
+
+
+
+
+
+
+-- Add this function to your Library object (place it near the CreateWindow function)
+
+function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
+    Config = Config or {}
+    local DynamicSize = Config.DynamicSize or false
+    local Width = Config.Width or 250
+    local Height = Config.Height or 400
+    
+    -- Initialize the flagging table
+    if not getgenv().playerstoflag then
+        getgenv().playerstoflag = {}
+    end
+    
+    local PlayerListFrame = {
+        Players = {};
+        SelectedPlayer = nil;
+        SelectedPlayerName = nil;
+    }
+    
+    local Outer = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0);
+        BorderColor3 = Color3.new(0, 0, 0);
+        Position = UDim2.fromOffset(0, 0);
+        Size = UDim2.fromOffset(Width, Height);
+        ZIndex = 1;
+        Parent = ScreenGui;
+    });
+
+    local Inner = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.AccentColor;
+        BorderMode = Enum.BorderMode.Inset;
+        Position = UDim2.new(0, 1, 0, 1);
+        Size = UDim2.new(1, -2, 1, -2);
+        ZIndex = 1;
+        Parent = Outer;
+    });
+
+    Library:AddToRegistry(Inner, {
+        BackgroundColor3 = 'MainColor';
+        BorderColor3 = 'AccentColor';
+    });
+
+    -- Title
+    local TitleLabel = Library:CreateLabel({
+        Position = UDim2.new(0, 7, 0, 0);
+        Size = UDim2.new(0, 0, 0, 25);
+        Text =  WindowName or 'Players Online';
+        TextXAlignment = Enum.TextXAlignment.Left;
+        TextSize = 12;
+        ZIndex = 1;
+        Parent = Inner;
+    });
+
+    -- Player List Container
+    local ListOuter = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Library.OutlineColor;
+        Position = UDim2.new(0, 8, 0, 28);
+        Size = UDim2.new(1, -16, 1, -36);
+        ZIndex = 1;
+        Parent = Inner;
+    });
+
+    Library:AddToRegistry(ListOuter, {
+        BackgroundColor3 = 'BackgroundColor';
+        BorderColor3 = 'OutlineColor';
+    });
+
+    local ListInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Color3.new(0, 0, 0);
+        BorderMode = Enum.BorderMode.Inset;
+        Position = UDim2.new(0, 0, 0, 0);
+        Size = UDim2.new(1, 0, 1, 0);
+        ZIndex = 2;
+        Parent = ListOuter;
+    });
+
+    Library:AddToRegistry(ListInner, {
+        BackgroundColor3 = 'BackgroundColor';
+    });
+
+    -- Scrolling Frame for player list
+    local ScrollingFrame = Library:Create('ScrollingFrame', {
+        BackgroundTransparency = 1;
+        BorderSizePixel = 0;
+        CanvasSize = UDim2.new(0, 0, 0, 0);
+        Size = UDim2.new(1, 0, 1, 0);
+        ZIndex = 2;
+        Parent = ListInner;
+
+        TopImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png';
+        BottomImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png';
+        ScrollBarThickness = 3;
+        ScrollBarImageColor3 = Library.AccentColor;
+    });
+
+    Library:AddToRegistry(ScrollingFrame, {
+        ScrollBarImageColor3 = 'AccentColor'
+    });
+
+    local ListLayout = Library:Create('UIListLayout', {
+        Padding = UDim.new(0, 2);
+        FillDirection = Enum.FillDirection.Vertical;
+        SortOrder = Enum.SortOrder.LayoutOrder;
+        Parent = ScrollingFrame;
+    });
+
+    local PlayerButtons = {};
+    local TweenService = game:GetService('TweenService');
+
+    local function IsPlayerFlagged(playerName)
+        for _, name in next, getgenv().playerstoflag do
+            if name == playerName then
+                return true
+            end
+        end
+        return false
+    end
+
+    local function TruncateName(name, isLocal)
+        local suffix = isLocal and " [LOCAL]" or "";
+        local flagSuffix = IsPlayerFlagged(name) and " [C]" or "";
+        local maxLength = 22 - #suffix - #flagSuffix;
+        
+        if #name > maxLength then
+            return name:sub(1, maxLength) .. "..." .. suffix .. flagSuffix;
+        end
+        
+        return name .. suffix .. flagSuffix;
+    end
+
+    function PlayerListFrame:UpdatePlayerList()
+        -- Clear existing buttons but preserve selection
+        for _, Button in next, PlayerButtons do
+            Button:Destroy();
+        end
+        PlayerButtons = {};
+
+        local PlayerList = Players:GetPlayers();
+        table.sort(PlayerList, function(a, b) return a.Name < b.Name end);
+
+        local function CreatePlayerButton(Player, isLocal)
+            local PlayerButton = Library:Create('Frame', {
+                BackgroundColor3 = Library.MainColor;
+                BorderColor3 = Library.OutlineColor;
+                BorderMode = Enum.BorderMode.Middle;
+                Size = UDim2.new(1, -1, 0, 22);
+                ZIndex = 3;
+                Active = true;
+                Parent = ScrollingFrame;
+            });
+
+            Library:AddToRegistry(PlayerButton, {
+                BackgroundColor3 = 'MainColor';
+                BorderColor3 = 'OutlineColor';
+            });
+
+            local PlayerLabelContainer = Library:Create('Frame', {
+                BackgroundTransparency = 1;
+                Size = UDim2.new(1, -6, 1, 0);
+                Position = UDim2.new(0, 6, 0, 0);
+                ZIndex = 4;
+                Parent = PlayerButton;
+            });
+
+            local displayName = Player.Name
+            if isLocal then
+                displayName = displayName .. " [LOCAL]"
+            end
+            if IsPlayerFlagged(Player.Name) then
+                displayName = displayName .. " [<font color=\"rgb(255, 0, 0)\">C</font>]"
+            end
+
+            local PlayerLabel = Library:CreateLabel({
+                Active = false;
+                Size = UDim2.new(1, 0, 1, 0);
+                TextSize = 11;
+                Text = displayName;
+                TextXAlignment = Enum.TextXAlignment.Left;
+                RichText = true;
+                ZIndex = 4;
+                Parent = PlayerLabelContainer;
+            });
+
+            if isLocal then
+                local LocalTag = Library:CreateLabel({
+                    Active = false;
+                    Size = UDim2.new(0, 50, 1, 0);
+                    TextSize = 9;
+                    Text = "[LOCAL]";
+                    TextColor3 = Color3.fromRGB(128, 128, 128);
+                    TextXAlignment = Enum.TextXAlignment.Right;
+                    ZIndex = 4;
+                    Parent = PlayerLabelContainer;
+                });
+            end
+
+            -- Restore selection if this is the selected player
+            if PlayerListFrame.SelectedPlayerName == Player.Name then
+                PlayerButton.BackgroundColor3 = Library.AccentColor;
+                for _, child in next, PlayerButton:GetDescendants() do
+                    if child:IsA('TextLabel') and child.Name ~= 'UITextSizeConstraint' then
+                        child.TextColor3 = Color3.fromRGB(255, 255, 255);
+                    end
+                end
+                PlayerListFrame.SelectedPlayer = { Name = Player.Name, Button = PlayerButton };
+            end
+
+            -- Hover effect
+            Library:OnHighlight(PlayerButton, PlayerButton,
+                { BorderColor3 = 'AccentColor', ZIndex = 4 },
+                { BorderColor3 = 'OutlineColor', ZIndex = 3 }
+            );
+
+            PlayerButton.InputBegan:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    -- Deselect previous player
+                    if PlayerListFrame.SelectedPlayer then
+                        local prevButton = PlayerListFrame.SelectedPlayer.Button;
+                        TweenService:Create(prevButton, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                            BackgroundColor3 = Library.MainColor
+                        }):Play();
+                        
+                        for _, child in next, prevButton:GetDescendants() do
+                            if child:IsA('TextLabel') and child.Name ~= 'UITextSizeConstraint' then
+                                TweenService:Create(child, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                    TextColor3 = Library.FontColor
+                                }):Play();
+                            end
+                        end
+                    end
+
+                    -- Select new player
+                    PlayerListFrame.SelectedPlayerName = Player.Name;
+                    PlayerListFrame.SelectedPlayer = { Name = Player.Name, Button = PlayerButton };
+                    
+                    TweenService:Create(PlayerButton, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = Library.AccentColor
+                    }):Play();
+                    
+                    -- Set text to white with tween
+                    for _, child in next, PlayerButton:GetDescendants() do
+                        if child:IsA('TextLabel') and child.Name ~= 'UITextSizeConstraint' then
+                            TweenService:Create(child, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                TextColor3 = Color3.fromRGB(255, 255, 255)
+                            }):Play();
+                        end
+                    end
+
+                    Library:SafeCallback(PlayerListFrame.OnPlayerSelected, Player);
+                end
+            end);
+
+            table.insert(PlayerButtons, PlayerButton);
+            return PlayerButton;
+        end
+
+        -- Add LocalPlayer first
+        CreatePlayerButton(LocalPlayer, true);
+
+        -- Add other players
+        for _, Player in next, PlayerList do
+            if Player ~= LocalPlayer then
+                CreatePlayerButton(Player, false);
+            end
+        end
+
+        ScrollingFrame.CanvasSize = UDim2.fromOffset(0, ListLayout.AbsoluteContentSize.Y);
+        
+        -- Dynamic sizing
+        if DynamicSize then
+            local newHeight = ListLayout.AbsoluteContentSize.Y + 64;
+            Outer.Size = UDim2.fromOffset(Width, newHeight);
+        end
+    end
+
+    function PlayerListFrame:OnPlayerSelected(Callback)
+        PlayerListFrame.OnPlayerSelected = Callback;
+    end
+
+    -- Auto-update when players join/leave
+    Library:GiveSignal(Players.PlayerAdded:Connect(function()
+        PlayerListFrame:UpdatePlayerList();
+    end));
+
+    Library:GiveSignal(Players.PlayerRemoving:Connect(function()
+        PlayerListFrame:UpdatePlayerList();
+    end));
+
+    -- Monitor flag changes in real-time
+    task.spawn(function()
+        local lastFlagCount = 0
+        while Outer.Parent do
+            task.wait(0.1)
+            local currentFlagCount = #getgenv().playerstoflag
+            if currentFlagCount ~= lastFlagCount then
+                lastFlagCount = currentFlagCount
+                PlayerListFrame:UpdatePlayerList()
+            end
+        end
+    end);
+
+    -- Color transmission with library colors (proper version)
+    task.defer(function()
+        local lastMain, lastAccent = Library.MainColor, Library.AccentColor
+        while Outer.Parent do
+            task.wait(1)
+            if lastMain ~= Library.MainColor or lastAccent ~= Library.AccentColor then
+                lastMain, lastAccent = Library.MainColor, Library.AccentColor
+                TweenService:Create(Inner, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = lastMain,
+                    BorderColor3 = lastAccent
+                }):Play()
+            end
+        end
+    end)
+
+    -- Initial update
+    PlayerListFrame:UpdatePlayerList();
+
+    -- Sync visibility with main window
+    if MainWindow and MainWindow.Holder then
+        MainWindow.Holder:GetPropertyChangedSignal('Visible'):Connect(function()
+            Outer.Visible = MainWindow.Holder.Visible;
+        end);
+        
+        Outer.Visible = MainWindow.Holder.Visible;
+    end
+
+    -- Position and track next to main window (on the left)
+    local function UpdatePosition()
+        if MainWindow and MainWindow.Holder and MainWindow.Holder.Parent then
+            local mainPos = MainWindow.Holder.AbsolutePosition;
+            local leftX = mainPos.X - Width - 5;
+            leftX = math.max(5, leftX);
+            Outer.Position = UDim2.fromOffset(leftX, mainPos.Y);
+        end
+    end
+
+    if MainWindow and MainWindow.Holder then
+        Library:GiveSignal(MainWindow.Holder:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdatePosition));
+        Library:GiveSignal(MainWindow.Holder:GetPropertyChangedSignal('AbsoluteSize'):Connect(UpdatePosition));
+        UpdatePosition();
+    else
+        Outer.Position = UDim2.fromOffset(5, 50);
+    end
+
+    PlayerListFrame.Holder = Outer;
+
+    return PlayerListFrame;
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
+    Config = Config or {}
+    
+    local PreviewSize = Config.Size or UDim2.fromOffset(220, 300)
+    local TargetObject = Config.Object or Workspace:FindFirstChild('CashRegister')
+    local ShouldRotate = Config.Rotate or true
+    local RotateSpeed = Config.RotateSpeed or 2
+    
+    local PreviewOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        BorderColor3 = Color3.new(0, 0, 0),
+        Size = PreviewSize,
+        Position = UDim2.new(1, 10, 0, 25),
+        Parent = ParentWindow.Holder,
+        ZIndex = 50,
+    })
+    
+
+local TweenService = game:GetService("TweenService");
+
+local PreviewInner = Library:Create('Frame', {
+	BackgroundColor3 = Library.MainColor,
+	BorderColor3 = Library.AccentColor,
+	BorderMode = Enum.BorderMode.Inset,
+	Size = UDim2.new(1, 0, 1, 0),
+	Position = UDim2.new(0, 1, 0, 1),
+	ZIndex = 51,
+	Parent = PreviewOuter,
+});
+
+local Highlight = Library:Create('Frame', {
+	BackgroundColor3 = Library.AccentColor,
+	BorderSizePixel = 0,
+	Size = UDim2.new(1, 0, 0, 2),
+	ZIndex = 52,
+	Parent = PreviewInner,
+});
+
+task.defer(function()
+	local lastMain, lastAccent = Library.MainColor, Library.AccentColor;
+	while task.wait(1) do
+		if lastMain ~= Library.MainColor or lastAccent ~= Library.AccentColor then
+			lastMain, lastAccent = Library.MainColor, Library.AccentColor;
+			TweenService:Create(PreviewInner, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundColor3 = lastMain,
+				BorderColor3 = lastAccent
+			}):Play();
+			TweenService:Create(Highlight, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundColor3 = lastAccent
+			}):Play();
+		end;
+	end;
+end);
+
+
+    
+    local PreviewLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 4, 0, 2),
+        Text = WindowName or 'Preview',
+        TextSize = 12,
+        ZIndex = 52,
+        Parent = PreviewInner,
+    })
+    
+    local ViewportFrame = Instance.new('ViewportFrame')
+    ViewportFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    ViewportFrame.BorderSizePixel = 0
+    ViewportFrame.Position = UDim2.new(0, 0, 0, 20)
+    ViewportFrame.Size = UDim2.new(1, 0, 1, -20)
+    ViewportFrame.ZIndex = 52
+    ViewportFrame.Parent = PreviewInner
+    
+    local Camera = Instance.new('Camera')
+    Camera.Parent = ViewportFrame
+    Camera.FieldOfView = 33 --IMP
+    ViewportFrame.CurrentCamera = Camera
+    
+    local ClonedModel = Instance.new('Folder')
+    ClonedModel.Name = 'PreviewModel'
+    ClonedModel.Parent = ViewportFrame
+    
+    local rotation = 0
+    local ClonedReference = nil
+    local OriginalCFrames = {}
+    
+    local function CloneObject()
+        for _, child in pairs(ClonedModel:GetChildren()) do
+            child:Destroy()
+        end
+        
+        if not TargetObject then return end
+        
+        local Cloned = TargetObject:Clone()
+        Cloned.Parent = ClonedModel
+        ClonedReference = Cloned
+        OriginalCFrames = {}
+        
+        -- Bütün parçaların orijinal CFrame'lerini kaydet
+        for _, Part in pairs(Cloned:GetDescendants()) do
+            if Part:IsA('BasePart') then
+                OriginalCFrames[Part] = Part.CFrame
+            end
+        end
+    end
+    
+    task.wait(0.1)
+    CloneObject()
+    
+    local UpdateConnection
+    UpdateConnection = RunService.RenderStepped:Connect(function()
+        if not ViewportFrame.Parent then
+            UpdateConnection:Disconnect()
+            return
+        end
+        
+        if not ClonedReference then return end
+        
+        -- Rotation
+        if ShouldRotate then
+            rotation = rotation + RotateSpeed * 0.016
+            local angle = math.rad(rotation)
+            
+            for Part, OriginalCFrame in pairs(OriginalCFrames) do
+                if Part.Parent then
+                    local originalPos = OriginalCFrame.Position
+                    local originalRot = OriginalCFrame
+                    
+                    -- Y ekseni etrafında döndür
+                    local rotated = CFrame.Angles(0, angle, 0)
+                    Part.CFrame = rotated * OriginalCFrame
+                end
+            end
+        end
+        
+        -- Kamera ve bounds hesapla
+        local AllParts = {}
+        for _, Part in pairs(ClonedModel:GetDescendants()) do
+            if Part:IsA('BasePart') then
+                table.insert(AllParts, Part)
+            end
+        end
+        
+        if #AllParts > 0 then
+            local minX, minY, minZ = math.huge, math.huge, math.huge
+            local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
+            
+            for _, Part in pairs(AllParts) do
+                local pos = Part.Position
+                local size = Part.Size / 2
+                minX = math.min(minX, pos.X - size.X)
+                minY = math.min(minY, pos.Y - size.Y)
+                minZ = math.min(minZ, pos.Z - size.Z)
+                maxX = math.max(maxX, pos.X + size.X)
+                maxY = math.max(maxY, pos.Y + size.Y)
+                maxZ = math.max(maxZ, pos.Z + size.Z)
+            end
+            
+            local centerPos = Vector3.new((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2)
+            local boundSize = Vector3.new(maxX - minX, maxY - minY, maxZ - minZ).Magnitude
+            
+            -- Kamera düz bak
+            local camDist = boundSize * 2
+            local camPos = centerPos + Vector3.new(0, 0, camDist)
+            
+            Camera.CFrame = CFrame.new(camPos, centerPos)
+        end
+    end)
+    
+    return {
+        Outer = PreviewOuter,
+        Update = CloneObject,
+        SetObject = function(self, obj)
+            TargetObject = obj
+            CloneObject()
+        end,
+        SetRotate = function(self, enabled)
+            ShouldRotate = enabled
+        end,
+        SetRotateSpeed = function(self, speed)
+            RotateSpeed = speed
+        end,
+    }
+end
+
+
+
+
+
+
+
 
 local function OnPlayerChange()
     local PlayerList = GetPlayersString();
