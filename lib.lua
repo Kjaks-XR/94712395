@@ -8,7 +8,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5XT"
+local version = "0.5XT FIX ATTEMPT 1"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -870,6 +870,11 @@ function Library:MapValue(Value, MinA, MaxA, MinB, MaxB)
 end;
 
 function Library:GetTextBounds(Text, Font, Size, Resolution)
+    -- Wait for TextService to be ready
+    if not game:IsLoaded() then
+        game.Loaded:Wait()
+    end
+    
     local Params = Instance.new("GetTextBoundsParams")
     Params.Text = Text
     Params.Font = Font
