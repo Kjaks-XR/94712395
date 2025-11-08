@@ -8,11 +8,11 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5XT-A1"
+local version = "0.5XT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
-
+--[[
 
 local fonts = {}
 do
@@ -58,14 +58,21 @@ do
     }
     
     -- Validate fonts loaded correctly
-    if not fonts["ProggyClean"] or typeof(fonts["ProggyClean"]) ~= "Font" then
+    if not fonts.GetFont("ProggyClean") or typeof(fonts.GetFont("ProggyClean")) ~= "Font" then
         warn("⚠️ Font loading failed! Using Enum.Font as fallback")
-        fonts["ProggyClean"] = Enum.Font.GothamProper
+        fonts.GetFont("ProggyClean") = Enum.Font.GothamProper
     end
 end
 
 
 print("downloaded fonts")
+]]
+
+
+local fonts = loadstring(game:HttpGet('https://raw.githubusercontent.com/Nexus-Scripts/nexusscripts-roblox-ui-custom-font-loader/refs/heads/main/custom_ui_fonts.lua'))()
+
+local customFonts = fonts.InitializeDefaultFonts()
+fonts.SetDebugMode(false)
 
 
 
@@ -306,7 +313,7 @@ xsx.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 xsx.BackgroundTransparency = 1
 xsx.Position = UDim2.new(0, 10, 0, 5)
 xsx.Size = UDim2.new(0, 120, 0, 21)
-xsx.FontFace = fonts["ProggyClean"]
+xsx.FontFace = fonts.GetFont("ProggyClean")
 xsx.Text = "XWARE V3.4B"
 xsx.TextColor3 = Color3.fromRGB(180, 140, 255)
 xsx.TextSize = 11
@@ -319,7 +326,7 @@ text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 text.BackgroundTransparency = 1
 text.Position = UDim2.new(1, -40, 0, 5)
 text.Size = UDim2.new(0, 30, 0, 21)
-text.FontFace = fonts["ProggyClean"]
+text.FontFace = fonts.GetFont("ProggyClean")
 text.Text = "PRIME"
 text.TextColor3 = Color3.fromRGB(255, 190, 70)
 text.TextSize = 11
@@ -334,7 +341,7 @@ n3TextLabel.BackgroundTransparency = 1
 n3TextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 n3TextLabel.Position = UDim2.new(0.50, 0, 0.4, 0)
 n3TextLabel.Size = UDim2.new(0, 200, 0, 100)
-n3TextLabel.FontFace = fonts["ProggyClean"]
+n3TextLabel.FontFace = fonts.GetFont("ProggyClean")
 n3TextLabel.Text = "<b><font size=\"70\">X</font><font color=\"rgb(180, 140, 255)\"><font size=\"70\">3</font></font></b>"
 n3TextLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
 n3TextLabel.TextSize = 70
@@ -349,7 +356,7 @@ specialEditionBadge.BackgroundColor3 = Color3.fromRGB(25, 18, 40)
 specialEditionBadge.BackgroundTransparency = 0.8
 specialEditionBadge.Position = UDim2.new(0.5, -80, 0.58, 0)
 specialEditionBadge.Size = UDim2.new(0, 160, 0, 22)
-specialEditionBadge.FontFace = fonts["ProggyClean"]
+specialEditionBadge.FontFace = fonts.GetFont("ProggyClean")
 specialEditionBadge.Text = "B SERIES"
 specialEditionBadge.TextColor3 = Color3.fromRGB(180, 140, 255)
 specialEditionBadge.TextSize = 9
@@ -373,7 +380,7 @@ badgeDotLeft.Text = ""
 badgeDotLeft.TextColor3 = Color3.fromRGB(255, 190, 70)
 badgeDotLeft.TextSize = 10
 badgeDotLeft.TextTransparency = 1
-badgeDotLeft.FontFace = fonts["ProggyClean"]
+badgeDotLeft.FontFace = fonts.GetFont("ProggyClean")
 
 local badgeDotRight = Instance.new("TextLabel", specialEditionBadge)
 badgeDotRight.BackgroundTransparency = 1
@@ -383,7 +390,7 @@ badgeDotRight.Text = ""
 badgeDotRight.TextColor3 = Color3.fromRGB(255, 190, 70)
 badgeDotRight.TextSize = 10
 badgeDotRight.TextTransparency = 1
-badgeDotRight.FontFace = fonts["ProggyClean"]
+badgeDotRight.FontFace = fonts.GetFont("ProggyClean")
 
 -- Blinking cursor
 task.spawn(function()
@@ -423,7 +430,7 @@ local function addTerminalLine(textContent, color)
 	local newText = Instance.new("TextLabel")
 	newText.Parent = terminalTextFrame
 	newText.BackgroundTransparency = 1
-	newText.FontFace = fonts["ProggyClean"]
+	newText.FontFace = fonts.GetFont("ProggyClean")
 	newText.Text = textContent
 	newText.TextColor3 = color or Color3.fromRGB(200, 160, 255)
 	newText.TextSize = 9
@@ -606,7 +613,7 @@ local Library = {
     OutlineColor = Color3.fromRGB(50, 50, 50);
     RiskColor = Color3.fromRGB(255, 50, 50),
     Black = Color3.new(0, 0, 0);
-    Font = fonts["ProggyClean"],  -- Use your custom font
+    Font = fonts.GetFont("ProggyClean"),  -- Use your custom font
 
     OpenedFrames = {};
     DependencyBoxes = {};
