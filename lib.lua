@@ -8,11 +8,11 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5XT"
+local version = "0.5T"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
---[[
+
 
 local fonts = {}
 do
@@ -58,21 +58,14 @@ do
     }
     
     -- Validate fonts loaded correctly
-    if not fonts.GetFont("ProggyClean") or typeof(fonts.GetFont("ProggyClean")) ~= "Font" then
+    if not fonts["ProggyClean"] or typeof(fonts["ProggyClean"]) ~= "Font" then
         warn("⚠️ Font loading failed! Using Enum.Font as fallback")
-        fonts.GetFont("ProggyClean") = Enum.Font.GothamProper
+        fonts["ProggyClean"] = Enum.Font.GothamProper
     end
 end
 
 
 print("downloaded fonts")
-]]
-
-
-local fonts = loadstring(game:HttpGet('https://raw.githubusercontent.com/Nexus-Scripts/nexusscripts-roblox-ui-custom-font-loader/refs/heads/main/custom_ui_fonts.lua'))()
-
-local customFonts = fonts.InitializeDefaultFonts()
-fonts.SetDebugMode(false)
 
 
 
@@ -313,7 +306,7 @@ xsx.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 xsx.BackgroundTransparency = 1
 xsx.Position = UDim2.new(0, 10, 0, 5)
 xsx.Size = UDim2.new(0, 120, 0, 21)
-xsx.FontFace = fonts.GetFont("ProggyClean")
+xsx.FontFace = fonts["ProggyClean"]
 xsx.Text = "XWARE V3.4B"
 xsx.TextColor3 = Color3.fromRGB(180, 140, 255)
 xsx.TextSize = 11
@@ -326,7 +319,7 @@ text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 text.BackgroundTransparency = 1
 text.Position = UDim2.new(1, -40, 0, 5)
 text.Size = UDim2.new(0, 30, 0, 21)
-text.FontFace = fonts.GetFont("ProggyClean")
+text.FontFace = fonts["ProggyClean"]
 text.Text = "PRIME"
 text.TextColor3 = Color3.fromRGB(255, 190, 70)
 text.TextSize = 11
@@ -341,7 +334,7 @@ n3TextLabel.BackgroundTransparency = 1
 n3TextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 n3TextLabel.Position = UDim2.new(0.50, 0, 0.4, 0)
 n3TextLabel.Size = UDim2.new(0, 200, 0, 100)
-n3TextLabel.FontFace = fonts.GetFont("ProggyClean")
+n3TextLabel.FontFace = fonts["ProggyClean"]
 n3TextLabel.Text = "<b><font size=\"70\">X</font><font color=\"rgb(180, 140, 255)\"><font size=\"70\">3</font></font></b>"
 n3TextLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
 n3TextLabel.TextSize = 70
@@ -356,7 +349,7 @@ specialEditionBadge.BackgroundColor3 = Color3.fromRGB(25, 18, 40)
 specialEditionBadge.BackgroundTransparency = 0.8
 specialEditionBadge.Position = UDim2.new(0.5, -80, 0.58, 0)
 specialEditionBadge.Size = UDim2.new(0, 160, 0, 22)
-specialEditionBadge.FontFace = fonts.GetFont("ProggyClean")
+specialEditionBadge.FontFace = fonts["ProggyClean"]
 specialEditionBadge.Text = "B SERIES"
 specialEditionBadge.TextColor3 = Color3.fromRGB(180, 140, 255)
 specialEditionBadge.TextSize = 9
@@ -380,7 +373,7 @@ badgeDotLeft.Text = ""
 badgeDotLeft.TextColor3 = Color3.fromRGB(255, 190, 70)
 badgeDotLeft.TextSize = 10
 badgeDotLeft.TextTransparency = 1
-badgeDotLeft.FontFace = fonts.GetFont("ProggyClean")
+badgeDotLeft.FontFace = fonts["ProggyClean"]
 
 local badgeDotRight = Instance.new("TextLabel", specialEditionBadge)
 badgeDotRight.BackgroundTransparency = 1
@@ -390,7 +383,7 @@ badgeDotRight.Text = ""
 badgeDotRight.TextColor3 = Color3.fromRGB(255, 190, 70)
 badgeDotRight.TextSize = 10
 badgeDotRight.TextTransparency = 1
-badgeDotRight.FontFace = fonts.GetFont("ProggyClean")
+badgeDotRight.FontFace = fonts["ProggyClean"]
 
 -- Blinking cursor
 task.spawn(function()
@@ -430,7 +423,7 @@ local function addTerminalLine(textContent, color)
 	local newText = Instance.new("TextLabel")
 	newText.Parent = terminalTextFrame
 	newText.BackgroundTransparency = 1
-	newText.FontFace = fonts.GetFont("ProggyClean")
+	newText.FontFace = fonts["ProggyClean"]
 	newText.Text = textContent
 	newText.TextColor3 = color or Color3.fromRGB(200, 160, 255)
 	newText.TextSize = 9
@@ -613,7 +606,7 @@ local Library = {
     OutlineColor = Color3.fromRGB(50, 50, 50);
     RiskColor = Color3.fromRGB(255, 50, 50),
     Black = Color3.new(0, 0, 0);
-    Font = fonts.GetFont("ProggyClean"),  -- Use your custom font
+    Font = fonts["ProggyClean"],  -- Use your custom font
 
     OpenedFrames = {};
     DependencyBoxes = {};
@@ -3827,7 +3820,7 @@ colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function
 		lastColor = Library.AccentColor
 		
 		local colorTweenInfo = TweenInfo.new(
-			1,
+			5,
 			Enum.EasingStyle.Quad,
 			Enum.EasingDirection.Out
 		)
@@ -4741,13 +4734,6 @@ end;
 
 
 
-
-
-
-
-
-
-
 function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
     Config = Config or {}
     local DynamicSize = Config.DynamicSize or false
@@ -4756,6 +4742,10 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
     
     if not getgenv().playerstoflag then
         getgenv().playerstoflag = {}
+    end
+    
+    if not getgenv().statusshowtoggle then
+        getgenv().statusshowtoggle = true
     end
     
     local TweenService = game:GetService("TweenService")
@@ -4769,31 +4759,79 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         SelectedPlayerName = nil;
         SearchText = '';
         SortMethod = 'name';
+        ViewMode = 'list'; -- 'list', 'grid', 'compact'
         OnlineCount = 0;
         ClanCache = {};
         ClanCacheTime = 0;
+        PlayerStatusCache = {};
+        UpdateThrottleTime = 0.1;
+        LastUpdateTime = 0;
+        IsUpdating = false;
     }
     
-    -- === Cached Helper Functions ===
+    -- === Player Status Color Coding ===
+    local PLAYER_STATUS = {
+        ACTIVE = {color = Color3.fromRGB(50, 200, 50), text = "Active"},
+        IDLE = {color = Color3.fromRGB(200, 150, 50), text = "Idle"},
+        AFK = {color = Color3.fromRGB(200, 50, 50), text = "AFK"},
+        LOADING = {color = Color3.fromRGB(100, 150, 255), text = "Spawn"}
+    }
+    
+    local function GetPlayerStatus(player)
+        if not player.Character then
+            return PLAYER_STATUS.LOADING
+        end
+        
+        local humanoid = player.Character:FindFirstChild("Humanoid")
+        if not humanoid or humanoid.Health <= 0 then
+            return PLAYER_STATUS.AFK
+        end
+        
+        local cached = PlayerListFrame.PlayerStatusCache[player.UserId]
+        if cached and tick() - cached.time < 5 then
+            return cached.status
+        end
+        
+        -- Detect idle via humanoid state and root part velocity
+        local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+        local isMoving = false
+        
+        if rootPart then
+            isMoving = rootPart.AssemblyLinearVelocity.Magnitude > 0.5
+        end
+        
+        local status = isMoving and PLAYER_STATUS.ACTIVE or PLAYER_STATUS.IDLE
+        PlayerListFrame.PlayerStatusCache[player.UserId] = {status = status, time = tick()}
+        return status
+    end
+
     local function GetPlayerClan(player)
         local cached = PlayerListFrame.ClanCache[player.UserId]
         if cached and tick() - PlayerListFrame.ClanCacheTime < 5 then
             return cached
         end
         
-        local clanFolder = RS:FindFirstChild("Players")
-        if not clanFolder then return nil end
-        
-        local playerFolder = clanFolder:FindFirstChild(player.Name)
-        if not playerFolder then return nil end
-        
-        local clanValue = playerFolder:FindFirstChild("Clan")
-        if clanValue then
-            local clan = clanValue:IsA("ValueBase") and clanValue.Value or clanValue:GetAttribute("CurrentClan")
-            if clan and clan ~= "" then
-                PlayerListFrame.ClanCache[player.UserId] = clan
-                return clan
+        local clan = nil
+        local rs = RS:FindFirstChild("Players")
+        if rs then
+            local playerFolder = rs:FindFirstChild(player.Name)
+            if playerFolder then
+                local status = playerFolder:FindFirstChild("Status")
+                if status then
+                    local journey = status:FindFirstChild("Journey")
+                    if journey then
+                        local clanObj = journey:FindFirstChild("Clan")
+                        if clanObj then
+                            clan = clanObj:GetAttribute("CurrentClan")
+                        end
+                    end
+                end
             end
+        end
+        
+        if clan and clan ~= "" then
+            PlayerListFrame.ClanCache[player.UserId] = clan
+            return clan
         end
         
         PlayerListFrame.ClanCache[player.UserId] = nil
@@ -4809,7 +4847,20 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         local playerClan = GetPlayerClan(player)
         if not playerClan then return false end
         
-        return localClan == playerClan
+        local function ExtractPlayerNameFromClan(clanName)
+            if not clanName then return nil end
+            local playerName = clanName:match("^(.-)%'s")
+            return playerName
+        end
+        
+        local localPlayerNameFromClan = ExtractPlayerNameFromClan(localClan)
+        local otherPlayerNameFromClan = ExtractPlayerNameFromClan(playerClan)
+        
+        if not localPlayerNameFromClan or not otherPlayerNameFromClan then
+            return false
+        end
+        
+        return localPlayerNameFromClan == otherPlayerNameFromClan
     end
 
     local function IsPlayerFlagged(playerName)
@@ -5014,7 +5065,7 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
     local SortButton = Library:Create('TextButton', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.OutlineColor;
-        Size = UDim2.new(0.5, -1, 1, 0);
+        Size = UDim2.new(0.33, -1, 1, 0);
         Text = 'Sort: Name';
         TextColor3 = Library.FontColor;
         TextSize = 9;
@@ -5071,10 +5122,71 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         SortMenu.Visible = not SortMenu.Visible
     end)
 
+    -- === View Mode Button ===
+    local ViewModeButton = Library:Create('TextButton', {
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.OutlineColor;
+        Size = UDim2.new(0.33, -1, 1, 0);
+        Text = 'View: List';
+        TextColor3 = Library.FontColor;
+        TextSize = 9;
+        FontFace = Library.Font;
+        ZIndex = 6;
+        Parent = ControlsOuter;
+    });
+
+    Library:AddToRegistry(ViewModeButton, {BackgroundColor3 = 'MainColor', BorderColor3 = 'OutlineColor', TextColor3 = 'FontColor'});
+
+    local VIEW_TEXTS = {list = 'View: List', grid = 'View: Grid', compact = 'View: Compact'}
+    
+    local function UpdateViewModeButtonText()
+        ViewModeButton.Text = VIEW_TEXTS[PlayerListFrame.ViewMode] or 'View: List'
+    end
+
+    local ViewModeMenu = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Library.OutlineColor;
+        Position = UDim2.new(0, 0, 1, 2);
+        Size = UDim2.fromOffset(70, 60);
+        Visible = false;
+        ZIndex = 10;
+        Parent = ViewModeButton;
+    });
+
+    Library:AddToRegistry(ViewModeMenu, {BackgroundColor3 = 'BackgroundColor', BorderColor3 = 'OutlineColor'});
+    Library:Create('UIListLayout', {FillDirection = Enum.FillDirection.Vertical, SortOrder = Enum.SortOrder.LayoutOrder, Parent = ViewModeMenu});
+
+    for _, viewType in ipairs({'list', 'grid', 'compact'}) do
+        local ViewOption = Library:Create('TextButton', {
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Color3.new(0, 0, 0);
+            Size = UDim2.new(1, -1, 0, 18);
+            Text = viewType:sub(1, 1):upper() .. viewType:sub(2);
+            TextColor3 = Library.FontColor;
+            TextSize = 10;
+            FontFace = Library.Font;
+            ZIndex = 11;
+            Parent = ViewModeMenu;
+        });
+
+        Library:AddToRegistry(ViewOption, {BackgroundColor3 = 'MainColor', TextColor3 = 'FontColor'});
+
+        ViewOption.MouseButton1Click:Connect(function()
+            PlayerListFrame.ViewMode = viewType
+            UpdateViewModeButtonText()
+            PlayerListFrame:UpdatePlayerList()
+            ViewModeMenu.Visible = false
+        end)
+    end
+
+    ViewModeButton.MouseButton1Click:Connect(function()
+        ViewModeMenu.Visible = not ViewModeMenu.Visible
+    end)
+
     local ClearButton = Library:Create('TextButton', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.OutlineColor;
-        Size = UDim2.new(0.5, -1, 1, 0);
+        Size = UDim2.new(0.34, -1, 1, 0);
         Text = 'Clear';
         TextColor3 = Library.FontColor;
         TextSize = 9;
@@ -5133,110 +5245,128 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
 
     local PlayerButtons = {}
 
+    local function CreatePlayerButton(Player, isLocal)
+        if not MatchesSearch(Player.Name) then return end
+
+        local status = GetPlayerStatus(Player)
+        local buttonSize = PlayerListFrame.ViewMode == 'list' and UDim2.new(1, -1, 0, 20) or 
+                          PlayerListFrame.ViewMode == 'grid' and UDim2.new(0.5, -2, 0, 50) or
+                          UDim2.new(1, -1, 0, 14)
+
+        local PlayerButton = Library:Create('Frame', {
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderMode = Enum.BorderMode.Middle;
+            Size = buttonSize;
+            ZIndex = 3;
+            Active = true;
+            Parent = ScrollingFrame;
+        });
+
+        Library:AddToRegistry(PlayerButton, {BackgroundColor3 = 'MainColor', BorderColor3 = 'OutlineColor'});
+
+        local displayName = Player.Name
+        if isLocal then
+            displayName = displayName .. " <font color=\"rgb(255, 255, 255)\"> [</font><font color=\"rgb(" .. math.floor(Library.AccentColor.R * 255) .. ", " .. math.floor(Library.AccentColor.G * 255) .. ", " .. math.floor(Library.AccentColor.B * 255) .. ")\">LOCAL</font><font color=\"rgb(255, 255, 255)\">]</font>"
+        elseif IsPlayerFlagged(Player.Name) then
+            displayName = displayName .. " <font color=\"rgb(255, 255, 255)\">[</font><font color=\"rgb(255, 100, 100)\">C</font><font color=\"rgb(255, 255, 255)\">]</font>"
+        end
+
+        if PlayerListFrame.SortMethod == 'distance' then
+            local dist = math.floor(GetPlayerDistance(Player))
+            displayName = displayName .. " <font color=\"rgb(255, 255, 255)\">(</font>" .. dist .. "<font color=\"rgb(255, 255, 255)\">m)</font>"
+        end
+
+        local isInClan = IsPlayerInLocalPlayerClan(Player)
+        if isInClan then
+            displayName = displayName .. " <font color=\"rgb(255, 255, 255)\">[</font><font color=\"rgb(100, 255, 100)\">T</font><font color=\"rgb(255, 255, 255)\">]</font>"
+        elseif Player.Team then
+            displayName = displayName .. " <font color=\"rgb(255, 255, 255)\">[</font><font color=\"rgb(255, 255, 255)\">" .. Player.Team.Name:sub(1, 1) .. "</font><font color=\"rgb(255, 255, 255)\">]</font>"
+        end
+
+        -- Add status at the end if toggle is enabled
+        if getgenv().statusshowtoggle then
+            displayName = displayName .. "   <font color=\"rgb(255, 255, 255)\">[</font><font color=\"rgb(" .. math.floor(status.color.R * 255) .. ", " .. math.floor(status.color.G * 255) .. ", " .. math.floor(status.color.B * 255) .. ")\">" .. status.text .. "</font><font color=\"rgb(255, 255, 255)\">]</font>"
+        end
+
+        local PlayerLabelContainer = Library:Create('Frame', {
+            BackgroundTransparency = 1;
+            Size = UDim2.new(1, -6, 1, 0);
+            Position = UDim2.new(0, 6, 0, 0);
+            ZIndex = 4;
+            Parent = PlayerButton;
+        });
+
+        Library:CreateLabel({
+            Active = false;
+            Size = UDim2.new(1, 0, 1, 0);
+            TextSize = PlayerListFrame.ViewMode == 'compact' and 9 or 11;
+            Text = displayName;
+            TextXAlignment = Enum.TextXAlignment.Left;
+            RichText = true;
+            FontFace = Library.Font;
+            ZIndex = 4;
+            Parent = PlayerLabelContainer;
+        });
+
+        if PlayerListFrame.SelectedPlayerName == Player.Name then
+            PlayerButton.BackgroundColor3 = Library.AccentColor;
+            PlayerListFrame.SelectedPlayer = {Name = Player.Name, Button = PlayerButton};
+        end
+
+        Library:OnHighlight(PlayerButton, PlayerButton,
+            {BorderColor3 = 'AccentColor', ZIndex = 4},
+            {BorderColor3 = 'OutlineColor', ZIndex = 3}
+        );
+
+        PlayerButton.InputBegan:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                SelectPlayer(Player, PlayerButton)
+            end
+        end);
+
+        table.insert(PlayerButtons, PlayerButton);
+        return 1
+    end
+
     function PlayerListFrame:UpdatePlayerList()
-        for i = 1, #PlayerButtons do
-            PlayerButtons[i]:Destroy()
+        local now = tick()
+        if now - self.LastUpdateTime < self.UpdateThrottleTime and not self.IsUpdating then
+            return
         end
-        table.clear(PlayerButtons)
-
-        local PlayerList = Players:GetPlayers()
-        SortPlayers(PlayerList)
-
-        local OnlineCount = 0
-
-        local function CreatePlayerButton(Player, isLocal)
-            if not MatchesSearch(Player.Name) then return end
-            OnlineCount = OnlineCount + 1
-
-            local PlayerButton = Library:Create('Frame', {
-                BackgroundColor3 = Library.MainColor;
-                BorderColor3 = Library.OutlineColor;
-                BorderMode = Enum.BorderMode.Middle;
-                Size = UDim2.new(1, -1, 0, 20);
-                ZIndex = 3;
-                Active = true;
-                Parent = ScrollingFrame;
-            });
-
-            Library:AddToRegistry(PlayerButton, {BackgroundColor3 = 'MainColor', BorderColor3 = 'OutlineColor'});
-
-            local PlayerLabelContainer = Library:Create('Frame', {
-                BackgroundTransparency = 1;
-                Size = UDim2.new(1, -6, 1, 0);
-                Position = UDim2.new(0, 6, 0, 0);
-                ZIndex = 4;
-                Parent = PlayerButton;
-            });
-
-            local displayName = Player.Name
-            if isLocal then
-                displayName = displayName .. " [LOCAL]"
-            elseif IsPlayerFlagged(Player.Name) then
-                displayName = displayName .. " [<font color=\"rgb(255, 100, 100)\">✓</font>]"
-            end
-
-            if PlayerListFrame.SortMethod == 'distance' then
-                local dist = math.floor(GetPlayerDistance(Player))
-                displayName = displayName .. " (" .. dist .. "m)"
-            end
-
-            local isInClan = IsPlayerInLocalPlayerClan(Player)
-            if isInClan then
-                displayName = displayName .. " [<font color=\"rgb(100, 255, 100)\">T</font>]"
-            elseif Player.Team then
-                displayName = displayName .. " [" .. Player.Team.Name:sub(1, 1) .. "]"
-            end
-
-            Library:CreateLabel({
-                Active = false;
-                Size = UDim2.new(1, 0, 1, 0);
-                TextSize = 11;
-                Text = displayName;
-                TextXAlignment = Enum.TextXAlignment.Left;
-                RichText = true;
-                ZIndex = 4;
-                Parent = PlayerLabelContainer;
-            });
-
-            if PlayerListFrame.SelectedPlayerName == Player.Name then
-                PlayerButton.BackgroundColor3 = Library.AccentColor;
-                for _, child in next, PlayerButton:GetDescendants() do
-                    if child:IsA('TextLabel') and child.Name ~= 'UITextSizeConstraint' then
-                        child.TextColor3 = Color3.fromRGB(255, 255, 255);
-                    end
-                end
-                PlayerListFrame.SelectedPlayer = {Name = Player.Name, Button = PlayerButton};
-            end
-
-            Library:OnHighlight(PlayerButton, PlayerButton,
-                {BorderColor3 = 'AccentColor', ZIndex = 4},
-                {BorderColor3 = 'OutlineColor', ZIndex = 3}
-            );
-
-            PlayerButton.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    SelectPlayer(Player, PlayerButton)
-                end
-            end);
-
-            table.insert(PlayerButtons, PlayerButton);
-        end
-
-        CreatePlayerButton(LocalPlayer, true);
-        for i = 1, #PlayerList do
-            if PlayerList[i] ~= LocalPlayer then
-                CreatePlayerButton(PlayerList[i], false);
-            end
-        end
-
-        PlayerListFrame.OnlineCount = OnlineCount
-        TitleLabel.Text = (WindowName or 'Players Online') .. ' [' .. OnlineCount .. ']'
-        ScrollingFrame.CanvasSize = UDim2.fromOffset(0, ListLayout.AbsoluteContentSize.Y);
         
-        if DynamicSize then
-            local newHeight = math.max(ListLayout.AbsoluteContentSize.Y + 120, Height);
-            Outer.Size = UDim2.fromOffset(Width, newHeight);
-        end
+        self.IsUpdating = true
+        
+        task.spawn(function()
+            for i = 1, #PlayerButtons do
+                PlayerButtons[i]:Destroy()
+            end
+            table.clear(PlayerButtons)
+
+            local PlayerList = Players:GetPlayers()
+            SortPlayers(PlayerList)
+
+            local OnlineCount = 0
+
+            OnlineCount = OnlineCount + (CreatePlayerButton(LocalPlayer, true) or 0)
+            for i = 1, #PlayerList do
+                if PlayerList[i] ~= LocalPlayer then
+                    OnlineCount = OnlineCount + (CreatePlayerButton(PlayerList[i], false) or 0)
+                end
+            end
+
+            PlayerListFrame.OnlineCount = OnlineCount
+            TitleLabel.Text = (WindowName or 'Players Online') .. ' [' .. OnlineCount .. ']'
+            ScrollingFrame.CanvasSize = UDim2.fromOffset(0, ListLayout.AbsoluteContentSize.Y);
+            
+            if DynamicSize then
+                local newHeight = math.max(ListLayout.AbsoluteContentSize.Y + 120, Height);
+                Outer.Size = UDim2.fromOffset(Width, newHeight);
+            end
+            
+            self.LastUpdateTime = tick()
+            self.IsUpdating = false
+        end)
     end
 
     SearchBox:GetPropertyChangedSignal('Text'):Connect(function()
@@ -5252,6 +5382,14 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         if SORT_METHODS[method] then
             PlayerListFrame.SortMethod = method
             UpdateSortButtonText()
+            PlayerListFrame:UpdatePlayerList()
+        end
+    end
+
+    function PlayerListFrame:SetViewMode(mode)
+        if VIEW_TEXTS[mode] then
+            PlayerListFrame.ViewMode = mode
+            UpdateViewModeButtonText()
             PlayerListFrame:UpdatePlayerList()
         end
     end
@@ -5280,13 +5418,24 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
         end
     end);
 
+    task.spawn(function()
+        local lastToggleState = getgenv().statusshowtoggle
+        while Outer.Parent do
+            task.wait(0.2)
+            if getgenv().statusshowtoggle ~= lastToggleState then
+                lastToggleState = getgenv().statusshowtoggle
+                PlayerListFrame:UpdatePlayerList()
+            end
+        end
+    end)
+
     task.defer(function()
         local lastMain, lastAccent = Library.MainColor, Library.AccentColor
         while Outer.Parent do
             task.wait(1)
             if lastMain ~= Library.MainColor or lastAccent ~= Library.AccentColor then
                 lastMain, lastAccent = Library.MainColor, Library.AccentColor
-                TweenService:Create(Inner, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                TweenService:Create(Inner, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = lastMain,
                     BorderColor3 = lastAccent
                 }):Play()
@@ -5322,15 +5471,17 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
     end
 
     PlayerListFrame.Holder = Outer;
+    PlayerListFrame._LastAccentColor = Library.AccentColor
+
+    Library:GiveSignal(game:GetService("RunService").Heartbeat:Connect(function()
+        if Library.AccentColor ~= PlayerListFrame._LastAccentColor then
+            PlayerListFrame._LastAccentColor = Library.AccentColor
+            PlayerListFrame:UpdatePlayerList()
+        end
+    end))
 
     return PlayerListFrame;
 end
-
-
-
-
-
-
 
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -5339,7 +5490,7 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
     Config = Config or {}
     
     local PreviewSize = Config.Size or UDim2.fromOffset(220, 300)
-    local TargetObject = Config.Object or Workspace:FindFirstChild('CashRegister')
+    local TargetObject = Config.Object or Workspace:FindFirstChild('Model')
     local ShouldRotate = Config.Rotate ~= false
     local RotateSpeed = Config.RotateSpeed or 2
     
@@ -5408,7 +5559,7 @@ colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function
 		lastColor = Library.AccentColor
 		
 		local colorTweenInfo = TweenInfo.new(
-			1,
+			5,
 			Enum.EasingStyle.Quad,
 			Enum.EasingDirection.Out
 		)
@@ -5452,7 +5603,7 @@ end)
                     BackgroundColor3 = lastMain,
                     BorderColor3 = lastAccent
                 }):Play()
-                TweenService:Create(Highlight, TweenInfo.new(4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                TweenService:Create(Highlight, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = lastAccent
                 }):Play()
             end
@@ -5473,7 +5624,7 @@ end)
     ViewportFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     ViewportFrame.BorderSizePixel = 0
     ViewportFrame.Position = UDim2.new(0, 0, 0, 20)
-    ViewportFrame.Size = UDim2.new(1, 0, 1, -20)
+    ViewportFrame.Size = UDim2.new(1, 0, 1, -40)
     ViewportFrame.ZIndex = 52
     ViewportFrame.Parent = PreviewInner
     
@@ -5485,6 +5636,16 @@ end)
     local ClonedModel = Instance.new('Folder')
     ClonedModel.Name = 'PreviewModel'
     ClonedModel.Parent = ViewportFrame
+    
+    -- Bottom label
+    Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 4, 1, -18),
+        Text = 'Character Appearance Visualization',
+        TextSize = 10,
+        ZIndex = 52,
+        Parent = PreviewInner,
+    })
     
     -- State variables
     local rotation = 0
@@ -5593,8 +5754,6 @@ end)
 
 
 end
-
-
 
 
 
