@@ -14,48 +14,54 @@ local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
 
 
+local fonts = {}
+do
+    function Register_Font(Name, Weight, Style, Asset)
+        if not isfile(Asset.Id) then
+            writefile(Asset.Id, Asset.Font)
+        end
 
-local fonts = {}; do
-	function Register_Font(Name, Weight, Style, Asset)
-		if not isfile(Asset.Id) then
-			writefile(Asset.Id, Asset.Font)
-		end
+        if isfile(Name .. ".font") then
+            delfile(Name .. ".font")
+        end
 
-		if isfile(Name .. ".font") then
-			delfile(Name .. ".font")
-		end
+        local Data = {
+            name = Name,
+            faces = {
+                {
+                    name = "Regular",
+                    weight = Weight,
+                    style = Style,
+                    assetId = getcustomasset(Asset.Id),
+                },
+            },
+        }
 
-		local Data = {
-			name = Name,
-			faces = {
-				{
-					name = "Regular",
-					weight = Weight,
-					style = Style,
-					assetId = getcustomasset(Asset.Id),
-				},
-			},
-		}
+        writefile(Name .. ".font", game:GetService("HttpService"):JSONEncode(Data))
 
-		writefile(Name .. ".font", game:GetService("HttpService"):JSONEncode(Data))
+        return getcustomasset(Name .. ".font");
+    end
 
-		return getcustomasset(Name .. ".font");
-	end
+    local ProggyTiny = Register_Font("ProggyTiny", 200, "Normal", {
+        Id = "ProggyTiny.ttf",
+        Font = game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/tahoma_bold.ttf"),
+    })
 
-	local ProggyTiny = Register_Font("ProggyTiny", 200, "Normal", {
-		Id = "ProggyTiny.ttf",
-		Font = game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/tahoma_bold.ttf"),
-	})
+    local ProggyClean = Register_Font("ProggyClean", 200, "normal", {
+        Id = "ProggyClean.ttf",
+        Font = game:HttpGet("https://github.com/97y1oHW/4991/raw/refs/heads/main/v3/Minecraftia-Regular.ttf")
+    })
 
-	local ProggyClean = Register_Font("ProggyClean", 200, "normal", {
-		Id = "ProggyClean.ttf",
-		Font = game:HttpGet("https://github.com/97y1oHW/4991/raw/refs/heads/main/v3/Minecraftia-Regular.ttf")
-	})
-
-	fonts = {
-		["TahomaBold"] = Font.new(ProggyTiny, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-		["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-	}
+    fonts = {
+        ["TahomaBold"] = Font.new(ProggyTiny, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+        ["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+    }
+    
+    -- Validate fonts loaded correctly
+    if not fonts["ProggyClean"] or typeof(fonts["ProggyClean"]) ~= "Font" then
+        warn("⚠️ Font loading failed! Using Enum.Font as fallback")
+        fonts["ProggyClean"] = Enum.Font.GothamProper
+    end
 end
 
 
