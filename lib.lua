@@ -889,7 +889,7 @@ function Library:GetTextBounds(Text, Font, Size, Resolution)
         return Bounds.X, Bounds.Y
     else
         warn("GetTextBounds failed:", Bounds)
-        return 0, 0
+        return 5, 5
     end
 end
 
