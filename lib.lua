@@ -5555,20 +5555,30 @@ end)
         Camera.CFrame = CFrame.new(camPos, centerPos)
     end)
     
-    return {
-        Outer = PreviewOuter,
-        Update = CloneObject,
-        SetObject = function(self, obj)
-            TargetObject = obj
-            CloneObject()
-        end,
-        SetRotate = function(self, enabled)
-            ShouldRotate = enabled
-        end,
-        SetRotateSpeed = function(self, speed)
-            RotateSpeed = speed
-        end,
-    }
+   return {
+    Outer = PreviewOuter,
+    Update = CloneObject,
+    SetObject = function(self, obj)
+        TargetObject = obj
+        CloneObject()
+    end,
+    SetRotate = function(self, enabled)
+        ShouldRotate = enabled
+    end,
+    SetRotateSpeed = function(self, speed)
+        RotateSpeed = speed
+    end,
+    SetFOV = function(self, fov)
+        Camera.FieldOfView = fov
+    end,
+    Disconnect = function(self)
+        if UpdateConnectionforprewviewui then
+            UpdateConnectionforprewviewui:Disconnect()
+        end
+    end,
+}
+
+
 end
 
 
