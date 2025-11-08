@@ -29,7 +29,7 @@ local ThemeManager = {} do
 ['Toxic Haze'] 		= { 22, httpService:JSONDecode('{"FontColor":"d2ffd2","MainColor":"141a12","AccentColor":"8eff2a","BackgroundColor":"0e130a","OutlineColor":"202920"}') },
 ['Steel Pulse'] 	= { 23, httpService:JSONDecode('{"FontColor":"dfe6eb","MainColor":"1b1f23","AccentColor":"3a8cd4","BackgroundColor":"14171a","OutlineColor":"25292d"}') },
 ['Sunset Mirage'] 	= { 24, httpService:JSONDecode('{"FontColor":"fff0e5","MainColor":"2a1b1b","AccentColor":"ff6b3b","BackgroundColor":"1c1010","OutlineColor":"352020"}') },
-['Oblivion'] 		= { 25, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"181818","AccentColor":"a200ff","BackgroundColor":"0c0c0c","OutlineColor":"2a2a2a"}') },
+--['Oblivion'] 		= { 25, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"181818","AccentColor":"a200ff","BackgroundColor":"0c0c0c","OutlineColor":"2a2a2a"}') },
 
 	}
 
