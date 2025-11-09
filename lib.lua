@@ -4002,21 +4002,16 @@ end;
 
 
 
-
-
-
--- Replace the existing Library:Notify function with this:
-
 function Library:Notify(Text, Time, Button1Text, Button2Text)
     local XSize, YSize = Library:GetTextBounds(Text, Library.Font, 14)
     YSize = YSize + 7
     
-    -- Increase height if buttons are present
     local HasButtons = Button1Text ~= nil or Button2Text ~= nil
     local ButtonHeight = HasButtons and 28 or 0
     local TotalHeight = YSize + ButtonHeight + (HasButtons and 10 or 0)
     
     local NotifyOuter = Library:Create('Frame', {
+        BackgroundTransparency = 1;
         BorderColor3 = Color3.new(0, 0, 0);
         Position = UDim2.new(0, 100, 0, 10);
         Size = UDim2.new(0, 0, 0, TotalHeight);
@@ -4083,7 +4078,6 @@ function Library:Notify(Text, Time, Button1Text, Button2Text)
         Parent = TextContainer;
     })
     
-    -- Button Container (if buttons exist)
     local ButtonContainer
     if HasButtons then
         ButtonContainer = Library:Create('Frame', {
@@ -4103,13 +4097,13 @@ function Library:Notify(Text, Time, Button1Text, Button2Text)
         
         local ButtonSize = Button1Text and Button2Text and 0.5 or 1
         
-        -- Button 1
         if Button1Text then
             local Button1Outer = Library:Create('Frame', {
                 BackgroundColor3 = Color3.new(0, 0, 0);
                 BorderColor3 = Color3.new(0, 0, 0);
                 Size = UDim2.new(ButtonSize, Button2Text and -2 or 0, 1, 0);
                 ZIndex = 104;
+                LayoutOrder = 1;
                 Parent = ButtonContainer;
             })
             
@@ -4136,50 +4130,54 @@ function Library:Notify(Text, Time, Button1Text, Button2Text)
                 Parent = Button1Inner;
             })
             
-            -- Hover effect
             Button1Outer.MouseEnter:Connect(function()
-                local hoverTween = TweenService:Create(Button1Outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                    BorderColor3 = Library.AccentColor
-                })
-                hoverTween:Play()
+                TweenService:Create(Button1Inner, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = Library:GetDarkerColor(Library.MainColor)
+                }):Play()
                 
-                local labelTween = TweenService:Create(Button1Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                TweenService:Create(Button1Outer, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BorderColor3 = Library.AccentColor
+                }):Play()
+                
+                TweenService:Create(Button1Label, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     TextColor3 = Library.FontColor
-                })
-                labelTween:Play()
+                }):Play()
             end)
             
             Button1Outer.MouseLeave:Connect(function()
-                local unhoverTween = TweenService:Create(Button1Outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                    BorderColor3 = Color3.new(0, 0, 0)
-                })
-                unhoverTween:Play()
+                TweenService:Create(Button1Inner, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = Library.MainColor
+                }):Play()
                 
-                local labelTween = TweenService:Create(Button1Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                TweenService:Create(Button1Outer, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BorderColor3 = Color3.new(0, 0, 0)
+                }):Play()
+                
+                TweenService:Create(Button1Label, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     TextColor3 = Color3.fromRGB(150, 150, 150)
-                })
-                labelTween:Play()
+                }):Play()
             end)
             
             Button1Outer.InputBegan:Connect(function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local clickTween = TweenService:Create(Button1Label, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                    TweenService:Create(Button1Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
                         TextColor3 = Library.AccentColor
-                    })
-                    clickTween:Play()
+                    }):Play()
                     
-                    Library:SafeCallback(Library._NotifyButton1Callback)
+                    if Library._NotifyButton1Callback then
+                        Library:SafeCallback(Library._NotifyButton1Callback)
+                    end
                 end
             end)
         end
         
-        -- Button 2
         if Button2Text then
             local Button2Outer = Library:Create('Frame', {
                 BackgroundColor3 = Color3.new(0, 0, 0);
                 BorderColor3 = Color3.new(0, 0, 0);
                 Size = UDim2.new(ButtonSize, 0, 1, 0);
                 ZIndex = 104;
+                LayoutOrder = 2;
                 Parent = ButtonContainer;
             })
             
@@ -4206,39 +4204,43 @@ function Library:Notify(Text, Time, Button1Text, Button2Text)
                 Parent = Button2Inner;
             })
             
-            -- Hover effect
             Button2Outer.MouseEnter:Connect(function()
-                local hoverTween = TweenService:Create(Button2Outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                    BorderColor3 = Library.AccentColor
-                })
-                hoverTween:Play()
+                TweenService:Create(Button2Inner, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = Library:GetDarkerColor(Library.MainColor)
+                }):Play()
                 
-                local labelTween = TweenService:Create(Button2Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                TweenService:Create(Button2Outer, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BorderColor3 = Library.AccentColor
+                }):Play()
+                
+                TweenService:Create(Button2Label, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     TextColor3 = Library.FontColor
-                })
-                labelTween:Play()
+                }):Play()
             end)
             
             Button2Outer.MouseLeave:Connect(function()
-                local unhoverTween = TweenService:Create(Button2Outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                    BorderColor3 = Color3.new(0, 0, 0)
-                })
-                unhoverTween:Play()
+                TweenService:Create(Button2Inner, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = Library.MainColor
+                }):Play()
                 
-                local labelTween = TweenService:Create(Button2Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                TweenService:Create(Button2Outer, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BorderColor3 = Color3.new(0, 0, 0)
+                }):Play()
+                
+                TweenService:Create(Button2Label, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     TextColor3 = Color3.fromRGB(150, 150, 150)
-                })
-                labelTween:Play()
+                }):Play()
             end)
             
             Button2Outer.InputBegan:Connect(function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local clickTween = TweenService:Create(Button2Label, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                    TweenService:Create(Button2Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
                         TextColor3 = Library.AccentColor
-                    })
-                    clickTween:Play()
+                    }):Play()
                     
-                    Library:SafeCallback(Library._NotifyButton2Callback)
+                    if Library._NotifyButton2Callback then
+                        Library:SafeCallback(Library._NotifyButton2Callback)
+                    end
                 end
             end)
         end
@@ -4257,21 +4259,21 @@ function Library:Notify(Text, Time, Button1Text, Button2Text)
         BackgroundColor3 = 'AccentColor';
     }, true)
     
-    -- Smooth opening animation
-    local openTween = TweenService:Create(NotifyOuter, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    local openTween = TweenService:Create(NotifyOuter, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, XSize + 8 + 4, 0, TotalHeight)
     })
     openTween:Play()
     
-    -- Auto-close or close on button click
     local function CloseNotification()
-        local closeTween = TweenService:Create(NotifyOuter, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        local closeTween = TweenService:Create(NotifyOuter, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             Size = UDim2.new(0, 0, 0, TotalHeight)
         })
         closeTween:Play()
         
         closeTween.Completed:Connect(function()
-            NotifyOuter:Destroy()
+            if NotifyOuter and NotifyOuter.Parent then
+                NotifyOuter:Destroy()
+            end
         end)
     end
     
@@ -4282,30 +4284,26 @@ function Library:Notify(Text, Time, Button1Text, Button2Text)
         end)
     end
     
-    -- Return callback functions for button handling
     local NotificationObject = {
         OnButton1 = function(self, callback)
             Library._NotifyButton1Callback = function()
                 callback()
                 CloseNotification()
             end
+            return self
         end,
         OnButton2 = function(self, callback)
             Library._NotifyButton2Callback = function()
                 callback()
                 CloseNotification()
             end
+            return self
         end,
         Close = CloseNotification
     }
     
     return NotificationObject
 end
-
-
-
-
-
 
 
 
@@ -4890,6 +4888,11 @@ function Library:CreateWindow(...)
     local Fading = false;
 
     function Library:Toggle()
+
+getgenv().uiisopen = not Toggled
+
+
+
         if Fading then
             return;
         end;
@@ -4899,9 +4902,13 @@ function Library:CreateWindow(...)
         Toggled = (not Toggled);
         ModalElement.Modal = Toggled;
 
+
+
         if Toggled then
             -- A bit scuffed, but if we're going from not toggled -> toggled we want to show the frame immediately so that the fade is visible.
             Outer.Visible = true;
+
+
 
             task.spawn(function()
                 -- TODO: add cursor fade?
@@ -4988,9 +4995,11 @@ function Library:CreateWindow(...)
         if type(Library.ToggleKeybind) == 'table' and Library.ToggleKeybind.Type == 'KeyPicker' then
             if Input.UserInputType == Enum.UserInputType.Keyboard and Input.KeyCode.Name == Library.ToggleKeybind.Value then
                 task.spawn(Library.Toggle)
+
             end
         elseif Input.KeyCode == Enum.KeyCode.RightControl or (Input.KeyCode == Enum.KeyCode.RightShift and (not Processed)) then
             task.spawn(Library.Toggle)
+
         end
     end))
 
