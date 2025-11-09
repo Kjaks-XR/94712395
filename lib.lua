@@ -2245,7 +2245,7 @@ local Label = Library:CreateLabel({
     Size = UDim2.new(1, 0, 1, 0);
     TextSize = 11;
     Text = Button.Text;
-    TextColor3 = Color3.fromRGB(150, 150, 150); -- START GREY, NOT WHITE
+    TextColor3 = Color3.fromRGB(105, 105, 105); -- START GREY, NOT WHITE
     ZIndex = 6;
     Parent = Inner;
 });
@@ -2686,12 +2686,7 @@ local ToggleOuter = Library:Create('Frame', {
     Parent = Container;
 })
 
-local Stroke = Instance.new('UIStroke')
-Stroke.Thickness = 1
-Stroke.Color = Color3.fromRGB(60, 60, 60)
-Stroke.Transparency = 0
-Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-Stroke.Parent = ToggleOuter
+
 
 
 		
@@ -2707,6 +2702,15 @@ Stroke.Parent = ToggleOuter
         ZIndex = 6;
         Parent = ToggleOuter;
     })
+
+
+local Stroke = Instance.new('UIStroke')
+Stroke.Thickness = 0.6
+Stroke.Color = Color3.fromRGB(60, 60, 60)
+Stroke.Transparency = 0
+Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+Stroke.Parent = ToggleInner
+
 
     local ToggleLabel = Library:CreateLabel({
         Size = UDim2.new(0, 216, 1, 0);
@@ -2771,22 +2775,22 @@ end
         local outerColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(30, 30, 30))
         local textColor = Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
 
-        TweenService:Create(ToggleInner, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        TweenService:Create(ToggleInner, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
             BackgroundColor3 = bgColor,
             BorderColor3 = borderColor
         }):Play()
 
-        TweenService:Create(ToggleOuter, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        TweenService:Create(ToggleOuter, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
             BorderColor3 = outerColor
         }):Play()
 
-			TweenService:Create(Stroke, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+			TweenService:Create(Stroke, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
     Color = Toggle.Value and Library.AccentColor or Color3.fromRGB(60, 60, 60)
 }):Play()
 
 
         if not Toggle.Risky then
-            TweenService:Create(ToggleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            TweenService:Create(ToggleLabel, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
                 TextColor3 = textColor
             }):Play()
         end
@@ -2912,7 +2916,7 @@ if not Info.Compact then
     });
 
     -- START WITH GREY COLOR
-    TitleLabel.TextColor3 = Color3.fromRGB(128, 128, 128);
+    TitleLabel.TextColor3 = Color3.fromRGB(105, 105, 105);
     Slider.IsTouched = false -- Start as not touched
 
     Groupbox:AddBlank(3);
@@ -3996,17 +4000,31 @@ function Library:SetWatermark(Text)
 end;
 
 
-function Library:Notify(Text, Time)
-    local XSize, YSize = Library:GetTextBounds(Text, Library.Font, 14);
+
+
+
+
+
+-- Replace the existing Library:Notify function with this:
+
+function Library:Notify(Text, Time, Button1Text, Button2Text)
+    local XSize, YSize = Library:GetTextBounds(Text, Library.Font, 14)
     YSize = YSize + 7
+    
+    -- Increase height if buttons are present
+    local HasButtons = Button1Text ~= nil or Button2Text ~= nil
+    local ButtonHeight = HasButtons and 28 or 0
+    local TotalHeight = YSize + ButtonHeight + (HasButtons and 10 or 0)
+    
     local NotifyOuter = Library:Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0);
         Position = UDim2.new(0, 100, 0, 10);
-        Size = UDim2.new(0, 0, 0, YSize);
+        Size = UDim2.new(0, 0, 0, TotalHeight);
         ClipsDescendants = true;
         ZIndex = 100;
         Parent = Library.NotificationArea;
-    });
+    })
+    
     local NotifyInner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.OutlineColor;
@@ -4014,11 +4032,13 @@ function Library:Notify(Text, Time)
         Size = UDim2.new(1, 0, 1, 0);
         ZIndex = 101;
         Parent = NotifyOuter;
-    });
+    })
+    
     Library:AddToRegistry(NotifyInner, {
         BackgroundColor3 = 'MainColor';
         BorderColor3 = 'OutlineColor';
-    }, true);
+    }, true)
+    
     local InnerFrame = Library:Create('Frame', {
         BackgroundColor3 = Color3.new(1, 1, 1);
         BorderSizePixel = 0;
@@ -4026,7 +4046,8 @@ function Library:Notify(Text, Time)
         Size = UDim2.new(1, -2, 1, -2);
         ZIndex = 102;
         Parent = NotifyInner;
-    });
+    })
+    
     local Gradient = Library:Create('UIGradient', {
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
@@ -4034,7 +4055,8 @@ function Library:Notify(Text, Time)
         });
         Rotation = -90;
         Parent = InnerFrame;
-    });
+    })
+    
     Library:AddToRegistry(Gradient, {
         Color = function()
             return ColorSequence.new({
@@ -4042,16 +4064,186 @@ function Library:Notify(Text, Time)
                 ColorSequenceKeypoint.new(1, Library.MainColor),
             });
         end
-    });
-    local NotifyLabel = Library:CreateLabel({
+    })
+    
+    local TextContainer = Library:Create('Frame', {
+        BackgroundTransparency = 1;
         Position = UDim2.new(0, 4, 0, 0);
-        Size = UDim2.new(1, -4, 1, 0);
+        Size = UDim2.new(1, -4, 0, YSize);
+        ZIndex = 103;
+        Parent = InnerFrame;
+    })
+    
+    local NotifyLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 1, 0);
         Text = Text;
         TextXAlignment = Enum.TextXAlignment.Left;
         TextSize = 12;
         ZIndex = 103;
-        Parent = InnerFrame;
-    });
+        Parent = TextContainer;
+    })
+    
+    -- Button Container (if buttons exist)
+    local ButtonContainer
+    if HasButtons then
+        ButtonContainer = Library:Create('Frame', {
+            BackgroundTransparency = 1;
+            Position = UDim2.new(0, 4, 0, YSize + 5);
+            Size = UDim2.new(1, -8, 0, ButtonHeight);
+            ZIndex = 103;
+            Parent = InnerFrame;
+        })
+        
+        Library:Create('UIListLayout', {
+            Padding = UDim.new(0, 4);
+            FillDirection = Enum.FillDirection.Horizontal;
+            SortOrder = Enum.SortOrder.LayoutOrder;
+            Parent = ButtonContainer;
+        })
+        
+        local ButtonSize = Button1Text and Button2Text and 0.5 or 1
+        
+        -- Button 1
+        if Button1Text then
+            local Button1Outer = Library:Create('Frame', {
+                BackgroundColor3 = Color3.new(0, 0, 0);
+                BorderColor3 = Color3.new(0, 0, 0);
+                Size = UDim2.new(ButtonSize, Button2Text and -2 or 0, 1, 0);
+                ZIndex = 104;
+                Parent = ButtonContainer;
+            })
+            
+            local Button1Inner = Library:Create('Frame', {
+                BackgroundColor3 = Library.MainColor;
+                BorderColor3 = Library.OutlineColor;
+                BorderMode = Enum.BorderMode.Inset;
+                Size = UDim2.new(1, 0, 1, 0);
+                ZIndex = 105;
+                Parent = Button1Outer;
+            })
+            
+            Library:AddToRegistry(Button1Inner, {
+                BackgroundColor3 = 'MainColor';
+                BorderColor3 = 'OutlineColor';
+            })
+            
+            local Button1Label = Library:CreateLabel({
+                Size = UDim2.new(1, 0, 1, 0);
+                TextSize = 11;
+                Text = Button1Text;
+                TextColor3 = Color3.fromRGB(150, 150, 150);
+                ZIndex = 106;
+                Parent = Button1Inner;
+            })
+            
+            -- Hover effect
+            Button1Outer.MouseEnter:Connect(function()
+                local hoverTween = TweenService:Create(Button1Outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    BorderColor3 = Library.AccentColor
+                })
+                hoverTween:Play()
+                
+                local labelTween = TweenService:Create(Button1Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    TextColor3 = Library.FontColor
+                })
+                labelTween:Play()
+            end)
+            
+            Button1Outer.MouseLeave:Connect(function()
+                local unhoverTween = TweenService:Create(Button1Outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    BorderColor3 = Color3.new(0, 0, 0)
+                })
+                unhoverTween:Play()
+                
+                local labelTween = TweenService:Create(Button1Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    TextColor3 = Color3.fromRGB(150, 150, 150)
+                })
+                labelTween:Play()
+            end)
+            
+            Button1Outer.InputBegan:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local clickTween = TweenService:Create(Button1Label, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                        TextColor3 = Library.AccentColor
+                    })
+                    clickTween:Play()
+                    
+                    Library:SafeCallback(Library._NotifyButton1Callback)
+                end
+            end)
+        end
+        
+        -- Button 2
+        if Button2Text then
+            local Button2Outer = Library:Create('Frame', {
+                BackgroundColor3 = Color3.new(0, 0, 0);
+                BorderColor3 = Color3.new(0, 0, 0);
+                Size = UDim2.new(ButtonSize, 0, 1, 0);
+                ZIndex = 104;
+                Parent = ButtonContainer;
+            })
+            
+            local Button2Inner = Library:Create('Frame', {
+                BackgroundColor3 = Library.MainColor;
+                BorderColor3 = Library.OutlineColor;
+                BorderMode = Enum.BorderMode.Inset;
+                Size = UDim2.new(1, 0, 1, 0);
+                ZIndex = 105;
+                Parent = Button2Outer;
+            })
+            
+            Library:AddToRegistry(Button2Inner, {
+                BackgroundColor3 = 'MainColor';
+                BorderColor3 = 'OutlineColor';
+            })
+            
+            local Button2Label = Library:CreateLabel({
+                Size = UDim2.new(1, 0, 1, 0);
+                TextSize = 11;
+                Text = Button2Text;
+                TextColor3 = Color3.fromRGB(150, 150, 150);
+                ZIndex = 106;
+                Parent = Button2Inner;
+            })
+            
+            -- Hover effect
+            Button2Outer.MouseEnter:Connect(function()
+                local hoverTween = TweenService:Create(Button2Outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    BorderColor3 = Library.AccentColor
+                })
+                hoverTween:Play()
+                
+                local labelTween = TweenService:Create(Button2Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    TextColor3 = Library.FontColor
+                })
+                labelTween:Play()
+            end)
+            
+            Button2Outer.MouseLeave:Connect(function()
+                local unhoverTween = TweenService:Create(Button2Outer, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    BorderColor3 = Color3.new(0, 0, 0)
+                })
+                unhoverTween:Play()
+                
+                local labelTween = TweenService:Create(Button2Label, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                    TextColor3 = Color3.fromRGB(150, 150, 150)
+                })
+                labelTween:Play()
+            end)
+            
+            Button2Outer.InputBegan:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local clickTween = TweenService:Create(Button2Label, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                        TextColor3 = Library.AccentColor
+                    })
+                    clickTween:Play()
+                    
+                    Library:SafeCallback(Library._NotifyButton2Callback)
+                end
+            end)
+        end
+    end
+    
     local LeftColor = Library:Create('Frame', {
         BackgroundColor3 = Library.AccentColor;
         BorderSizePixel = 0;
@@ -4059,18 +4251,68 @@ function Library:Notify(Text, Time)
         Size = UDim2.new(0, 3, 1, 2);
         ZIndex = 104;
         Parent = NotifyOuter;
-    });
+    })
+    
     Library:AddToRegistry(LeftColor, {
         BackgroundColor3 = 'AccentColor';
-    }, true);
-    pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true);
-    task.spawn(function()
-        wait(Time or 5);
-        pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true);
-        wait(0.4);
-        NotifyOuter:Destroy();
-    end);
-end;
+    }, true)
+    
+    -- Smooth opening animation
+    local openTween = TweenService:Create(NotifyOuter, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, XSize + 8 + 4, 0, TotalHeight)
+    })
+    openTween:Play()
+    
+    -- Auto-close or close on button click
+    local function CloseNotification()
+        local closeTween = TweenService:Create(NotifyOuter, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Size = UDim2.new(0, 0, 0, TotalHeight)
+        })
+        closeTween:Play()
+        
+        closeTween.Completed:Connect(function()
+            NotifyOuter:Destroy()
+        end)
+    end
+    
+    if Time and Time > 0 then
+        task.spawn(function()
+            wait(Time)
+            CloseNotification()
+        end)
+    end
+    
+    -- Return callback functions for button handling
+    local NotificationObject = {
+        OnButton1 = function(self, callback)
+            Library._NotifyButton1Callback = function()
+                callback()
+                CloseNotification()
+            end
+        end,
+        OnButton2 = function(self, callback)
+            Library._NotifyButton2Callback = function()
+                callback()
+                CloseNotification()
+            end
+        end,
+        Close = CloseNotification
+    }
+    
+    return NotificationObject
+end
+
+
+
+
+
+
+
+
+
+
+
+
 
 function Library:CreateWindow(...)
     local Arguments = { ... }
@@ -4761,6 +5003,44 @@ end;
 
 
 
+function Library:AddTitleImage(WindowInner, ImageUrl, Config)
+    Config = Config or {}
+    
+    local ImageSize = Config.Size or UDim2.new(0, 50, 0, 20)
+    local ImagePosition = Config.Position or UDim2.new(1, -58, 0, 3)
+    
+    -- Download and cache the image
+    local success, imageData = pcall(function()
+        return game:HttpGet(ImageUrl)
+    end)
+    
+    if not success then
+        warn("Failed to download image from: " .. ImageUrl)
+        return nil
+    end
+    
+    -- Save to file for getcustomasset
+    local fileName = "title_image_" .. math.random(1000, 9999) .. ".png"
+    pcall(function()
+        writefile(fileName, imageData)
+    end)
+    
+    -- Create the image label
+    local TitleImage = Library:Create('ImageLabel', {
+        BackgroundTransparency = 1;
+        BorderSizePixel = 0;
+        Position = ImagePosition;
+        Size = ImageSize;
+        Image = getcustomasset(fileName);
+        ZIndex = 2;
+        Parent = WindowInner;
+    })
+    
+    return TitleImage
+end
+
+
+
 
 
 
@@ -5011,13 +5291,18 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
 
     AnimateGlow()
 
+
+    -- Color change detection (optimized)
     local lastColor = Library.AccentColor
-    game:GetService("RunService").Heartbeat:Connect(function()
+    local colorChangeConnection
+    colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
         if Library.AccentColor ~= lastColor then
             lastColor = Library.AccentColor
-            TweenService:Create(glow, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = lastColor}):Play()
+            local colorTweenInfo = TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor}):Play()
         end
     end)
+
 
     local Inner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
@@ -5515,6 +5800,15 @@ function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
     return PlayerListFrame;
 end
 
+
+
+
+
+
+
+
+
+
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
@@ -5786,6 +6080,302 @@ end)
 
 
 end
+
+
+
+
+
+
+function Library:CreateStatsPanel(ParentWindow, Config)
+    Config = Config or {}
+    
+    local PanelSize = Config.Size or UDim2.fromOffset(220, 140)
+    local OffsetY = Config.OffsetY or 320
+    
+    -- Create outer frame
+    local StatsOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        BorderColor3 = Color3.new(0, 0, 0),
+        Size = PanelSize,
+        Position = UDim2.new(1, 10, 0, OffsetY),
+        Parent = ParentWindow.Holder,
+        ZIndex = 50,
+    })
+    
+    -- Create glow effect (matching preview style)
+    local glow = Instance.new("ImageLabel", StatsOuter)
+    glow.Name = "GlowEffect"
+    glow.Image = "rbxassetid://18245826428"
+    glow.ScaleType = Enum.ScaleType.Slice
+    glow.SliceCenter = Rect.new(21, 21, 79, 79)
+    glow.ImageColor3 = Library.AccentColor
+    glow.ImageTransparency = 0.6
+    glow.BackgroundTransparency = 1
+    glow.Size = UDim2.new(1, 40, 1, 40)
+    glow.Position = UDim2.new(0, -20, 0, -20)
+    glow.ZIndex = -1
+    
+    -- Create pulsing animation
+    local startTransparency = 0.6
+    local minTransparency = 0.3
+    local pulseDuration = getgenv().glowwatermarkspeed or 5
+    
+    local pulseInfo = TweenInfo.new(
+        pulseDuration / 2,
+        Enum.EasingStyle.Sine,
+        Enum.EasingDirection.InOut
+    )
+    
+    local function createPulseTween()
+        local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = minTransparency})
+        local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = startTransparency})
+        
+        tweenOut.Completed:Connect(function()
+            tweenIn:Play()
+        end)
+        
+        tweenIn.Completed:Connect(function()
+            tweenOut:Play()
+        end)
+        
+        tweenOut:Play()
+    end
+    
+    createPulseTween()
+    
+    -- Color change detection (optimized)
+    local lastColor = Library.AccentColor
+    local colorChangeConnection
+    colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if Library.AccentColor ~= lastColor then
+            lastColor = Library.AccentColor
+            local colorTweenInfo = TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor}):Play()
+        end
+    end)
+    
+    -- Create inner frame with gradient effect
+    local StatsInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor,
+        BorderColor3 = Library.AccentColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 1, 0, 1),
+        ZIndex = 51,
+        Parent = StatsOuter,
+    })
+    
+    -- Premium gradient overlay
+    local gradientOverlay = Instance.new("Frame", StatsInner)
+    gradientOverlay.Name = "GradientOverlay"
+    gradientOverlay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    gradientOverlay.BackgroundTransparency = 0.95
+    gradientOverlay.BorderSizePixel = 0
+    gradientOverlay.Size = UDim2.new(1, 0, 0.5, 0)
+    gradientOverlay.ZIndex = 51
+    
+    local gradient = Instance.new("UIGradient", gradientOverlay)
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Library.AccentColor),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+    })
+    gradient.Rotation = 90
+    
+    local Highlight = Library:Create('Frame', {
+        BackgroundColor3 = Library.AccentColor,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 2),
+        ZIndex = 52,
+        Parent = StatsInner,
+    })
+    
+    -- Color sync loop (optimized to only check when needed)
+    local colorSyncTask = task.defer(function()
+        local lastMain, lastAccent = Library.MainColor, Library.AccentColor
+        while task.wait(2) do
+            if lastMain ~= Library.MainColor or lastAccent ~= Library.AccentColor then
+                lastMain, lastAccent = Library.MainColor, Library.AccentColor
+                
+                TweenService:Create(StatsInner, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = lastMain,
+                    BorderColor3 = lastAccent
+                }):Play()
+                
+                TweenService:Create(Highlight, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = lastAccent
+                }):Play()
+                
+                gradient.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, lastAccent),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+                })
+            end
+        end
+    end)
+    
+    -- Premium title with subtle styling
+    Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 4, 0, 2),
+        Text = 'SYSTEM STATS',
+        TextSize = 11,
+        TextScaled = false,
+        FontFace = fonts["ProggyClean"],
+        ZIndex = 53,
+        Parent = StatsInner,
+    })
+    
+    -- Create container for stats with better spacing
+    local StatsContainer = Library:Create('Frame', {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, -8, 1, -25),
+        Position = UDim2.new(0, 4, 0, 22),
+        ZIndex = 52,
+        Parent = StatsInner,
+    })
+    
+    -- Stats labels (premium look) - Left aligned
+    local MemoryLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0.25, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        Text = 'Memory: 0.0 MB',
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = StatsContainer,
+    })
+    
+    local FPSLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0.25, 0),
+        Position = UDim2.new(0, 0, 0.25, 0),
+        Text = 'FPS: 0 | Ping: 0ms',
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = StatsContainer,
+    })
+    
+    local VersionLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0.25, 0),
+        Position = UDim2.new(0, 0, 0.5, 0),
+        Text = 'V3.4B (0.283)',
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = StatsContainer,
+    })
+    
+    local UpTimeLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0.25, 0),
+        Position = UDim2.new(0, 0, 0.75, 0),
+        Text = 'UpTime: 0m 0s',
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = StatsContainer,
+    })
+    
+    -- Optimized stats update loop
+    local startTime = tick()
+    local frameCount = 0
+    local lastFrameTime = tick()
+    local lastMemoryUpdate = tick()
+    local lastPingUpdate = tick()
+    local cachedMemory = 0
+    local cachedPing = "0ms"
+    local statsService = game:GetService("Stats")
+    local UpdateStatsConnection
+    
+    UpdateStatsConnection = RunService.RenderStepped:Connect(LPH_NO_VIRTUALIZE(function()
+        if not StatsInner.Parent then
+            UpdateStatsConnection:Disconnect()
+            colorChangeConnection:Disconnect()
+            return
+        end
+        
+        frameCount = frameCount + 1
+        local currentTime = tick()
+        local deltaTime = currentTime - lastFrameTime
+        
+        -- Update FPS every 0.2 seconds
+        if deltaTime >= 0.2 then
+            local fps = math.floor(frameCount / deltaTime)
+            FPSLabel.Text = "FPS: " .. fps .. " | Ping: " .. cachedPing
+            frameCount = 0
+            lastFrameTime = currentTime
+        end
+        
+        -- Update Ping every 0.5 seconds
+        if currentTime - lastPingUpdate >= 0.5 then
+            local pingValue = statsService:FindFirstChild("Network")
+            if pingValue then
+                local pingItem = pingValue:FindFirstChild("ServerStatsItem")
+                if pingItem then
+                    local success, result = pcall(function()
+                        return pingItem:GetValueString()
+                    end)
+                    if success then
+                        cachedPing = result
+                    end
+                end
+            end
+            lastPingUpdate = currentTime
+        end
+        
+        -- Update Memory every 0.5 seconds
+        if currentTime - lastMemoryUpdate >= 0.5 then
+            cachedMemory = math.floor(gcinfo() / 1024)
+            
+            if cachedMemory >= 80 then
+                MemoryLabel.Text = "Memory: " .. cachedMemory .. "MB "
+                
+                local richText = Instance.new("TextLabel")
+                richText.RichText = true
+                
+                local formattedText = string.format("Memory: %dMB <font color=\"#FFFFFF\">[</font><font color=\"#FF0000\">HIGH</font><font color=\"#FFFFFF\">]</font>", cachedMemory)
+                MemoryLabel.Text = "Memory: " .. cachedMemory .. "MB [HIGH]"
+                MemoryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            else
+                MemoryLabel.Text = "Memory: " .. cachedMemory .. " MB"
+                MemoryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            end
+            lastMemoryUpdate = currentTime
+        end
+        
+        -- Update UpTime every second
+        if frameCount % 60 == 0 then
+            local upTime = math.floor(currentTime - startTime)
+            local minutes = math.floor(upTime / 60)
+            local seconds = upTime % 60
+            UpTimeLabel.Text = "UpTime: " .. minutes .. "m " .. seconds .. "s"
+        end
+    end))
+    
+    return {
+        Outer = StatsOuter,
+        MemoryLabel = MemoryLabel,
+        FPSLabel = FPSLabel,
+        VersionLabel = VersionLabel,
+        UpTimeLabel = UpTimeLabel,
+        Disconnect = function(self)
+            if UpdateStatsConnection then
+                UpdateStatsConnection:Disconnect()
+            end
+            if colorChangeConnection then
+                colorChangeConnection:Disconnect()
+            end
+        end,
+    }
+end
+
+
+
+
 
 
 
