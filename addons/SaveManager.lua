@@ -362,7 +362,7 @@ end
 			local name = Options.SaveManager_ConfigList.Value
 			local success, err = self:LoadSafe(name)
 			if not success then return self.Library:Notify('Failed to load config: ' .. err) end
-			self.Library:Notify(string.format('Loaded config %q', name))
+			self.Library:Notify(string.format('Loaded config %q', name,15))
 		end)
 
 		section:AddButton('Overwrite config', function()
