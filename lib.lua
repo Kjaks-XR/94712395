@@ -2862,19 +2862,20 @@ end
 end
 
 	
-local AccentColorDark = Library.AccentColorDark
 task.spawn(function()
-	while task.wait(0.1) do
-		if Library.AccentColorDark ~= AccentColorDark then
-			AccentColorDark = Library.AccentColorDark
-			for _, toggle in pairs(Toggles) do
-				if toggle.Display then
-					toggle:Display()
-				end
-			end
-		end
-	end
-end)
+	local lastColor = Library.AccentColorDark;
+	while true do
+		task.wait(0.31);
+		local current = Library.AccentColorDark;
+		if current ~= lastColor then
+			lastColor = current;
+			for _, t in next, Toggles do
+				local d = t.Display;
+				if d then d(t); end;
+			end;
+		end;
+	end;
+end);
 
 
 function Funcs:AddSlider(Idx, Info)
