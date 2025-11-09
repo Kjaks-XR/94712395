@@ -1,3 +1,31 @@
+if not LPH_OBFUSCATED then
+LPH_JIT = function(...) return ... end;
+LPH_JIT_MAX = function(...) return ... end;
+LPH_JIT_ULTRA = function(...) return ... end;
+LPH_NO_VIRTUALIZE = function(...) return ... end;
+LPH_ENCSTR = function(...) return ... end;
+LPH_STRENC = function(...) return ... end;
+LRM_INIT_SCRIPT = function(callback)
+    if type(callback) == "function" then
+        callback()
+    end
+end
+LPH_HOOK_FIX = function(...) return ... end;
+LPH_CRASH = function() return print(debug.traceback()) end;
+end;
+
+if LPH_OBFUSCATED then
+
+warn("Library Optimization ON")
+else
+print("nun opt")
+
+end
+
+
+
+
+
 local InputService = game:GetService('UserInputService');
 local TextService = game:GetService('TextService');
 local CoreGui = game:GetService('CoreGui');
@@ -8,9 +36,12 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5T"
+local version = "0.5XT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
+
+
+
 
 
 
@@ -619,7 +650,7 @@ local Library = {
 local RainbowStep = 0
 local Hue = 0
 
-table.insert(Library.Signals, RenderStepped:Connect(function(Delta)
+table.insert(Library.Signals, RenderStepped:Connect(LPH_NO_VIRTUALIZE(function(Delta)
     RainbowStep = RainbowStep + Delta
 
     if RainbowStep >= (1 / 60) then
@@ -634,7 +665,7 @@ table.insert(Library.Signals, RenderStepped:Connect(function(Delta)
         Library.CurrentRainbowHue = Hue;
         Library.CurrentRainbowColor = Color3.fromHSV(Hue, 0.8, 1);
     end
-end))
+end)))
 
 local function GetPlayersString()
     local PlayerList = Players:GetPlayers();
@@ -5685,7 +5716,7 @@ end)
     
     -- Main render loop
     local UpdateConnection
-    UpdateConnection = RunService.RenderStepped:Connect(function()
+    UpdateConnection = RunService.RenderStepped:Connect(LPH_NO_VIRTUALIZE(function()
         if not ViewportFrame.Parent then
             UpdateConnection:Disconnect()
             return
@@ -5727,7 +5758,7 @@ end)
         local camPos = centerPos + Vector3.new(0, 0, boundSize * 2)
         
         Camera.CFrame = CFrame.new(camPos, centerPos)
-    end)
+    end))
     
    return {
     Outer = PreviewOuter,
