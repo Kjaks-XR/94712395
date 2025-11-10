@@ -80,24 +80,26 @@ do
 
     local ProggyClean = Register_Font("ProggyClean", 200, "normal", {
         Id = "ProggyClean.ttf",
-        Font = game:HttpGet("https://github.com/97y1oHW/4991/raw/refs/heads/main/v3/Minecraftia-Regular.ttf")
+        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/Minecraftia-Regular.ttf")
+    })
+
+    local PIXY = Register_Font("PIXY", 200, "normal", {
+        Id = "PIXY.ttf",
+        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/PIXY.ttf")
     })
 
     fonts = {
         ["TahomaBold"] = Font.new(ProggyTiny, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
         ["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+        ["PIXY"] = Font.new(PIXY, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
     }
     
     -- Validate fonts loaded correctly
     if not fonts["ProggyClean"] or typeof(fonts["ProggyClean"]) ~= "Font" then
-        warn("⚠️ Font loading failed! Using Enum.Font as fallback")
+        warn("⚠️ Font loading failed Using Enum.Font as fallback")
         fonts["ProggyClean"] = Enum.Font.GothamProper
     end
 end
-
-
-print("downloaded fonts")
-
 
 
 
