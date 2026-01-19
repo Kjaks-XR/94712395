@@ -97,7 +97,7 @@ do
     -- Validate fonts loaded correctly
     if not fonts["ProggyClean"] or typeof(fonts["ProggyClean"]) ~= "Font" then
         warn("⚠️ Font loading failed Using Enum.Font as fallback")
-        fonts["ProggyClean"] = Enum.Font.GothamProper
+        fonts["ProggyClean"] = Enum.Font.Code
     end
 end
 
