@@ -306,26 +306,39 @@ end
 		end
 	end
 
-	function SaveManager:RefreshConfigList()
-		local list = listfiles(self.Folder .. '/settings')
-		local out = {}
-		for i = 1, #list do
-			local file = list[i]
-			if file:sub(-5) == '.json' then
-				local pos = file:find('.json', 1, true)
-				local start = pos
-				local char = file:sub(pos, pos)
-				while char ~= '/' and char ~= '\\' and char ~= '' do
-					pos = pos - 1
-					char = file:sub(pos, pos)
-				end
-				if char == '/' or char == '\\' then
-					table.insert(out, file:sub(pos + 1, start - 1))
-				end
-			end
-		end
-		return out
-	end
+function SaveManager:RefreshConfigList()
+	local list = listfiles(self.Folder .. '/settings');
+	local out = {};
+
+	for i = 1, #list do
+		local file = list[i];
+		local ext;
+
+		if file:sub(-5) == '.json' then
+			ext = '.json';
+		elseif file:sub(-4) == '.lua' then
+			ext = '.lua';
+		end;
+
+		if ext then
+			local pos = file:find(ext, 1, true);
+			local start = pos;
+			local char = file:sub(pos, pos);
+
+			while char ~= '/' and char ~= '\\' and char ~= '' do
+				pos = pos - 1;
+				char = file:sub(pos, pos);
+			end;
+
+			if char == '/' or char == '\\' then
+				table.insert(out, file:sub(pos + 1, start - 1));
+			end;
+		end;
+	end;
+
+	return out;
+end;
+
 
 	function SaveManager:SetLibrary(library)
 		self.Library = library
