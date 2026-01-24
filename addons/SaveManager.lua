@@ -1,4 +1,4 @@
-print"save manager loaded 0.5 for series B"
+print"save manager loaded 0.5 for series B - LUA FORMAT"
 
 local httpService = game:GetService('HttpService')
 
@@ -6,8 +6,8 @@ local SaveManager = {} do
 	SaveManager.Folder = 'LinoriaLibSettings'
 	SaveManager.Ignore = {}
 	
-	-- Obfuscation characters - wide variety but moderate
-local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†‡€™áàâäãåæçéèêëíìîïñóòôöõøœßúùûüýÿ"
+	-- Obfuscation characters
+	local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†‡€™áàâäãåæçéèêëíìîïñóòôöõøœßúùûüýÿ"
 	
 	-- Helper function to encode to base64
 	local function base64Encode(str)
@@ -40,26 +40,21 @@ local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†�
 			return string.char(c)
 		end))
 	end
-		-- Inject randomized noise with no predictable patterns
+	
+	-- Inject randomized noise
 	local function injectNoise(str)
 		local result = ''
 		local i = 1
 		while i <= #str do
 			result = result .. str:sub(i, i)
-			
-			-- Vary noise insertion: use random intervals instead of fixed probability
-			-- This prevents repeating patterns from emerging
 			local insertChance = math.random(100)
-			
 			if insertChance <= 18 then
-				-- Randomly decide: insert 0-4 noise chars at random intervals
 				local noiseCount = math.random(0, 4)
 				for _ = 1, noiseCount do
 					local randomIdx = math.random(1, #NOISE_CHARS)
 					result = result .. NOISE_CHARS:sub(randomIdx, randomIdx)
 				end
 			end
-			
 			i = i + 1
 		end
 		return result
@@ -116,72 +111,72 @@ local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†�
 		end
 		return result
 	end
+	
 	SaveManager.Parser = {
-	Toggle = {
-		Save = function(idx, object) 
-			return { type = 'Toggle', idx = idx, value = object.Value } 
-		end,
-		Load = function(idx, data)
-			if Toggles[idx] then
-				local oldOnChange = Toggles[idx].OnChange
-				Toggles[idx].OnChange = nil
-				Toggles[idx]:SetValue(data.value)
-				Toggles[idx].OnChange = oldOnChange
-			end
-		end,
-	},
-	Slider = {
-		Save = function(idx, object)
-			return { type = 'Slider', idx = idx, value = object.Value }
-		end,
-		Load = function(idx, data)
-			if Options[idx] then
-				local oldOnChange = Options[idx].OnChange
-				Options[idx].OnChange = nil
-				Options[idx]:SetValue(tonumber(data.value) or data.value)
-				Options[idx].OnChange = oldOnChange
-			end
-		end,
-	},
-	Dropdown = {
-		Save = function(idx, object)
-			return { type = 'Dropdown', idx = idx, value = object.Value, multi = object.Multi }
-		end,
-		Load = function(idx, data)
-			if Options[idx] then 
-				Options[idx]:SetValue(data.value)
-			end
-		end,
-	},
-	ColorPicker = {
-		Save = function(idx, object)
-			return { type = 'ColorPicker', idx = idx, value = object.Value:ToHex(), transparency = object.Transparency }
-		end,
-		Load = function(idx, data)
-			if Options[idx] then 
-				Options[idx]:SetValueRGB(Color3.fromHex(data.value), data.transparency)
-			end
-		end,
-	},
-	KeyPicker = {
-		Save = function(idx, object)
-			return { type = 'KeyPicker', idx = idx, mode = object.Mode, key = object.Value }
-		end,
-		Load = function(idx, data)
-			if Options[idx] then 
-				Options[idx]:SetValue({ data.key, data.mode })
-			end
-		end,
-	},
-	Input = {
-		Save = function(idx, object)
-			return nil  -- Don't save input boxes
-		end,
-		Load = function(idx, data)
-			-- Don't load input boxes
-		end,
-	},
-}
+		Toggle = {
+			Save = function(idx, object) 
+				return { type = 'Toggle', idx = idx, value = object.Value } 
+			end,
+			Load = function(idx, data)
+				if Toggles[idx] then
+					local oldOnChange = Toggles[idx].OnChange
+					Toggles[idx].OnChange = nil
+					Toggles[idx]:SetValue(data.value)
+					Toggles[idx].OnChange = oldOnChange
+				end
+			end,
+		},
+		Slider = {
+			Save = function(idx, object)
+				return { type = 'Slider', idx = idx, value = object.Value }
+			end,
+			Load = function(idx, data)
+				if Options[idx] then
+					local oldOnChange = Options[idx].OnChange
+					Options[idx].OnChange = nil
+					Options[idx]:SetValue(tonumber(data.value) or data.value)
+					Options[idx].OnChange = oldOnChange
+				end
+			end,
+		},
+		Dropdown = {
+			Save = function(idx, object)
+				return { type = 'Dropdown', idx = idx, value = object.Value, multi = object.Multi }
+			end,
+			Load = function(idx, data)
+				if Options[idx] then 
+					Options[idx]:SetValue(data.value)
+				end
+			end,
+		},
+		ColorPicker = {
+			Save = function(idx, object)
+				return { type = 'ColorPicker', idx = idx, value = object.Value:ToHex(), transparency = object.Transparency }
+			end,
+			Load = function(idx, data)
+				if Options[idx] then 
+					Options[idx]:SetValueRGB(Color3.fromHex(data.value), data.transparency)
+				end
+			end,
+		},
+		KeyPicker = {
+			Save = function(idx, object)
+				return { type = 'KeyPicker', idx = idx, mode = object.Mode, key = object.Value }
+			end,
+			Load = function(idx, data)
+				if Options[idx] then 
+					Options[idx]:SetValue({ data.key, data.mode })
+				end
+			end,
+		},
+		Input = {
+			Save = function(idx, object)
+				return nil
+			end,
+			Load = function(idx, data)
+			end,
+		},
+	}
 
 	function SaveManager:SetIgnoreIndexes(list)
 		for _, key in next, list do
@@ -190,7 +185,7 @@ local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†�
 	end
 
 	function SaveManager:SetFolder(folder)
-		self.Folder = folder;
+		self.Folder = folder
 		self:BuildFolderTree()
 	end
 
@@ -225,83 +220,86 @@ local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†�
 		-- Layer 4: Hex encode
 		local hexed = hexEncode(bytecoded)
 
-
-	local final = hexed .. '0197384-97GH-S' -- sonuna imza ekledik
-	writefile(fullPath, final)
+		local final = hexed .. '0197384-97GH-S'
+		writefile(fullPath, final)
 		return true
 	end
 	
-function SaveManager:LoadSafe(name)
-	if not name then return false, 'no config file is selected' end;
+	function SaveManager:LoadSafe(name)
+		if not name then return false, 'no config file is selected' end
 
-	local base = self.Folder .. '/settings/' .. name;
-	local file;
-
-	if isfile(base .. '.lua') then
-		file = base .. '.lua';
-	elseif isfile(base .. '.json') then
-		file = base .. '.json';
-	else
-		return false, 'invalid file';
-	end;
-
-	local fileContent = readfile(file);
-
-	
-	-- Remove signature from end
-	local signature = '0197384-97GH-S'
-	if fileContent:sub(-#signature) == signature then
-		fileContent = fileContent:sub(1, -#signature - 1)
-	end
-	
-	-- Layer 4: Hex decode
-	local decoded_hex = hexDecode(fileContent)
-	
-	-- Layer 3: Bytecode decode
-	local decoded_bytecode = bytecodeDecode(decoded_hex)
-	
-	-- Layer 2: Remove noise
-	local cleaned = removeNoise(decoded_bytecode)
-	
-	-- Layer 1: Base64 decode
-	local decoded_str = base64Decode(cleaned)
-	
-	local success, decoded = pcall(httpService.JSONDecode, httpService, decoded_str)
-	if not success then return false, 'decode error' end
-
-	-- Disable all callbacks before loading
-	local originalCallbacks = {}
-	
-	for idx, toggle in next, Toggles do
-		originalCallbacks[idx] = toggle.OnChange
-		toggle.OnChange = nil
-	end
-
-	for idx, option in next, Options do
-		originalCallbacks[idx] = option.OnChange
-		option.OnChange = nil
-	end
-
-	-- Load all values silently (no callbacks triggered)
-	for _, option in next, decoded.objects do
-		if self.Parser[option.type] then
-			pcall(function()
-				self.Parser[option.type].Load(option.idx, option)
-			end)
+		-- Only look for .lua files
+		local file = self.Folder .. '/settings/' .. name .. '.lua'
+		
+		if not isfile(file) then
+			return false, 'config file not found'
 		end
-	end
 
-	-- Restore callbacks (without triggering them)
-	for idx, toggle in next, Toggles do
-		toggle.OnChange = originalCallbacks[idx]
-	end
+		local success, fileContent = pcall(readfile, file)
+		if not success then
+			return false, 'failed to read file'
+		end
 
-	for idx, option in next, Options do
-		option.OnChange = originalCallbacks[idx]
-	end
+		-- Remove signature from end
+		local signature = '0197384-97GH-S'
+		if fileContent:sub(-#signature) == signature then
+			fileContent = fileContent:sub(1, -#signature - 1)
+		else
+			return false, 'invalid config signature'
+		end
+		
+		-- Layer 4: Hex decode
+		local success1, decoded_hex = pcall(hexDecode, fileContent)
+		if not success1 then return false, 'hex decode failed' end
+		
+		-- Layer 3: Bytecode decode
+		local success2, decoded_bytecode = pcall(bytecodeDecode, decoded_hex)
+		if not success2 then return false, 'bytecode decode failed' end
+		
+		-- Layer 2: Remove noise
+		local success3, cleaned = pcall(removeNoise, decoded_bytecode)
+		if not success3 then return false, 'noise removal failed' end
+		
+		-- Layer 1: Base64 decode
+		local success4, decoded_str = pcall(base64Decode, cleaned)
+		if not success4 then return false, 'base64 decode failed' end
+		
+		local success5, decoded = pcall(httpService.JSONDecode, httpService, decoded_str)
+		if not success5 then return false, 'json decode error' end
 
-	return true
-end
+		-- Disable all callbacks before loading
+		local originalCallbacks = {}
+		
+		for idx, toggle in next, Toggles do
+			originalCallbacks[idx] = toggle.OnChange
+			toggle.OnChange = nil
+		end
+
+		for idx, option in next, Options do
+			originalCallbacks[idx] = option.OnChange
+			option.OnChange = nil
+		end
+
+		-- Load all values silently
+		for _, option in next, decoded.objects do
+			if self.Parser[option.type] then
+				pcall(function()
+					self.Parser[option.type].Load(option.idx, option)
+				end)
+			end
+		end
+
+		-- Restore callbacks
+		for idx, toggle in next, Toggles do
+			toggle.OnChange = originalCallbacks[idx]
+		end
+
+		for idx, option in next, Options do
+			option.OnChange = originalCallbacks[idx]
+		end
+
+		return true
+	end
 
 	function SaveManager:IgnoreThemeSettings()
 		self:SetIgnoreIndexes({ 
@@ -317,39 +315,32 @@ end
 		end
 	end
 
-function SaveManager:RefreshConfigList()
-	local list = listfiles(self.Folder .. '/settings');
-	local out = {};
+	function SaveManager:RefreshConfigList()
+		local list = listfiles(self.Folder .. '/settings')
+		local out = {}
 
-	for i = 1, #list do
-		local file = list[i];
-		local ext;
+		for i = 1, #list do
+			local file = list[i]
+			
+			-- Only process .lua files
+			if file:sub(-4) == '.lua' then
+				local pos = file:find('.lua', 1, true)
+				local start = pos
+				local char = file:sub(pos, pos)
 
-		if file:sub(-5) == '.json' then
-			ext = '.json';
-		elseif file:sub(-4) == '.lua' then
-			ext = '.lua';
-		end;
+				while char ~= '/' and char ~= '\\' and char ~= '' do
+					pos = pos - 1
+					char = file:sub(pos, pos)
+				end
 
-		if ext then
-			local pos = file:find(ext, 1, true);
-			local start = pos;
-			local char = file:sub(pos, pos);
+				if char == '/' or char == '\\' then
+					table.insert(out, file:sub(pos + 1, start - 1))
+				end
+			end
+		end
 
-			while char ~= '/' and char ~= '\\' and char ~= '' do
-				pos = pos - 1;
-				char = file:sub(pos, pos);
-			end;
-
-			if char == '/' or char == '\\' then
-				table.insert(out, file:sub(pos + 1, start - 1));
-			end;
-		end;
-	end;
-
-	return out;
-end;
-
+		return out
+	end
 
 	function SaveManager:SetLibrary(library)
 		self.Library = library
@@ -386,7 +377,7 @@ end;
 			local name = Options.SaveManager_ConfigList.Value
 			local success, err = self:LoadSafe(name)
 			if not success then return self.Library:Notify('Failed to load config: ' .. err) end
-			self.Library:Notify(string.format('Loaded config %q', name,15))
+			self.Library:Notify(string.format('Loaded config %q', name))
 		end)
 
 		section:AddButton('Overwrite config', function()
@@ -415,12 +406,12 @@ end;
 		end
 
 		SaveManager:SetIgnoreIndexes({ 
-    "showplayerlistui",  -- Bu toggle load olmuyor
-    "SaveManager_ConfigList", 
-    "SaveManager_ConfigName",
-	"luaTabshow",
-	"freecamToggle",
-})
+			"showplayerlistui",
+			"SaveManager_ConfigList", 
+			"SaveManager_ConfigName",
+			"luaTabshow",
+			"freecamToggle",
+		})
 	end
 
 	SaveManager:BuildFolderTree()
