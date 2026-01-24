@@ -196,7 +196,7 @@ local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†�
 
 	function SaveManager:Save(name)
 		if (not name) then return false, 'no config file is selected' end
-		local fullPath = self.Folder .. '/settings/' .. name .. '.json'
+		local fullPath = self.Folder .. '/settings/' .. name .. '.lua'
 		local data = { objects = {} }
 
 		for idx, toggle in next, Toggles do
@@ -230,12 +230,23 @@ local NOISE_CHARS = ">£#$½_*-!@#$%^&*()_+-=[]{}|;:',.<>?/\\`~¥¢¡¿§¶†�
 	writefile(fullPath, final)
 		return true
 	end
+	
 function SaveManager:LoadSafe(name)
-	if (not name) then return false, 'no config file is selected' end
-	local file = self.Folder .. '/settings/' .. name .. '.json'
-	if not isfile(file) then return false, 'invalid file' end
+	if not name then return false, 'no config file is selected' end;
 
-	local fileContent = readfile(file)
+	local base = self.Folder .. '/settings/' .. name;
+	local file;
+
+	if isfile(base .. '.lua') then
+		file = base .. '.lua';
+	elseif isfile(base .. '.json') then
+		file = base .. '.json';
+	else
+		return false, 'invalid file';
+	end;
+
+	local fileContent = readfile(file);
+
 	
 	-- Remove signature from end
 	local signature = '0197384-97GH-S'
