@@ -1,4 +1,4 @@
-print"save manager loaded 0.3 for series B - FIXED"
+print"save manager loaded 0.5 for series B"
 
 local httpService = game:GetService('HttpService')
 
