@@ -599,7 +599,13 @@ introduction:Destroy()
 
 end
 
-intro()
+chancegsdsf = math.random(1,2)
+chanchefef2 = math.random(1,3)
+
+if chanchefef2 == chancegsdsf then
+	intro()
+end
+
 
 
 
