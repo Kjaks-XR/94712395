@@ -6309,7 +6309,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     Library:CreateLabel({
         Size = UDim2.new(1, 0, 0, 18),
         Position = UDim2.new(0, 4, 0, 2),
-        Text = 'SYSTEM STATS',
+        Text = 'STATS',
         TextSize = 11,
         TextScaled = false,
         FontFace = fonts["ProggyClean"],
