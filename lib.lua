@@ -5851,8 +5851,6 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
     local TargetObject = Config.Object or Workspace:FindFirstChild('Model')
     local ShouldRotate = Config.Rotate ~= false
     local RotateSpeed = Config.RotateSpeed or 2
-    local UpdateInterval = Config.UpdateInterval or 0.1 -- Time between object updates
-    local AutoUpdate = Config.AutoUpdate ~= false -- Whether to auto-update the preview
     
     -- Create outer frame
     local PreviewOuter = Library:Create('Frame', {
@@ -5864,64 +5862,76 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
         ZIndex = 50,
     })
     
-    -- Glow effect
-    local glow = Instance.new("ImageLabel", PreviewOuter)
-    glow.Name = "GlowEffect"
-    glow.Image = "rbxassetid://18245826428" -- Glow texture ID
-    glow.ScaleType = Enum.ScaleType.Slice
-    glow.SliceCenter = Rect.new(21, 21, 79, 79)
-    glow.ImageColor3 = Library.AccentColor
-    glow.ImageTransparency = 0.6
-    glow.BackgroundTransparency = 1
-    glow.Size = UDim2.new(1, 40, 1, 40)
-    glow.Position = UDim2.new(0, -20, 0, -20)
-    glow.ZIndex = -1
-    
-    -- Pulsing animation
-    local startTransparency = 0.6
-    local minTransparency = 0.3
-    local pulseDuration = getgenv().glowwatermarkspeed or 5
-    
-    local pulseInfo = TweenInfo.new(
-        pulseDuration / 2,
-        Enum.EasingStyle.Sine,
-        Enum.EasingDirection.InOut
-    )
-    
-    local function createPulseTween()
-        local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = minTransparency})
-        local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = startTransparency})
-        
-        tweenOut.Completed:Connect(function()
-            tweenIn:Play()
-        end)
-        
-        tweenIn.Completed:Connect(function()
-            tweenOut:Play()
-        end)
-        
-        tweenOut:Play()
-    end
-    
-    createPulseTween()
-    
-    -- Color sync for glow
-    local lastGlowColor = Library.AccentColor
-    local colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
-        if Library.AccentColor ~= lastGlowColor then
-            lastGlowColor = Library.AccentColor
-            
-            local colorTweenInfo = TweenInfo.new(
-                5,
-                Enum.EasingStyle.Quad,
-                Enum.EasingDirection.Out
-            )
-            
-            local colorTween = TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor})
-            colorTween:Play()
-        end
-    end)
-    
+
+
+
+
+local glow = Instance.new("ImageLabel", PreviewOuter)
+glow.Name = "GlowEffect"
+glow.Image = "rbxassetid://18245826428" -- Glow texture ID
+glow.ScaleType = Enum.ScaleType.Slice
+glow.SliceCenter = Rect.new(21, 21, 79, 79)
+glow.ImageColor3 = Library.AccentColor
+glow.ImageTransparency = 0.6
+glow.BackgroundTransparency = 1
+glow.Size = UDim2.new(1, 40, 1, 40)
+glow.Position = UDim2.new(0, -20, 0, -20)
+glow.ZIndex = -1
+
+-- Create pulsing animation
+local TweenService = game:GetService("TweenService")
+local startTransparency = 0.6
+local minTransparency = 0.3
+local pulseDuration = getgenv().glowwatermarkspeed or 5
+
+local pulseInfo = TweenInfo.new(
+	pulseDuration / 2,
+	Enum.EasingStyle.Sine,
+	Enum.EasingDirection.InOut
+)
+
+local function createPulseTween()
+	local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = minTransparency})
+	local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = startTransparency})
+	
+	tweenOut.Completed:Connect(function()
+		tweenIn:Play()
+	end)
+	
+	tweenIn.Completed:Connect(function()
+		tweenOut:Play()
+	end)
+	
+	tweenOut:Play()
+end
+
+-- Start pulsing animation
+createPulseTween()
+
+-- Watch for color changes and tween them
+local lastColor = Library.AccentColor
+local colorChangeConnection
+
+colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
+	if Library.AccentColor ~= lastColor then
+		lastColor = Library.AccentColor
+		
+		local colorTweenInfo = TweenInfo.new(
+			5,
+			Enum.EasingStyle.Quad,
+			Enum.EasingDirection.Out
+		)
+		
+		local colorTween = TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor})
+		colorTween:Play()
+	end
+end)
+
+
+
+
+
+
     -- Create inner frame with accent border
     local PreviewInner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor,
@@ -5941,11 +5951,10 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
         Parent = PreviewInner,
     })
     
-    -- Color sync for main elements
-    task.spawn(function()
+    -- Color sync loop (only runs when colors change)
+    task.defer(function()
         local lastMain, lastAccent = Library.MainColor, Library.AccentColor
-        while true do
-            task.wait(1)
+        while task.wait(1) do
             if lastMain ~= Library.MainColor or lastAccent ~= Library.AccentColor then
                 lastMain, lastAccent = Library.MainColor, Library.AccentColor
                 TweenService:Create(PreviewInner, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -5959,7 +5968,6 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
         end
     end)
     
-    -- Title label
     Library:CreateLabel({
         Size = UDim2.new(1, 0, 0, 18),
         Position = UDim2.new(0, 4, 0, 2),
@@ -5969,7 +5977,7 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
         Parent = PreviewInner,
     })
     
-    -- Viewport setup
+    -- Setup viewport
     local ViewportFrame = Instance.new('ViewportFrame')
     ViewportFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     ViewportFrame.BorderSizePixel = 0
@@ -6002,40 +6010,27 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
     local ClonedReference = nil
     local OriginalCFrames = {}
     local AllParts = {}
-    local LastUpdateTime = 0
-    local IsDestroyed = false
+    local CachedBounds = {size = 0, center = Vector3.new()}
     
-    -- Function to update the model reference
-    local function UpdateModelReference()
-        if IsDestroyed or not ViewportFrame.Parent then return end
-        
-        -- Cleanup old model
+    local function CloneObject()
+        -- Cleanup
         for _, child in pairs(ClonedModel:GetChildren()) do
             child:Destroy()
         end
         
-        if not TargetObject or not TargetObject.Parent then 
+        if not TargetObject then 
             ClonedReference = nil
-            OriginalCFrames = {}
-            AllParts = {}
             return 
         end
         
-        -- Clone the target object
-        local success, cloned = pcall(function()
-            return TargetObject:Clone()
-        end)
-        
-        if not success then return end
-        
-        cloned.Parent = ClonedModel
-        ClonedReference = cloned
-        
-        -- Cache original CFrames and collect all parts
+        -- Clone and cache original CFrames
+        local Cloned = TargetObject:Clone()
+        Cloned.Parent = ClonedModel
+        ClonedReference = Cloned
         OriginalCFrames = {}
         AllParts = {}
         
-        for _, Part in pairs(cloned:GetDescendants()) do
+        for _, Part in pairs(Cloned:GetDescendants()) do
             if Part:IsA('BasePart') then
                 OriginalCFrames[Part] = Part.CFrame
                 table.insert(AllParts, Part)
@@ -6043,155 +6038,80 @@ function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
         end
     end
     
-    -- Initial clone
-    UpdateModelReference()
+    task.wait(0.1)
+    CloneObject()
     
-    -- Main render loop with continuous updates
-    local renderConnection
-    renderConnection = RunService.RenderStepped:Connect(function(deltaTime)
-        if IsDestroyed or not ViewportFrame.Parent then
-            if renderConnection then
-                renderConnection:Disconnect()
-            end
+    -- Main render loop
+    local UpdateConnection
+    UpdateConnection = RunService.RenderStepped:Connect(LPH_NO_VIRTUALIZE(function()
+        if not ViewportFrame.Parent then
+            UpdateConnection:Disconnect()
             return
         end
         
-        -- Auto-update the model at intervals
-        if AutoUpdate then
-            LastUpdateTime = LastUpdateTime + deltaTime
-            if LastUpdateTime >= UpdateInterval then
-                LastUpdateTime = 0
-                UpdateModelReference()
-            end
-        end
-        
-        -- Skip if no valid model
         if not ClonedReference or #AllParts == 0 then return end
-        
-        -- Check if model still exists
-        if not ClonedReference.Parent then
-            UpdateModelReference()
-            return
-        end
         
         -- Rotation logic
         if ShouldRotate then
-            rotation = rotation + RotateSpeed * deltaTime
+            rotation = rotation + RotateSpeed * 0.016
             local angle = math.rad(rotation)
             local rotMatrix = CFrame.Angles(0, angle, 0)
             
-            -- Apply rotation to all parts
             for _, Part in pairs(AllParts) do
-                if Part and Part.Parent then
-                    local originalCFrame = OriginalCFrames[Part]
-                    if originalCFrame then
-                        Part.CFrame = rotMatrix * originalCFrame
-                    end
+                if Part.Parent then
+                    Part.CFrame = rotMatrix * OriginalCFrames[Part]
                 end
             end
         end
         
-        -- Calculate bounds for camera positioning
+        -- Calculate bounds only when needed
         local minX, minY, minZ = math.huge, math.huge, math.huge
         local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
-        local hasValidParts = false
         
         for _, Part in pairs(AllParts) do
-            if Part and Part.Parent then
-                local pos = Part.Position
-                local halfSize = Part.Size * 0.5
-                
-                minX = math.min(minX, pos.X - halfSize.X)
-                minY = math.min(minY, pos.Y - halfSize.Y)
-                minZ = math.min(minZ, pos.Z - halfSize.Z)
-                maxX = math.max(maxX, pos.X + halfSize.X)
-                maxY = math.max(maxY, pos.Y + halfSize.Y)
-                maxZ = math.max(maxZ, pos.Z + halfSize.Z)
-                hasValidParts = true
-            end
+            local pos = Part.Position
+            local halfSize = Part.Size * 0.5
+            minX = math.min(minX, pos.X - halfSize.X)
+            minY = math.min(minY, pos.Y - halfSize.Y)
+            minZ = math.min(minZ, pos.Z - halfSize.Z)
+            maxX = math.max(maxX, pos.X + halfSize.X)
+            maxY = math.max(maxY, pos.Y + halfSize.Y)
+            maxZ = math.max(maxZ, pos.Z + halfSize.Z)
         end
         
-        if not hasValidParts then
-            UpdateModelReference()
-            return
-        end
-        
-        -- Update camera position to fit model
-        local centerPos = Vector3.new(
-            (minX + maxX) * 0.5,
-            (minY + maxY) * 0.5,
-            (minZ + maxZ) * 0.5
-        )
-        
-        local boundSize = math.max(
-            maxX - minX,
-            maxY - minY,
-            maxZ - minZ
-        ) * 0.5
-        
-        local distance = boundSize / math.tan(math.rad(Camera.FieldOfView * 0.5))
-        local camPos = centerPos + Vector3.new(distance * 1.5, boundSize * 0.3, distance * 1.5)
+        -- Update camera
+        local centerPos = Vector3.new((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5)
+        local boundSize = math.sqrt((maxX - minX) ^ 2 + (maxY - minY) ^ 2 + (maxZ - minZ) ^ 2) * 0.5
+        local camPos = centerPos + Vector3.new(0, 0, boundSize * 2)
         
         Camera.CFrame = CFrame.new(camPos, centerPos)
-    end)
+    end))
     
-    -- Return the preview object with methods
-    local PreviewObject = {}
-    
-    function PreviewObject:Update()
-        UpdateModelReference()
-    end
-    
-    function PreviewObject:SetObject(obj)
+   return {
+    Outer = PreviewOuter,
+    Update = CloneObject,
+    SetObject = function(self, obj)
         TargetObject = obj
-        UpdateModelReference()
-    end
-    
-    function PreviewObject:SetRotate(enabled)
+        CloneObject()
+    end,
+    SetRotate = function(self, enabled)
         ShouldRotate = enabled
-    end
-    
-    function PreviewObject:SetRotateSpeed(speed)
+    end,
+    SetRotateSpeed = function(self, speed)
         RotateSpeed = speed
-    end
-    
-    function PreviewObject:SetFOV(fov)
+    end,
+    SetFOV = function(self, fov)
         Camera.FieldOfView = fov
-    end
-    
-    function PreviewObject:SetAutoUpdate(enabled)
-        AutoUpdate = enabled
-    end
-    
-    function PreviewObject:SetUpdateInterval(interval)
-        UpdateInterval = interval
-    end
-    
-    function PreviewObject:Disconnect()
-        IsDestroyed = true
-        
-        if renderConnection then
-            renderConnection:Disconnect()
-            renderConnection = nil
+    end,
+    Disconnect = function(self)
+        if UpdateConnectionforprewviewui then
+            UpdateConnectionforprewviewui:Disconnect()
         end
-        
-        if colorChangeConnection then
-            colorChangeConnection:Disconnect()
-            colorChangeConnection = nil
-        end
-        
-        if PreviewOuter and PreviewOuter.Parent then
-            PreviewOuter:Destroy()
-        end
-    end
-    
-    PreviewObject.Outer = PreviewOuter
-    PreviewObject.Viewport = ViewportFrame
-    PreviewObject.Camera = Camera
-    
-    return PreviewObject
-end
+    end,
+}
 
+
+end
 
 
 
