@@ -6156,28 +6156,91 @@ local function GetServerRegion()
     
     if success and result then
         -- Common region codes to full names
-        local regionNames = {
-            ["US"] = "United States",
-            ["GB"] = "United Kingdom",
-            ["DE"] = "Germany",
-            ["FR"] = "France",
-            ["CA"] = "Canada",
-            ["AU"] = "Australia",
-            ["BR"] = "Brazil",
-            ["JP"] = "Japan",
-            ["KR"] = "South Korea",
-            ["CN"] = "China",
-            ["IN"] = "India",
-            ["RU"] = "Russia",
-            ["MX"] = "Mexico",
-            ["ES"] = "Spain",
-            ["IT"] = "Italy",
-            ["NL"] = "Netherlands",
-            ["SE"] = "Sweden",
-            ["PL"] = "Poland",
-            ["TR"] = "Turkey",
-            ["SG"] = "Singapore",
-        }
+local regionNames = {
+    -- North America
+    ["US"] = "United States",
+    ["CA"] = "Canada",
+    ["MX"] = "Mexico",
+
+    -- South America
+    ["BR"] = "Brazil",
+    ["AR"] = "Argentina",
+    ["CL"] = "Chile",
+    ["CO"] = "Colombia",
+    ["PE"] = "Peru",
+    ["VE"] = "Venezuela",
+
+    -- Europe (most common)
+    ["GB"] = "United Kingdom",
+    ["DE"] = "Germany",
+    ["FR"] = "France",
+    ["IT"] = "Italy",
+    ["ES"] = "Spain",
+    ["NL"] = "Netherlands",
+    ["BE"] = "Belgium",
+    ["SE"] = "Sweden",
+    ["NO"] = "Norway",
+    ["DK"] = "Denmark",
+    ["FI"] = "Finland",
+    ["PL"] = "Poland",
+    ["CZ"] = "Czech Republic",
+    ["AT"] = "Austria",
+    ["CH"] = "Switzerland",
+    ["PT"] = "Portugal",
+    ["IE"] = "Ireland",
+    ["GR"] = "Greece",
+    ["HU"] = "Hungary",
+    ["RO"] = "Romania",
+    ["TR"] = "Turkey",          -- both Europe & Asia
+    ["UA"] = "Ukraine",
+    ["RU"] = "Russia",
+
+    -- Asia-Pacific (major markets)
+    ["JP"] = "Japan",
+    ["KR"] = "South Korea",
+    ["CN"] = "China",
+    ["IN"] = "India",
+    ["AU"] = "Australia",
+    ["NZ"] = "New Zealand",
+    ["SG"] = "Singapore",
+    ["ID"] = "Indonesia",
+    ["MY"] = "Malaysia",
+    ["TH"] = "Thailand",
+    ["PH"] = "Philippines",
+    ["VN"] = "Vietnam",
+    ["TW"] = "Taiwan",
+    ["HK"] = "Hong Kong",
+    ["MO"] = "Macau",
+
+    -- Middle East & Africa (frequently supported nowadays)
+    ["AE"] = "United Arab Emirates",
+    ["SA"] = "Saudi Arabia",
+    ["IL"] = "Israel",
+    ["ZA"] = "South Africa",
+    ["EG"] = "Egypt",
+    ["NG"] = "Nigeria",
+    ["KE"] = "Kenya",
+
+    -- Smaller but still often appearing regions
+    ["LU"] = "Luxembourg",
+    ["IS"] = "Iceland",
+    ["EE"] = "Estonia",
+    ["LV"] = "Latvia",
+    ["LT"] = "Lithuania",
+    ["HR"] = "Croatia",
+    ["SI"] = "Slovenia",
+    ["SK"] = "Slovakia",
+    ["BG"] = "Bulgaria",
+}
+
+-- Bonus: very short alias-style version if you prefer minimal keys
+-- local regionNamesShort = {
+--     US="USA", GB="UK", DE="Germany", FR="France", CA="Canada", AU="Australia",
+--     JP="Japan", KR="Korea", CN="China", IN="India", BR="Brazil", TR="Turkey",
+--     SG="Singapore", AE="UAE", SA="Saudi", ZA="South Africa", TW="Taiwan",
+--     HK="Hong Kong", ID="Indonesia", MY="Malaysia", TH="Thailand", PH="Philippines",
+-- }
+	
         return regionNames[result] or result
     end
     
