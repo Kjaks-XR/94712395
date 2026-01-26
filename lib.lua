@@ -5837,279 +5837,145 @@ end
 
 
 
-
-
-
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
 
 function Library:CreateObjectPreview(ParentWindow, WindowName, Config)
     Config = Config or {}
-    
+
     local PreviewSize = Config.Size or UDim2.fromOffset(220, 300)
-    local TargetObject = Config.Object or Workspace:FindFirstChild('Model')
+    local TargetObject = Config.Object or Players.LocalPlayer.Character
     local ShouldRotate = Config.Rotate ~= false
     local RotateSpeed = Config.RotateSpeed or 2
-    
-    -- Create outer frame
-    local PreviewOuter = Library:Create('Frame', {
-        BackgroundColor3 = Color3.new(0, 0, 0),
-        BorderColor3 = Color3.new(0, 0, 0),
+
+    local PreviewOuter = Library:Create("Frame", {
+        BackgroundColor3 = Color3.new(0,0,0),
+        BorderColor3 = Color3.new(0,0,0),
         Size = PreviewSize,
-        Position = UDim2.new(1, 10, 0, 25),
+        Position = UDim2.new(1,10,0,25),
         Parent = ParentWindow.Holder,
-        ZIndex = 50,
+        ZIndex = 50
     })
-    
 
-
-
-
-local glow = Instance.new("ImageLabel", PreviewOuter)
-glow.Name = "GlowEffect"
-glow.Image = "rbxassetid://18245826428" -- Glow texture ID
-glow.ScaleType = Enum.ScaleType.Slice
-glow.SliceCenter = Rect.new(21, 21, 79, 79)
-glow.ImageColor3 = Library.AccentColor
-glow.ImageTransparency = 0.6
-glow.BackgroundTransparency = 1
-glow.Size = UDim2.new(1, 40, 1, 40)
-glow.Position = UDim2.new(0, -20, 0, -20)
-glow.ZIndex = -1
-
--- Create pulsing animation
-local TweenService = game:GetService("TweenService")
-local startTransparency = 0.6
-local minTransparency = 0.3
-local pulseDuration = getgenv().glowwatermarkspeed or 5
-
-local pulseInfo = TweenInfo.new(
-	pulseDuration / 2,
-	Enum.EasingStyle.Sine,
-	Enum.EasingDirection.InOut
-)
-
-local function createPulseTween()
-	local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = minTransparency})
-	local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = startTransparency})
-	
-	tweenOut.Completed:Connect(function()
-		tweenIn:Play()
-	end)
-	
-	tweenIn.Completed:Connect(function()
-		tweenOut:Play()
-	end)
-	
-	tweenOut:Play()
-end
-
--- Start pulsing animation
-createPulseTween()
-
--- Watch for color changes and tween them
-local lastColor = Library.AccentColor
-local colorChangeConnection
-
-colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
-	if Library.AccentColor ~= lastColor then
-		lastColor = Library.AccentColor
-		
-		local colorTweenInfo = TweenInfo.new(
-			5,
-			Enum.EasingStyle.Quad,
-			Enum.EasingDirection.Out
-		)
-		
-		local colorTween = TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor})
-		colorTween:Play()
-	end
-end)
-
-
-
-
-
-
-    -- Create inner frame with accent border
-    local PreviewInner = Library:Create('Frame', {
+    local PreviewInner = Library:Create("Frame", {
         BackgroundColor3 = Library.MainColor,
         BorderColor3 = Library.AccentColor,
         BorderMode = Enum.BorderMode.Inset,
-        Size = UDim2.new(1, 0, 1, 0),
-        Position = UDim2.new(0, 1, 0, 1),
+        Size = UDim2.new(1,0,1,0),
+        Position = UDim2.new(0,1,0,1),
         ZIndex = 51,
-        Parent = PreviewOuter,
+        Parent = PreviewOuter
     })
-    
-    local Highlight = Library:Create('Frame', {
-        BackgroundColor3 = Library.AccentColor,
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0, 2),
-        ZIndex = 52,
-        Parent = PreviewInner,
-    })
-    
-    -- Color sync loop (only runs when colors change)
-    task.defer(function()
-        local lastMain, lastAccent = Library.MainColor, Library.AccentColor
-        while task.wait(1) do
-            if lastMain ~= Library.MainColor or lastAccent ~= Library.AccentColor then
-                lastMain, lastAccent = Library.MainColor, Library.AccentColor
-                TweenService:Create(PreviewInner, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = lastMain,
-                    BorderColor3 = lastAccent
-                }):Play()
-                TweenService:Create(Highlight, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = lastAccent
-                }):Play()
-            end
-        end
-    end)
-    
+
     Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 18),
-        Position = UDim2.new(0, 4, 0, 2),
-        Text = WindowName or 'Preview',
+        Size = UDim2.new(1,0,0,18),
+        Position = UDim2.new(0,4,0,2),
+        Text = WindowName or "Preview",
         TextSize = 12,
         ZIndex = 52,
-        Parent = PreviewInner,
+        Parent = PreviewInner
     })
-    
-    -- Setup viewport
-    local ViewportFrame = Instance.new('ViewportFrame')
-    ViewportFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+
+    local ViewportFrame = Instance.new("ViewportFrame")
+    ViewportFrame.BackgroundColor3 = Color3.fromRGB(25,25,30)
     ViewportFrame.BorderSizePixel = 0
-    ViewportFrame.Position = UDim2.new(0, 0, 0, 20)
-    ViewportFrame.Size = UDim2.new(1, 0, 1, -40)
+    ViewportFrame.Position = UDim2.new(0,0,0,20)
+    ViewportFrame.Size = UDim2.new(1,0,1,-40)
     ViewportFrame.ZIndex = 52
     ViewportFrame.Parent = PreviewInner
-    
-    local Camera = Instance.new('Camera')
+
+    local Camera = Instance.new("Camera")
+    Camera.FieldOfView = 35
     Camera.Parent = ViewportFrame
-    Camera.FieldOfView = 33
     ViewportFrame.CurrentCamera = Camera
-    
-    local ClonedModel = Instance.new('Folder')
-    ClonedModel.Name = 'PreviewModel'
-    ClonedModel.Parent = ViewportFrame
-    
-    -- Bottom label
-    Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 18),
-        Position = UDim2.new(0, 4, 1, -18),
-        Text = 'Character Appearance Visualization',
-        TextSize = 10,
-        ZIndex = 52,
-        Parent = PreviewInner,
-    })
-    
-    -- State variables
+
+    local Holder = Instance.new("Folder")
+    Holder.Parent = ViewportFrame
+
+    local ClonedParts = {}
+    local SourceParts = {}
     local rotation = 0
-    local ClonedReference = nil
-    local OriginalCFrames = {}
-    local AllParts = {}
-    local CachedBounds = {size = 0, center = Vector3.new()}
-    
-    local function CloneObject()
-        -- Cleanup
-        for _, child in pairs(ClonedModel:GetChildren()) do
-            child:Destroy()
-        end
-        
-        if not TargetObject then 
-            ClonedReference = nil
-            return 
-        end
-        
-        -- Clone and cache original CFrames
-        local Cloned = TargetObject:Clone()
-        Cloned.Parent = ClonedModel
-        ClonedReference = Cloned
-        OriginalCFrames = {}
-        AllParts = {}
-        
-        for _, Part in pairs(Cloned:GetDescendants()) do
-            if Part:IsA('BasePart') then
-                OriginalCFrames[Part] = Part.CFrame
-                table.insert(AllParts, Part)
+
+    local function CacheSource()
+        SourceParts = {}
+        if not TargetObject then return end
+        for _, p in pairs(TargetObject:GetDescendants()) do
+            if p:IsA("BasePart") then
+                SourceParts[p.Name] = p
             end
         end
     end
-    
-    task.wait(0.1)
-    CloneObject()
-    
-    -- Main render loop
-    local UpdateConnection
-    UpdateConnection = RunService.RenderStepped:Connect(LPH_NO_VIRTUALIZE(function()
-        if not ViewportFrame.Parent then
-            UpdateConnection:Disconnect()
-            return
-        end
-        
-        if not ClonedReference or #AllParts == 0 then return end
-        
-        -- Rotation logic
-        if ShouldRotate then
-            rotation = rotation + RotateSpeed * 0.016
-            local angle = math.rad(rotation)
-            local rotMatrix = CFrame.Angles(0, angle, 0)
-            
-            for _, Part in pairs(AllParts) do
-                if Part.Parent then
-                    Part.CFrame = rotMatrix * OriginalCFrames[Part]
-                end
+
+    local function CloneCharacter()
+        Holder:ClearAllChildren()
+        ClonedParts = {}
+        if not TargetObject then return end
+
+        local clone = TargetObject:Clone()
+        clone.Parent = Holder
+
+        for _, p in pairs(clone:GetDescendants()) do
+            if p:IsA("BasePart") then
+                table.insert(ClonedParts, p)
             end
         end
-        
-        -- Calculate bounds only when needed
-        local minX, minY, minZ = math.huge, math.huge, math.huge
-        local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
-        
-        for _, Part in pairs(AllParts) do
-            local pos = Part.Position
-            local halfSize = Part.Size * 0.5
-            minX = math.min(minX, pos.X - halfSize.X)
-            minY = math.min(minY, pos.Y - halfSize.Y)
-            minZ = math.min(minZ, pos.Z - halfSize.Z)
-            maxX = math.max(maxX, pos.X + halfSize.X)
-            maxY = math.max(maxY, pos.Y + halfSize.Y)
-            maxZ = math.max(maxZ, pos.Z + halfSize.Z)
-        end
-        
-        -- Update camera
-        local centerPos = Vector3.new((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5)
-        local boundSize = math.sqrt((maxX - minX) ^ 2 + (maxY - minY) ^ 2 + (maxZ - minZ) ^ 2) * 0.5
-        local camPos = centerPos + Vector3.new(0, 0, boundSize * 2)
-        
-        Camera.CFrame = CFrame.new(camPos, centerPos)
-    end))
-    
-   return {
-    Outer = PreviewOuter,
-    Update = CloneObject,
-    SetObject = function(self, obj)
-        TargetObject = obj
-        CloneObject()
-    end,
-    SetRotate = function(self, enabled)
-        ShouldRotate = enabled
-    end,
-    SetRotateSpeed = function(self, speed)
-        RotateSpeed = speed
-    end,
-    SetFOV = function(self, fov)
-        Camera.FieldOfView = fov
-    end,
-    Disconnect = function(self)
-        if UpdateConnectionforprewviewui then
-            UpdateConnectionforprewviewui:Disconnect()
-        end
-    end,
-}
 
+        CacheSource()
+    end
 
+    CloneCharacter()
+
+    local Conn
+    Conn = RunService.RenderStepped:Connect(function(dt)
+        if not ViewportFrame.Parent then Conn:Disconnect() return end
+        if not TargetObject then return end
+
+        for _, p in pairs(ClonedParts) do
+            local src = SourceParts[p.Name]
+            if src then
+                p.CFrame = src.CFrame
+            end
+        end
+
+        if ShouldRotate then
+            rotation += RotateSpeed * dt * 60
+            local rot = CFrame.Angles(0, math.rad(rotation), 0)
+            for _, p in pairs(ClonedParts) do
+                p.CFrame = rot * p.CFrame
+            end
+        end
+
+        local min, max = Vector3.new(1e9,1e9,1e9), Vector3.new(-1e9,-1e9,-1e9)
+        for _, p in pairs(ClonedParts) do
+            min = min:Min(p.Position)
+            max = max:Max(p.Position)
+        end
+
+        local center = (min + max) * 0.5
+        local size = (max - min).Magnitude
+        Camera.CFrame = CFrame.new(center + Vector3.new(0,0,size), center)
+    end)
+
+    Players.LocalPlayer.CharacterAdded:Connect(function(char)
+        TargetObject = char
+        CloneCharacter()
+    end)
+
+    return {
+        SetObject = function(_, obj)
+            TargetObject = obj
+            CloneCharacter()
+        end,
+        SetRotate = function(_, v)
+            ShouldRotate = v
+        end,
+        SetRotateSpeed = function(_, v)
+            RotateSpeed = v
+        end,
+        Disconnect = function()
+            if Conn then Conn:Disconnect() end
+        end
+    }
 end
 
 
