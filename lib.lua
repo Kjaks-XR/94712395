@@ -6109,7 +6109,74 @@ end
 
 
 
+-- Utility functions for executor and region detection
+local function GetExecutorName()
+    -- Detect executor environment
+    if identifyexecutor then
+        local success, name = pcall(identifyexecutor)
+        if success and name then
+            return name
+        end
+    end
+    
+    -- Fallback detection methods
+    if KRNL_LOADED then return "Krnl"
+    elseif syn then return "Synapse X"
+    elseif SONA_LOADED then return "Sona"
+    elseif Fluxus then return "Fluxus"
+    elseif getexecutorname then
+        local success, name = pcall(getexecutorname)
+        if success then return name end
+    elseif is_sirhurt_closure then return "SirHurt"
+    elseif OXYGEN_LOADED then return "Oxygen U"
+    elseif shadow_env then return "Shadow"
+    elseif SENTINEL_V2 then return "Sentinel"
+    elseif is_protosmasher_closure then return "ProtoSmasher"
+    elseif TRIGON_LOADED then return "Trigon"
+    elseif iselectron or Electron then return "Electron"
+    elseif secure_load then return "Sentinel"
+    elseif ARCEUS_LOADED then return "Arceus X"
+    elseif IsElectron then return "Electron"
+    elseif http and http.request then return "Synapse"
+    else return "Unknown"
+    end
+end
 
+local function GetServerRegion()
+    local LocalizationService = game:GetService("LocalizationService")
+    local success, result = pcall(function()
+        return LocalizationService:GetCountryRegionForPlayerAsync(game.Players.LocalPlayer)
+    end)
+    
+    if success and result then
+        -- Common region codes to full names
+        local regionNames = {
+            ["US"] = "United States",
+            ["GB"] = "United Kingdom",
+            ["DE"] = "Germany",
+            ["FR"] = "France",
+            ["CA"] = "Canada",
+            ["AU"] = "Australia",
+            ["BR"] = "Brazil",
+            ["JP"] = "Japan",
+            ["KR"] = "South Korea",
+            ["CN"] = "China",
+            ["IN"] = "India",
+            ["RU"] = "Russia",
+            ["MX"] = "Mexico",
+            ["ES"] = "Spain",
+            ["IT"] = "Italy",
+            ["NL"] = "Netherlands",
+            ["SE"] = "Sweden",
+            ["PL"] = "Poland",
+            ["TR"] = "Turkey",
+            ["SG"] = "Singapore",
+        }
+        return regionNames[result] or result
+    end
+    
+    return "Unknown"
+end
 
 function Library:CreateStatsPanel(ParentWindow, Config)
     Config = Config or {}
@@ -6262,7 +6329,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     
     -- Stats labels (premium look) - Left aligned
     local MemoryLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0.25, 0),
+        Size = UDim2.new(1, 0, 0.2, 0),
         Position = UDim2.new(0, 0, 0, 0),
         Text = 'Memory: 0.0 MB',
         TextSize = 9,
@@ -6273,8 +6340,8 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local FPSLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0.25, 0),
-        Position = UDim2.new(0, 0, 0.25, 0),
+        Size = UDim2.new(1, 0, 0.2, 0),
+        Position = UDim2.new(0, 0, 0.2, 0),
         Text = 'FPS: 0 | Ping: 0ms',
         TextSize = 9,
         FontFace = fonts["ProggyClean"],
@@ -6283,10 +6350,21 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Parent = StatsContainer,
     })
     
-    local VersionLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0.25, 0),
-        Position = UDim2.new(0, 0, 0.5, 0),
-        Text = 'V3.4B (0.283)',
+    local ExecutorLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0.2, 0),
+        Position = UDim2.new(0, 0, 0.4, 0),
+        Text = 'Executor: ' .. GetExecutorName(),
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = StatsContainer,
+    })
+    
+    local RegionLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0.2, 0),
+        Position = UDim2.new(0, 0, 0.6, 0),
+        Text = 'Region: Loading...',
         TextSize = 9,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -6295,8 +6373,8 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local UpTimeLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0.25, 0),
-        Position = UDim2.new(0, 0, 0.75, 0),
+        Size = UDim2.new(1, 0, 0.2, 0),
+        Position = UDim2.new(0, 0, 0.8, 0),
         Text = 'UpTime: 0m 0s',
         TextSize = 9,
         FontFace = fonts["ProggyClean"],
@@ -6304,6 +6382,12 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         ZIndex = 53,
         Parent = StatsContainer,
     })
+    
+    -- Async fetch server region (runs once)
+    task.spawn(function()
+        local region = GetServerRegion()
+        RegionLabel.Text = 'Region: ' .. region
+    end)
     
     -- Optimized stats update loop
     local startTime = tick()
@@ -6357,12 +6441,6 @@ function Library:CreateStatsPanel(ParentWindow, Config)
             cachedMemory = math.floor(gcinfo() / 1024)
             
             if cachedMemory >= 80 then
-                MemoryLabel.Text = "Memory: " .. cachedMemory .. "MB "
-                
-                local richText = Instance.new("TextLabel")
-                richText.RichText = true
-                
-                local formattedText = string.format("Memory: %dMB <font color=\"#FFFFFF\">[</font><font color=\"#FF0000\">HIGH</font><font color=\"#FFFFFF\">]</font>", cachedMemory)
                 MemoryLabel.Text = "Memory: " .. cachedMemory .. "MB [HIGH]"
                 MemoryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             else
@@ -6385,7 +6463,8 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Outer = StatsOuter,
         MemoryLabel = MemoryLabel,
         FPSLabel = FPSLabel,
-        VersionLabel = VersionLabel,
+        ExecutorLabel = ExecutorLabel,
+        RegionLabel = RegionLabel,
         UpTimeLabel = UpTimeLabel,
         Disconnect = function(self)
             if UpdateStatsConnection then
@@ -6397,7 +6476,6 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         end,
     }
 end
-
 
 
 
