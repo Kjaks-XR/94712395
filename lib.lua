@@ -2690,9 +2690,15 @@ end;
     end;
 
 
+getgenv().logMessage(1, "Creating Toggles...")
 
 function Funcs:AddToggle(Idx, Info)
     assert(Info.Text, 'AddInput: Missing `Text` string.')
+
+task.spawn(function()
+wait(15)
+getgenv().logMessage(1, "Created Toggle:" ..Info)
+end
 
     local Toggle = {
         Value = Info.Default or false;
@@ -2827,6 +2833,8 @@ end
     function Toggle:OnChanged(Func)
         Toggle.Changed = Func;
         Func(Toggle.Value)
+getgenv().logMessage(1, tostring(Toggle).." Changed to "..tostring(Toggle.Value))
+
     end
 
     function Toggle:SetValue(Bool)
@@ -6560,8 +6568,10 @@ function Library:CreateStatsPanel(ParentWindow, Config)
             
             if cachedMemory >= 80 then
                 MemoryLabel.Text = "Memory: " .. cachedMemory .. "MB [HIGH]"
+getgenv().logMessage(3, "Huge Memory Leak Detected")
                 MemoryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             else
+
                 MemoryLabel.Text = "Memory: " .. cachedMemory .. " MB"
                 MemoryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
@@ -6599,13 +6609,10 @@ end
 
 
 
-
-
-
 function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
     Config = Config or {}
     
-    local PanelSize = Config.Size or UDim2.fromOffset(220, 200)
+    local PanelSize = Config.Size or UDim2.fromOffset(250, 280)
     local MaxLogs = Config.MaxLogs or 50
     
     -- Create outer frame
@@ -6613,10 +6620,10 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
         BackgroundColor3 = Color3.new(0, 0, 0),
         BorderColor3 = Color3.new(0, 0, 0),
         Size = PanelSize,
-        Position = UDim2.fromOffset(5, 50), -- Will be updated below
+        Position = UDim2.fromOffset(5, 50),
         Parent = ScreenGui,
         ZIndex = 50,
-        Visible = true, -- Changed to true by default
+        Visible = true,
     })
     
     -- Position below PlayerList
@@ -6628,7 +6635,6 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
         end
     end
     
-    -- Update position when PlayerList moves or resizes
     if PlayerListFrame and PlayerListFrame.Holder then
         Library:GiveSignal(PlayerListFrame.Holder:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdatePosition))
         Library:GiveSignal(PlayerListFrame.Holder:GetPropertyChangedSignal('AbsoluteSize'):Connect(UpdatePosition))
@@ -6690,23 +6696,43 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
     
     Library:AddToRegistry(Highlight, {BackgroundColor3 = 'AccentColor'})
     
-    -- Title
-    Library:CreateLabel({
+    -- Title with gradient background
+    local TitleContainer = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor,
+        BorderSizePixel = 0,
         Size = UDim2.new(1, 0, 0, 18),
-        Position = UDim2.new(0, 4, 0, 2),
-        Text = 'UI LOGS',
-        TextSize = 11,
-        FontFace = fonts["ProggyClean"],
-        ZIndex = 53,
+        Position = UDim2.new(0, 0, 0, 2),
+        ZIndex = 52,
         Parent = LogInner,
+    })
+    
+    local TitleGradient = Library:Create('UIGradient', {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+            ColorSequenceKeypoint.new(1, Library.MainColor),
+        }),
+        Rotation = 90,
+        Parent = TitleContainer,
+    })
+    
+    local TitleLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 4, 0, 0),
+        Text = 'LOGS',
+        TextSize = 12,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = TitleContainer,
     })
     
     -- Scrolling frame for logs
     local ScrollingFrame = Library:Create('ScrollingFrame', {
-        BackgroundTransparency = 1,
+        BackgroundColor3 = Library.BackgroundColor,
+        BackgroundTransparency = 0,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 4, 0, 22),
-        Size = UDim2.new(1, -8, 1, -26),
+        Position = UDim2.new(0, 4, 0, 24),
+        Size = UDim2.new(1, -8, 1, -28),
         CanvasSize = UDim2.new(0, 0, 0, 0),
         ScrollBarThickness = 3,
         ScrollBarImageColor3 = Library.AccentColor,
@@ -6716,7 +6742,10 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
         BottomImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
     })
     
-    Library:AddToRegistry(ScrollingFrame, {ScrollBarImageColor3 = 'AccentColor'})
+    Library:AddToRegistry(ScrollingFrame, {
+        ScrollBarImageColor3 = 'AccentColor',
+        BackgroundColor3 = 'BackgroundColor'
+    })
     
     local ListLayout = Library:Create('UIListLayout', {
         Padding = UDim.new(0, 2),
@@ -6727,10 +6756,10 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
     
     local LogMessages = {}
     local LogTypes = {
-        [0] = {prefix = "[OUT]", color = Color3.fromRGB(255, 255, 255)},
-        [1] = {prefix = "[INFO]", color = Color3.fromRGB(100, 150, 255)},
-        [2] = {prefix = "[WARN]", color = Color3.fromRGB(255, 200, 50)},
-        [3] = {prefix = "[ERR]", color = Color3.fromRGB(255, 100, 100)},
+        [0] = {prefix = "OUT", color = Color3.fromRGB(230, 230, 230), bgColor = Color3.fromRGB(40, 40, 45)},
+        [1] = {prefix = "INFO", color = Color3.fromRGB(100, 180, 255), bgColor = Color3.fromRGB(30, 40, 50)},
+        [2] = {prefix = "WARN", color = Color3.fromRGB(255, 200, 80), bgColor = Color3.fromRGB(50, 45, 30)},
+        [3] = {prefix = "ERR", color = Color3.fromRGB(255, 100, 100), bgColor = Color3.fromRGB(50, 30, 30)},
     }
     
     local function AddLog(logType, message)
@@ -6742,34 +6771,81 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
             if oldest then oldest:Destroy() end
         end
         
-        -- Create log entry
+        -- Create log entry frame
         local LogEntry = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor,
+            BackgroundColor3 = logInfo.bgColor,
             BorderColor3 = Library.OutlineColor,
-            Size = UDim2.new(1, -2, 0, 14),
+            BorderMode = Enum.BorderMode.Inset,
+            Size = UDim2.new(1, -2, 0, 22),
             ZIndex = 53,
             Parent = ScrollingFrame,
         })
         
-        Library:AddToRegistry(LogEntry, {BackgroundColor3 = 'BackgroundColor', BorderColor3 = 'OutlineColor'})
+        -- Colored left accent
+        local ColorAccent = Library:Create('Frame', {
+            BackgroundColor3 = logInfo.color,
+            BorderSizePixel = 0,
+            Size = UDim2.new(0, 2, 1, 0),
+            Position = UDim2.new(0, 0, 0, 0),
+            ZIndex = 54,
+            Parent = LogEntry,
+        })
         
-        local LogText = Library:CreateLabel({
-            Size = UDim2.new(1, -4, 1, 0),
-            Position = UDim2.new(0, 2, 0, 0),
-            Text = logInfo.prefix .. " " .. message,
-            TextSize = 9,
+        -- Prefix label (colored box style)
+        local PrefixLabel = Library:Create('TextLabel', {
+            BackgroundColor3 = logInfo.color,
+            BackgroundTransparency = 0.9,
+            BorderSizePixel = 0,
+            Size = UDim2.new(0, 40, 0, 14),
+            Position = UDim2.new(0, 6, 0.5, -7),
+            Text = logInfo.prefix,
+            TextColor3 = logInfo.color,
+            TextSize = 10,
+            FontFace = fonts["ProggyClean"],
+            TextStrokeTransparency = 1,
+            ZIndex = 55,
+            Parent = LogEntry,
+        })
+        
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 2),
+            Parent = PrefixLabel,
+        })
+        
+        -- Message text
+        local MessageLabel = Library:Create('TextLabel', {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -52, 1, 0),
+            Position = UDim2.new(0, 50, 0, 0),
+            Text = message,
+            TextColor3 = Color3.fromRGB(220, 220, 220),
+            TextSize = 13,
             FontFace = fonts["ProggyClean"],
             TextXAlignment = Enum.TextXAlignment.Left,
-            TextColor3 = logInfo.color,
+            TextYAlignment = Enum.TextYAlignment.Center,
             TextTruncate = Enum.TextTruncate.AtEnd,
-            ZIndex = 54,
+            TextStrokeTransparency = 1,
+            ZIndex = 55,
             Parent = LogEntry,
         })
         
         table.insert(LogMessages, LogEntry)
         
-        -- Update canvas size
+        -- Fade in animation
+        LogEntry.BackgroundTransparency = 1
+        ColorAccent.BackgroundTransparency = 1
+        PrefixLabel.TextTransparency = 1
+        PrefixLabel.BackgroundTransparency = 1
+        MessageLabel.TextTransparency = 1
+        
+        TweenService:Create(LogEntry, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+        TweenService:Create(ColorAccent, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+        TweenService:Create(PrefixLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {TextTransparency = 0, BackgroundTransparency = 0.9}):Play()
+        TweenService:Create(MessageLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {TextTransparency = 0}):Play()
+        
+        -- Update canvas size and scroll to bottom
         ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y)
+        task.wait()
         ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
     end
     
@@ -6798,6 +6874,18 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
         end,
     }
 end
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
