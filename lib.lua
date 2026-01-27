@@ -6602,10 +6602,7 @@ end
 
 
 
-
--- Add this function after the CreateStatsPanel function (around line 3800)
-
-function Library:CreateLogPanel(ParentWindow, Config)
+function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
     Config = Config or {}
     
     local PanelSize = Config.Size or UDim2.fromOffset(220, 200)
@@ -6616,11 +6613,27 @@ function Library:CreateLogPanel(ParentWindow, Config)
         BackgroundColor3 = Color3.new(0, 0, 0),
         BorderColor3 = Color3.new(0, 0, 0),
         Size = PanelSize,
-        Position = UDim2.new(0, 5, 1, 10), -- Below player list
+        Position = UDim2.fromOffset(5, 50), -- Will be updated below
         Parent = ScreenGui,
         ZIndex = 50,
-        Visible = false,
+        Visible = true, -- Changed to true by default
     })
+    
+    -- Position below PlayerList
+    local function UpdatePosition()
+        if PlayerListFrame and PlayerListFrame.Holder and PlayerListFrame.Holder.Parent then
+            local playerListPos = PlayerListFrame.Holder.AbsolutePosition
+            local playerListSize = PlayerListFrame.Holder.AbsoluteSize
+            LogOuter.Position = UDim2.fromOffset(playerListPos.X, playerListPos.Y + playerListSize.Y + 10)
+        end
+    end
+    
+    -- Update position when PlayerList moves or resizes
+    if PlayerListFrame and PlayerListFrame.Holder then
+        Library:GiveSignal(PlayerListFrame.Holder:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdatePosition))
+        Library:GiveSignal(PlayerListFrame.Holder:GetPropertyChangedSignal('AbsoluteSize'):Connect(UpdatePosition))
+        UpdatePosition()
+    end
     
     -- Glow effect
     local glow = Instance.new("ImageLabel", LogOuter)
@@ -6644,6 +6657,15 @@ function Library:CreateLogPanel(ParentWindow, Config)
         tweenOut:Play()
     end
     createPulseTween()
+    
+    -- Color change detection
+    local lastColor = Library.AccentColor
+    Library:GiveSignal(RunService.Heartbeat:Connect(function()
+        if Library.AccentColor ~= lastColor then
+            lastColor = Library.AccentColor
+            TweenService:Create(glow, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Library.AccentColor}):Play()
+        end
+    end))
     
     -- Inner frame
     local LogInner = Library:Create('Frame', {
