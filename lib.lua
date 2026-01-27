@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5XT"
+local version = "0.5XTX"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -5857,7 +5857,7 @@ end
 
 
 
--- Add this function to your Library object (place it after other UI creation functions)
+	-- Add this function to your Library object (place it after other UI creation functions)
 
 function Library:CreateLogsUI(ParentWindow, Config)
     Config = Config or {}
@@ -6342,13 +6342,13 @@ function Library:CreateLogsUI(ParentWindow, Config)
     return LogsUI
 end
 
--- Add this to the global environment for easy access
-getgenv().logerror = function(logType, message)
+-- Create separate logging functions that don't recursively call themselves
+local function AddLogToUI(logType, message)
     if Library and Library.CurrentLogsUI then
         Library.CurrentLogsUI:AddLog(logType, message)
     end
     
-    -- Also print to console for debugging
+    -- Also print to console for debugging (using different function names)
     local logData = {
         output = function(m) print("[OUTPUT] " .. m) end,
         information = function(m) warn("[INFO] " .. m) end,
@@ -6360,14 +6360,16 @@ getgenv().logerror = function(logType, message)
     func(message)
 end
 
--- You can also add convenience functions
-getgenv().logoutput = function(message) getgenv().logerror("output", message) end
-getgenv().loginfo = function(message) getgenv().logerror("information", message) end
-getgenv().logwarn = function(message) getgenv().logerror("warning", message) end
-getgenv().logerror = function(message) getgenv().logerror("error", message) end
+-- Add these to the global environment
+getgenv().logoutput = function(message) AddLogToUI("output", message) end
+getgenv().loginfo = function(message) AddLogToUI("information", message) end
+getgenv().logwarn = function(message) AddLogToUI("warning", message) end
+getgenv().logerror = function(message) AddLogToUI("error", message) end
 
-
-
+-- Add a function that accepts both type and message
+getgenv().logmessage = function(logType, message)
+    AddLogToUI(logType, message)
+end
 
 
 
