@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5XTT"
+local version = "0.5XT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -5850,6 +5850,525 @@ end
 
     return PlayerListFrame;
 end
+
+
+
+
+
+
+
+-- Add this function to your Library object (place it after other UI creation functions)
+
+function Library:CreateLogsUI(ParentWindow, Config)
+    Config = Config or {}
+    
+    local LogsSize = Config.Size or UDim2.fromOffset(400, 250)
+    local MaxLogs = Config.MaxLogs or 100
+    local FontSize = Config.FontSize or 10
+    
+    -- Create outer frame
+    local LogsOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        BorderColor3 = Color3.new(0, 0, 0),
+        Size = LogsSize,
+        Position = Config.Position or UDim2.new(1, 10, 0, 340),
+        Parent = ParentWindow.Holder,
+        ZIndex = 50,
+    })
+    
+    -- Create glow effect
+    local glow = Instance.new("ImageLabel", LogsOuter)
+    glow.Name = "GlowEffect"
+    glow.Image = "rbxassetid://18245826428"
+    glow.ScaleType = Enum.ScaleType.Slice
+    glow.SliceCenter = Rect.new(21, 21, 79, 79)
+    glow.ImageColor3 = Library.AccentColor
+    glow.ImageTransparency = 0.6
+    glow.BackgroundTransparency = 1
+    glow.Size = UDim2.new(1, 40, 1, 40)
+    glow.Position = UDim2.new(0, -20, 0, -20)
+    glow.ZIndex = -1
+    
+    -- Create pulsing animation
+    local function createPulseTween()
+        local startTransparency = 0.6
+        local minTransparency = 0.3
+        local pulseDuration = 4
+        
+        local pulseInfo = TweenInfo.new(
+            pulseDuration / 2,
+            Enum.EasingStyle.Sine,
+            Enum.EasingDirection.InOut
+        )
+        
+        local function pulse()
+            local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = minTransparency})
+            local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = startTransparency})
+            
+            tweenOut.Completed:Connect(function()
+                tweenIn:Play()
+            end)
+            
+            tweenIn.Completed:Connect(function()
+                tweenOut:Play()
+            end)
+            
+            tweenOut:Play()
+        end
+        
+        pulse()
+    end
+    
+    createPulseTween()
+    
+    -- Color change detection
+    local lastColor = Library.AccentColor
+    local colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
+        if Library.AccentColor ~= lastColor then
+            lastColor = Library.AccentColor
+            local colorTweenInfo = TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+            TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor}):Play()
+        end
+    end)
+    
+    -- Create inner frame
+    local LogsInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor,
+        BorderColor3 = Library.AccentColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 1, 0, 1),
+        ZIndex = 51,
+        Parent = LogsOuter,
+    })
+    
+    Library:AddToRegistry(LogsInner, {BackgroundColor3 = 'MainColor', BorderColor3 = 'AccentColor'})
+    
+    -- Highlight bar at top
+    local Highlight = Library:Create('Frame', {
+        BackgroundColor3 = Library.AccentColor,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 2),
+        ZIndex = 52,
+        Parent = LogsInner,
+    })
+    
+    Library:AddToRegistry(Highlight, {BackgroundColor3 = 'AccentColor'})
+    
+    -- Title label
+    local TitleLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 4, 0, 2),
+        Text = 'Logs',
+        TextSize = 12,
+        ZIndex = 52,
+        Parent = LogsInner,
+    })
+    
+    -- Log controls container
+    local ControlsOuter = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor,
+        BorderColor3 = Library.OutlineColor,
+        Position = UDim2.new(0, 4, 0, 20),
+        Size = UDim2.new(1, -8, 0, 20),
+        ZIndex = 52,
+        Parent = LogsInner,
+    })
+    
+    Library:AddToRegistry(ControlsOuter, {BackgroundColor3 = 'BackgroundColor', BorderColor3 = 'OutlineColor'})
+    
+    -- UIListLayout for controls
+    Library:Create('UIListLayout', {
+        Padding = UDim.new(0, 2),
+        FillDirection = Enum.FillDirection.Horizontal,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = ControlsOuter,
+    })
+    
+    -- Clear logs button
+    local ClearButton = Library:Create('TextButton', {
+        BackgroundColor3 = Library.MainColor,
+        BorderColor3 = Library.OutlineColor,
+        Size = UDim2.new(0.25, -1, 1, 0),
+        Text = 'Clear',
+        TextColor3 = Library.FontColor,
+        TextSize = 10,
+        FontFace = Library.Font,
+        ZIndex = 53,
+        Parent = ControlsOuter,
+    })
+    
+    Library:AddToRegistry(ClearButton, {
+        BackgroundColor3 = 'MainColor',
+        BorderColor3 = 'OutlineColor',
+        TextColor3 = 'FontColor'
+    })
+    
+    -- Copy logs button
+    local CopyButton = Library:Create('TextButton', {
+        BackgroundColor3 = Library.MainColor,
+        BorderColor3 = Library.OutlineColor,
+        Size = UDim2.new(0.25, -1, 1, 0),
+        Text = 'Copy',
+        TextColor3 = Library.FontColor,
+        TextSize = 10,
+        FontFace = Library.Font,
+        ZIndex = 53,
+        Parent = ControlsOuter,
+    })
+    
+    Library:AddToRegistry(CopyButton, {
+        BackgroundColor3 = 'MainColor',
+        BorderColor3 = 'OutlineColor',
+        TextColor3 = 'FontColor'
+    })
+    
+    -- Save logs button
+    local SaveButton = Library:Create('TextButton', {
+        BackgroundColor3 = Library.MainColor,
+        BorderColor3 = Library.OutlineColor,
+        Size = UDim2.new(0.25, -1, 1, 0),
+        Text = 'Save',
+        TextColor3 = Library.FontColor,
+        TextSize = 10,
+        FontFace = Library.Font,
+        ZIndex = 53,
+        Parent = ControlsOuter,
+    })
+    
+    Library:AddToRegistry(SaveButton, {
+        BackgroundColor3 = 'MainColor',
+        BorderColor3 = 'OutlineColor',
+        TextColor3 = 'FontColor'
+    })
+    
+    -- Auto-scroll toggle
+    local AutoScrollButton = Library:Create('TextButton', {
+        BackgroundColor3 = Library.AccentColor,
+        BorderColor3 = Library.OutlineColor,
+        Size = UDim2.new(0.25, -1, 1, 0),
+        Text = 'Auto',
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextSize = 10,
+        FontFace = Library.Font,
+        ZIndex = 53,
+        Parent = ControlsOuter,
+    })
+    
+    Library:AddToRegistry(AutoScrollButton, {
+        BackgroundColor3 = 'AccentColor',
+        BorderColor3 = 'OutlineColor',
+        TextColor3 = function() return Color3.fromRGB(255, 255, 255) end
+    })
+    
+    -- Logs display area
+    local LogsOuterFrame = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor,
+        BorderColor3 = Library.OutlineColor,
+        Position = UDim2.new(0, 4, 0, 42),
+        Size = UDim2.new(1, -8, 1, -48),
+        ZIndex = 52,
+        Parent = LogsInner,
+    })
+    
+    Library:AddToRegistry(LogsOuterFrame, {BackgroundColor3 = 'BackgroundColor', BorderColor3 = 'OutlineColor'})
+    
+    local LogsInnerFrame = Library:Create('Frame', {
+        BackgroundColor3 = Color3.fromRGB(20, 20, 25),
+        BorderColor3 = Color3.new(0, 0, 0),
+        BorderMode = Enum.BorderMode.Inset,
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 53,
+        Parent = LogsOuterFrame,
+    })
+    
+    -- Scrolling frame for logs
+    local ScrollingFrame = Library:Create('ScrollingFrame', {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 54,
+        Parent = LogsInnerFrame,
+        
+        TopImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+        BottomImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = Library.AccentColor,
+    })
+    
+    Library:AddToRegistry(ScrollingFrame, {ScrollBarImageColor3 = 'AccentColor'})
+    
+    -- Logs container with list layout
+    local LogsContainer = Library:Create('Frame', {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 0),
+        ZIndex = 54,
+        Parent = ScrollingFrame,
+    })
+    
+    local LogsLayout = Library:Create('UIListLayout', {
+        Padding = UDim.new(0, 2),
+        FillDirection = Enum.FillDirection.Vertical,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = LogsContainer,
+    })
+    
+    -- Log type icons and colors
+    local LOG_TYPES = {
+        output = {
+            color = Color3.fromRGB(255, 255, 255),  -- White
+            icon = "📝",
+            prefix = "[OUTPUT]"
+        },
+        information = {
+            color = Color3.fromRGB(100, 150, 255),  -- Blue
+            icon = "ℹ️",
+            prefix = "[INFO]"
+        },
+        warning = {
+            color = Color3.fromRGB(255, 200, 50),   -- Yellow
+            icon = "⚠️",
+            prefix = "[WARN]"
+        },
+        error = {
+            color = Color3.fromRGB(255, 50, 50),    -- Red
+            icon = "❌",
+            prefix = "[ERROR]"
+        }
+    }
+    
+    -- State variables
+    local LogsUI = {
+        Logs = {},
+        AutoScrollEnabled = true,
+        MaxLogs = MaxLogs
+    }
+    
+    -- Function to get current time string
+    local function GetTimeString()
+        local time = os.date("*t")
+        return string.format("%02d:%02d", time.hour, time.min)
+    end
+    
+    -- Function to add a log entry
+    function LogsUI:AddLog(logType, message)
+        local logData = LOG_TYPES[logType] or LOG_TYPES.output
+        
+        -- Create log entry container
+        local LogEntry = Library:Create('Frame', {
+            BackgroundColor3 = Color3.fromRGB(30, 30, 35),
+            BorderColor3 = Color3.fromRGB(50, 50, 55),
+            BorderMode = Enum.BorderMode.Middle,
+            Size = UDim2.new(1, -4, 0, 20),
+            ZIndex = 55,
+            Parent = LogsContainer,
+        })
+        
+        -- Time label
+        local TimeLabel = Library:CreateLabel({
+            Position = UDim2.new(0, 4, 0, 0),
+            Size = UDim2.new(0, 40, 1, 0),
+            Text = "[" .. GetTimeString() .. "]",
+            TextColor3 = Color3.fromRGB(150, 150, 150),
+            TextSize = FontSize,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 56,
+            Parent = LogEntry,
+        })
+        
+        -- Icon label
+        local IconLabel = Library:CreateLabel({
+            Position = UDim2.new(0, 46, 0, 0),
+            Size = UDim2.new(0, 20, 1, 0),
+            Text = logData.icon,
+            TextColor3 = logData.color,
+            TextSize = FontSize,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 56,
+            Parent = LogEntry,
+        })
+        
+        -- Message label
+        local MessageLabel = Library:CreateLabel({
+            Position = UDim2.new(0, 70, 0, 0),
+            Size = UDim2.new(1, -74, 1, 0),
+            Text = message,
+            TextColor3 = logData.color,
+            TextSize = FontSize,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextWrapped = false,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 56,
+            Parent = LogEntry,
+        })
+        
+        -- Store log data
+        local logEntryData = {
+            Frame = LogEntry,
+            Time = GetTimeString(),
+            Type = logType,
+            Message = message,
+            Color = logData.color
+        }
+        
+        -- Add tooltip with full message
+        Library:AddToolTip(message, LogEntry)
+        
+        -- Add to logs table
+        table.insert(LogsUI.Logs, logEntryData)
+        
+        -- Limit number of logs
+        if #LogsUI.Logs > LogsUI.MaxLogs then
+            local oldestLog = LogsUI.Logs[1]
+            if oldestLog and oldestLog.Frame then
+                oldestLog.Frame:Destroy()
+            end
+            table.remove(LogsUI.Logs, 1)
+        end
+        
+        -- Update container size
+        LogsContainer.Size = UDim2.new(1, 0, 0, #LogsUI.Logs * 22)
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, LogsContainer.Size.Y.Offset)
+        
+        -- Auto scroll to bottom
+        if LogsUI.AutoScrollEnabled then
+            task.wait()
+            ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
+        end
+        
+        return logEntryData
+    end
+    
+    -- Function to clear all logs
+    function LogsUI:ClearLogs()
+        for _, logData in ipairs(LogsUI.Logs) do
+            if logData.Frame then
+                logData.Frame:Destroy()
+            end
+        end
+        
+        LogsUI.Logs = {}
+        LogsContainer.Size = UDim2.new(1, 0, 0, 0)
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    end
+    
+    -- Function to copy logs to clipboard
+    function LogsUI:CopyLogs()
+        local logText = ""
+        for _, logData in ipairs(LogsUI.Logs) do
+            logText = logText .. string.format("[%s] %s: %s\n", 
+                logData.Time, 
+                LOG_TYPES[logData.Type].prefix, 
+                logData.Message)
+        end
+        
+        if pcall(function()
+            setclipboard(logText)
+        end) then
+            Library:Notify("Logs copied to clipboard!", 2)
+        else
+            Library:Notify("Failed to copy logs", 2)
+        end
+    end
+    
+    -- Function to save logs to file
+    function LogsUI:SaveLogs()
+        local logText = ""
+        for _, logData in ipairs(LogsUI.Logs) do
+            logText = logText .. string.format("[%s] %s: %s\n", 
+                logData.Time, 
+                LOG_TYPES[logData.Type].prefix, 
+                logData.Message)
+        end
+        
+        local filename = "logs_" .. os.date("%Y-%m-%d_%H-%M-%S") .. ".txt"
+        
+        if writefile then
+            writefile(filename, logText)
+            Library:Notify("Logs saved to " .. filename, 2)
+        else
+            Library:Notify("File system not available", 2)
+        end
+    end
+    
+    -- Function to toggle auto-scroll
+    function LogsUI:ToggleAutoScroll()
+        LogsUI.AutoScrollEnabled = not LogsUI.AutoScrollEnabled
+        
+        if LogsUI.AutoScrollEnabled then
+            AutoScrollButton.Text = "Auto"
+            AutoScrollButton.BackgroundColor3 = Library.AccentColor
+        else
+            AutoScrollButton.Text = "Manual"
+            AutoScrollButton.BackgroundColor3 = Library.MainColor
+        end
+    end
+    
+    -- Button click handlers
+    ClearButton.MouseButton1Click:Connect(function()
+        LogsUI:ClearLogs()
+    end)
+    
+    CopyButton.MouseButton1Click:Connect(function()
+        LogsUI:CopyLogs()
+    end)
+    
+    SaveButton.MouseButton1Click:Connect(function()
+        LogsUI:SaveLogs()
+    end)
+    
+    AutoScrollButton.MouseButton1Click:Connect(function()
+        LogsUI:ToggleAutoScroll()
+    end)
+    
+    -- Add button hover effects
+    Library:OnHighlight(ClearButton, ClearButton,
+        { BorderColor3 = 'AccentColor' },
+        { BorderColor3 = 'OutlineColor' }
+    )
+    
+    Library:OnHighlight(CopyButton, CopyButton,
+        { BorderColor3 = 'AccentColor' },
+        { BorderColor3 = 'OutlineColor' }
+    )
+    
+    Library:OnHighlight(SaveButton, SaveButton,
+        { BorderColor3 = 'AccentColor' },
+        { BorderColor3 = 'OutlineColor' }
+    )
+    
+    -- Return the LogsUI object
+    return LogsUI
+end
+
+-- Add this to the global environment for easy access
+getgenv().logerror = function(logType, message)
+    if Library and Library.CurrentLogsUI then
+        Library.CurrentLogsUI:AddLog(logType, message)
+    end
+    
+    -- Also print to console for debugging
+    local logData = {
+        output = function(m) print("[OUTPUT] " .. m) end,
+        information = function(m) warn("[INFO] " .. m) end,
+        warning = function(m) warn("[WARN] " .. m) end,
+        error = function(m) warn("[ERROR] " .. m) end
+    }
+    
+    local func = logData[logType] or print
+    func(message)
+end
+
+-- You can also add convenience functions
+getgenv().logoutput = function(message) getgenv().logerror("output", message) end
+getgenv().loginfo = function(message) getgenv().logerror("information", message) end
+getgenv().logwarn = function(message) getgenv().logerror("warning", message) end
+getgenv().logerror = function(message) getgenv().logerror("error", message) end
+
+
+
+
 
 
 
