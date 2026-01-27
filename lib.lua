@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5XTX"
+local version = "0.5XT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -5866,6 +5866,26 @@ end
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
@@ -6579,6 +6599,183 @@ end
 
 
 
+
+
+
+
+-- Add this function after the CreateStatsPanel function (around line 3800)
+
+function Library:CreateLogPanel(ParentWindow, Config)
+    Config = Config or {}
+    
+    local PanelSize = Config.Size or UDim2.fromOffset(220, 200)
+    local MaxLogs = Config.MaxLogs or 50
+    
+    -- Create outer frame
+    local LogOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        BorderColor3 = Color3.new(0, 0, 0),
+        Size = PanelSize,
+        Position = UDim2.new(0, 5, 1, 10), -- Below player list
+        Parent = ScreenGui,
+        ZIndex = 50,
+        Visible = false,
+    })
+    
+    -- Glow effect
+    local glow = Instance.new("ImageLabel", LogOuter)
+    glow.Name = "GlowEffect"
+    glow.Image = "rbxassetid://18245826428"
+    glow.ScaleType = Enum.ScaleType.Slice
+    glow.SliceCenter = Rect.new(21, 21, 79, 79)
+    glow.ImageColor3 = Library.AccentColor
+    glow.ImageTransparency = 0.6
+    glow.BackgroundTransparency = 1
+    glow.Size = UDim2.new(1, 40, 1, 40)
+    glow.Position = UDim2.new(0, -20, 0, -20)
+    glow.ZIndex = -1
+    
+    -- Pulse animation
+    local function createPulseTween()
+        local tweenOut = TweenService:Create(glow, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.3})
+        local tweenIn = TweenService:Create(glow, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.6})
+        tweenOut.Completed:Connect(function() tweenIn:Play() end)
+        tweenIn.Completed:Connect(function() tweenOut:Play() end)
+        tweenOut:Play()
+    end
+    createPulseTween()
+    
+    -- Inner frame
+    local LogInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor,
+        BorderColor3 = Library.AccentColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 1, 0, 1),
+        ZIndex = 51,
+        Parent = LogOuter,
+    })
+    
+    Library:AddToRegistry(LogInner, {BackgroundColor3 = 'MainColor', BorderColor3 = 'AccentColor'})
+    
+    local Highlight = Library:Create('Frame', {
+        BackgroundColor3 = Library.AccentColor,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 2),
+        ZIndex = 52,
+        Parent = LogInner,
+    })
+    
+    Library:AddToRegistry(Highlight, {BackgroundColor3 = 'AccentColor'})
+    
+    -- Title
+    Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 4, 0, 2),
+        Text = 'UI LOGS',
+        TextSize = 11,
+        FontFace = fonts["ProggyClean"],
+        ZIndex = 53,
+        Parent = LogInner,
+    })
+    
+    -- Scrolling frame for logs
+    local ScrollingFrame = Library:Create('ScrollingFrame', {
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 4, 0, 22),
+        Size = UDim2.new(1, -8, 1, -26),
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = Library.AccentColor,
+        ZIndex = 52,
+        Parent = LogInner,
+        TopImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+        BottomImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+    })
+    
+    Library:AddToRegistry(ScrollingFrame, {ScrollBarImageColor3 = 'AccentColor'})
+    
+    local ListLayout = Library:Create('UIListLayout', {
+        Padding = UDim.new(0, 2),
+        FillDirection = Enum.FillDirection.Vertical,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = ScrollingFrame,
+    })
+    
+    local LogMessages = {}
+    local LogTypes = {
+        [0] = {prefix = "[OUT]", color = Color3.fromRGB(255, 255, 255)},
+        [1] = {prefix = "[INFO]", color = Color3.fromRGB(100, 150, 255)},
+        [2] = {prefix = "[WARN]", color = Color3.fromRGB(255, 200, 50)},
+        [3] = {prefix = "[ERR]", color = Color3.fromRGB(255, 100, 100)},
+    }
+    
+    local function AddLog(logType, message)
+        local logInfo = LogTypes[logType] or LogTypes[0]
+        
+        -- Remove oldest log if at max
+        if #LogMessages >= MaxLogs then
+            local oldest = table.remove(LogMessages, 1)
+            if oldest then oldest:Destroy() end
+        end
+        
+        -- Create log entry
+        local LogEntry = Library:Create('Frame', {
+            BackgroundColor3 = Library.BackgroundColor,
+            BorderColor3 = Library.OutlineColor,
+            Size = UDim2.new(1, -2, 0, 14),
+            ZIndex = 53,
+            Parent = ScrollingFrame,
+        })
+        
+        Library:AddToRegistry(LogEntry, {BackgroundColor3 = 'BackgroundColor', BorderColor3 = 'OutlineColor'})
+        
+        local LogText = Library:CreateLabel({
+            Size = UDim2.new(1, -4, 1, 0),
+            Position = UDim2.new(0, 2, 0, 0),
+            Text = logInfo.prefix .. " " .. message,
+            TextSize = 9,
+            FontFace = fonts["ProggyClean"],
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextColor3 = logInfo.color,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 54,
+            Parent = LogEntry,
+        })
+        
+        table.insert(LogMessages, LogEntry)
+        
+        -- Update canvas size
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y)
+        ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
+    end
+    
+    -- Global function
+    getgenv().logMessage = function(logType, message)
+        AddLog(logType, tostring(message))
+    end
+    
+    -- Sync with parent window visibility
+    if ParentWindow and ParentWindow.Holder then
+        ParentWindow.Holder:GetPropertyChangedSignal('Visible'):Connect(function()
+            LogOuter.Visible = ParentWindow.Holder.Visible
+        end)
+        LogOuter.Visible = ParentWindow.Holder.Visible
+    end
+    
+    return {
+        Outer = LogOuter,
+        AddLog = AddLog,
+        Clear = function()
+            for _, log in ipairs(LogMessages) do
+                log:Destroy()
+            end
+            LogMessages = {}
+            ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        end,
+    }
+end
 
 
 
