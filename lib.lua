@@ -2695,10 +2695,6 @@ end;
 function Funcs:AddToggle(Idx, Info)
     assert(Info.Text, 'AddInput: Missing `Text` string.')
 
-task.spawn(function()
-wait(15)
-getgenv().logMessage(1, "Created Toggle:" ..tostring(Info))
-end)
 
     local Toggle = {
         Value = Info.Default or false;
