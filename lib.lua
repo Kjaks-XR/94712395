@@ -2690,7 +2690,7 @@ end;
     end;
 
 
-getgenv().logMessage(1, "Creating Toggles...")
+
 
 function Funcs:AddToggle(Idx, Info)
     assert(Info.Text, 'AddInput: Missing `Text` string.')
