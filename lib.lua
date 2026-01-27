@@ -2698,7 +2698,7 @@ function Funcs:AddToggle(Idx, Info)
 task.spawn(function()
 wait(15)
 getgenv().logMessage(1, "Created Toggle:" ..Info)
-end
+end)
 
     local Toggle = {
         Value = Info.Default or false;
