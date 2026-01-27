@@ -2697,7 +2697,7 @@ function Funcs:AddToggle(Idx, Info)
 
 task.spawn(function()
 wait(15)
-getgenv().logMessage(1, "Created Toggle:" ..Info)
+getgenv().logMessage(1, "Created Toggle:" ..tostring(Info))
 end)
 
     local Toggle = {
