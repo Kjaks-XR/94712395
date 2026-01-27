@@ -770,62 +770,53 @@ function Library:CreateLabel(Properties, IsHud)
     return Library:Create(_Instance, Properties);
 end;
 
-function Library:MakeDraggable(frame, dragOffsetY)
-    dragOffsetY = dragOffsetY or 40
-
-    local dragging, dragInput, dragStart, startPos
-
-    local function update(input)
-        if not dragging then return end
-
-        local delta = input.Position - dragStart
-        local newPos = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-
-        -- Optional: add slight smoothing / lerp if you want butter feel
-        frame.Position = frame.Position:Lerp(newPos, 0.35)
-
-        frame.Position = newPos
-    end
-
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-
-        local pos = Vector2.new(input.Position.X, input.Position.Y)
-        local framePos = frame.AbsolutePosition
-        local frameSize = frame.AbsoluteSize
-
-        -- Only allow dragging from top bar
-        if pos.Y - framePos.Y > dragOffsetY then return end
-
-        dragging = true
-        dragStart = pos
-        startPos = frame.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
+function Library:MakeDraggable(Instance, Cutoff)
+    Instance.Active = true;
+    local dragging = false
+    local dragInput, dragStart, startPos
+    
+    Instance.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local ObjPos = Vector2.new(
+                Mouse.X - Instance.AbsolutePosition.X,
+                Mouse.Y - Instance.AbsolutePosition.Y
+            );
+            if ObjPos.Y > (Cutoff or 40) then
+                return;
+            end;
+            
+            dragging = true
+            dragStart = Input.Position
+            startPos = Instance.Position
+            
+            -- Capture the input to prevent other interactions
+            Input.Changed:Connect(function()
+                if Input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end;
     end)
-
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
+    
+    Instance.InputChanged:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = Input
         end
     end)
-
-    -- Use Heartbeat instead of RenderStepped
-    game:GetService("RunService").Heartbeat:Connect(function()
-        if dragging and dragInput then
-            update(dragInput)
+    
+    InputService.InputChanged:Connect(function(Input)
+        if Input == dragInput and dragging then
+            local delta = Input.Position - dragStart
+            Instance.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
         end
     end)
 end
+
 
 function Library:AddToolTip(InfoStr, HoverInstance)
     local X, Y = Library:GetTextBounds(InfoStr, Library.Font, 14);
