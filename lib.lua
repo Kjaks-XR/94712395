@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5XT"
+local version = "0.5X - OPT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -1020,26 +1020,27 @@ function Library:RemoveFromRegistry(Instance)
 end;
 
 function Library:UpdateColorsUsingRegistry()
-    -- TODO: Could have an 'active' list of objects
-    -- where the active list only contains Visible objects.
-
-    -- IMPL: Could setup .Changed events on the AddToRegistry function
-    -- that listens for the 'Visible' propert being changed.
-    -- Visible: true => Add to active list, and call UpdateColors function
-    -- Visible: false => Remove from active list.
-
-    -- The above would be especially efficient for a rainbow menu color or live color-changing.
-
+    -- Batch updates to reduce redraws
+    local updates = {}
+    
     for Idx, Object in next, Library.Registry do
+        -- Skip invisible objects
+        if not Object.Instance.Visible then continue end
+        
         for Property, ColorIdx in next, Object.Properties do
             if type(ColorIdx) == 'string' then
-                Object.Instance[Property] = Library[ColorIdx];
+                table.insert(updates, {Object.Instance, Property, Library[ColorIdx]})
             elseif type(ColorIdx) == 'function' then
-                Object.Instance[Property] = ColorIdx()
+                table.insert(updates, {Object.Instance, Property, ColorIdx()})
             end
-        end;
-    end;
-end;
+        end
+    end
+    
+    -- Apply all updates at once
+    for _, update in ipairs(updates) do
+        update[1][update[2]] = update[3]
+    end
+end
 
 function Library:GiveSignal(Signal)
     -- Only used for signals not attached to library instances, as those should be cleaned up on object destruction by Roblox
@@ -3030,12 +3031,23 @@ local DisplayLabel = Library:CreateLabel({
         end;
 
         -- Smooth tween fonksiyonu
-        function Slider:TweenFill(targetSize)
-            local TweenService = game:GetService("TweenService")
-            local tweenInfo = TweenInfo.new(0.75, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-            local tween = TweenService:Create(Fill, tweenInfo, {Size = targetSize})
-            tween:Play()
-        end
+-- Add to slider creation:
+local ActiveTweens = {}
+
+function Slider:TweenFill(targetSize)
+    -- Cancel previous tween
+    if ActiveTweens[Fill] then
+        ActiveTweens[Fill]:Cancel()
+    end
+    
+    local tween = TweenService:Create(Fill, TweenInfo.new(0.75, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = targetSize})
+    ActiveTweens[Fill] = tween
+    tween:Play()
+    
+    tween.Completed:Connect(function()
+        ActiveTweens[Fill] = nil
+    end)
+end
 
         -- Text renk değiştirme fonksiyonu (Title için)
         function Slider:UpdateTextColor(touched)
@@ -5089,7 +5101,11 @@ if not getgenv().moderatorsdetected then
     getgenv().moderatorsdetected = {}
 end
 
+	 UpdateDebounce = false
+ UpdateScheduled = false
+
 function Library:CreatePlayerListFrame(MainWindow, WindowName, Config)
+		
     Config = Config or {}
     local DynamicSize = Config.DynamicSize or false
     local Width = Config.Width or 250
@@ -6522,7 +6538,13 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     local statsService = game:GetService("Stats")
     local UpdateStatsConnection
     
-    UpdateStatsConnection = RunService.RenderStepped:Connect(LPH_NO_VIRTUALIZE(function()
+local lastUpdate = 0
+local UPDATE_INTERVAL = 0.1 -- Update every 100ms instead of every frame
+
+UpdateStatsConnection = RunService.Heartbeat:Connect(function()
+    local now = tick()
+    if now - lastUpdate < UPDATE_INTERVAL then return end
+    lastUpdate = now
         if not StatsInner.Parent then
             UpdateStatsConnection:Disconnect()
             colorChangeConnection:Disconnect()
@@ -6581,7 +6603,7 @@ getgenv().logMessage(3, "Huge Memory Leak Detected")
             local seconds = upTime % 60
             UpTimeLabel.Text = "UpTime: " .. minutes .. "m " .. seconds .. "s"
         end
-    end))
+    end)
     
     return {
         Outer = StatsOuter,
