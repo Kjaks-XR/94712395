@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5X - OPT"
+local version = "0.5XX - OPT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -1019,28 +1019,50 @@ function Library:RemoveFromRegistry(Instance)
     end;
 end;
 
+
+
+
+
+
+
 function Library:UpdateColorsUsingRegistry()
-    -- Batch updates to reduce redraws
-    local updates = {}
+    -- Only update if UI is visible
+    if not ScreenGui.Parent then return end
     
     for Idx, Object in next, Library.Registry do
-        -- Skip invisible objects
-        if not Object.Instance.Visible then continue end
+        -- Check if instance still exists
+        if not Object.Instance or not Object.Instance.Parent then continue end
+        
+        -- Skip invisible objects for performance (but still update them occasionally)
+        local shouldUpdate = Object.Instance.Visible or (Idx % 10 == 0)
+        if not shouldUpdate then continue end
         
         for Property, ColorIdx in next, Object.Properties do
             if type(ColorIdx) == 'string' then
-                table.insert(updates, {Object.Instance, Property, Library[ColorIdx]})
+                -- Safely update the property
+                local newColor = Library[ColorIdx]
+                if newColor then
+                    Object.Instance[Property] = newColor
+                end
             elseif type(ColorIdx) == 'function' then
-                table.insert(updates, {Object.Instance, Property, ColorIdx()})
+                -- Safely call the function
+                local success, newColor = pcall(ColorIdx)
+                if success and newColor then
+                    Object.Instance[Property] = newColor
+                end
             end
         end
     end
-    
-    -- Apply all updates at once
-    for _, update in ipairs(updates) do
-        update[1][update[2]] = update[3]
-    end
 end
+
+
+
+
+
+
+
+
+
 
 function Library:GiveSignal(Signal)
     -- Only used for signals not attached to library instances, as those should be cleaned up on object destruction by Roblox
