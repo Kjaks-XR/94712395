@@ -1024,37 +1024,33 @@ end;
 
 
 
-
 function Library:UpdateColorsUsingRegistry()
-    -- Only update if UI is visible
-    if not ScreenGui.Parent then return end
-    
     for Idx, Object in next, Library.Registry do
-        -- Check if instance still exists
-        if not Object.Instance or not Object.Instance.Parent then continue end
-        
-        -- Skip invisible objects for performance (but still update them occasionally)
-        local shouldUpdate = Object.Instance.Visible or (Idx % 10 == 0)
-        if not shouldUpdate then continue end
-        
-        for Property, ColorIdx in next, Object.Properties do
-            if type(ColorIdx) == 'string' then
-                -- Safely update the property
-                local newColor = Library[ColorIdx]
-                if newColor then
-                    Object.Instance[Property] = newColor
-                end
-            elseif type(ColorIdx) == 'function' then
-                -- Safely call the function
-                local success, newColor = pcall(ColorIdx)
-                if success and newColor then
-                    Object.Instance[Property] = newColor
+        -- Make sure the instance still exists and has a parent
+        if Object.Instance and Object.Instance.Parent then
+            -- Update all registered properties
+            for Property, ColorIdx in next, Object.Properties do
+                -- Safely get the new color/value
+                local success, result = pcall(function()
+                    if type(ColorIdx) == 'string' then
+                        -- Reference to Library.AccentColor, Library.MainColor, etc.
+                        return Library[ColorIdx]
+                    elseif type(ColorIdx) == 'function' then
+                        -- Function that returns a color
+                        return ColorIdx()
+                    end
+                end)
+                
+                -- If we got a valid value, apply it safely
+                if success and result then
+                    pcall(function()
+                        Object.Instance[Property] = result
+                    end)
                 end
             end
         end
     end
 end
-
 
 
 
