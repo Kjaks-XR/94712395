@@ -2916,7 +2916,7 @@ end
     function Toggle:OnChanged(Func)
         Toggle.Changed = Func;
         Func(Toggle.Value)
-getgenv().logMessage(1, tostring(Toggle).." Changed to "..tostring(Toggle.Value))
+
 
     end
 
