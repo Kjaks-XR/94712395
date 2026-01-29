@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5TX - OPT"
+local version = "0.5T- OPT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -6296,7 +6296,6 @@ end
 
 
 
-
 -- Utility functions for executor and region detection
 local function GetExecutorName()
     -- Detect executor environment
@@ -6338,91 +6337,83 @@ local function GetServerRegion()
     
     if success and result then
         -- Common region codes to full names
-local regionNames = {
-    -- North America
-    ["US"] = "United States",
-    ["CA"] = "Canada",
-    ["MX"] = "Mexico",
+        local regionNames = {
+            -- North America
+            ["US"] = "United States",
+            ["CA"] = "Canada",
+            ["MX"] = "Mexico",
 
-    -- South America
-    ["BR"] = "Brazil",
-    ["AR"] = "Argentina",
-    ["CL"] = "Chile",
-    ["CO"] = "Colombia",
-    ["PE"] = "Peru",
-    ["VE"] = "Venezuela",
+            -- South America
+            ["BR"] = "Brazil",
+            ["AR"] = "Argentina",
+            ["CL"] = "Chile",
+            ["CO"] = "Colombia",
+            ["PE"] = "Peru",
+            ["VE"] = "Venezuela",
 
-    -- Europe (most common)
-    ["GB"] = "United Kingdom",
-    ["DE"] = "Germany",
-    ["FR"] = "France",
-    ["IT"] = "Italy",
-    ["ES"] = "Spain",
-    ["NL"] = "Netherlands",
-    ["BE"] = "Belgium",
-    ["SE"] = "Sweden",
-    ["NO"] = "Norway",
-    ["DK"] = "Denmark",
-    ["FI"] = "Finland",
-    ["PL"] = "Poland",
-    ["CZ"] = "Czech Republic",
-    ["AT"] = "Austria",
-    ["CH"] = "Switzerland",
-    ["PT"] = "Portugal",
-    ["IE"] = "Ireland",
-    ["GR"] = "Greece",
-    ["HU"] = "Hungary",
-    ["RO"] = "Romania",
-    ["TR"] = "Turkey",          -- both Europe & Asia
-    ["UA"] = "Ukraine",
-    ["RU"] = "Russia",
+            -- Europe (most common)
+            ["GB"] = "United Kingdom",
+            ["DE"] = "Germany",
+            ["FR"] = "France",
+            ["IT"] = "Italy",
+            ["ES"] = "Spain",
+            ["NL"] = "Netherlands",
+            ["BE"] = "Belgium",
+            ["SE"] = "Sweden",
+            ["NO"] = "Norway",
+            ["DK"] = "Denmark",
+            ["FI"] = "Finland",
+            ["PL"] = "Poland",
+            ["CZ"] = "Czech Republic",
+            ["AT"] = "Austria",
+            ["CH"] = "Switzerland",
+            ["PT"] = "Portugal",
+            ["IE"] = "Ireland",
+            ["GR"] = "Greece",
+            ["HU"] = "Hungary",
+            ["RO"] = "Romania",
+            ["TR"] = "Turkey",
+            ["UA"] = "Ukraine",
+            ["RU"] = "Russia",
 
-    -- Asia-Pacific (major markets)
-    ["JP"] = "Japan",
-    ["KR"] = "South Korea",
-    ["CN"] = "China",
-    ["IN"] = "India",
-    ["AU"] = "Australia",
-    ["NZ"] = "New Zealand",
-    ["SG"] = "Singapore",
-    ["ID"] = "Indonesia",
-    ["MY"] = "Malaysia",
-    ["TH"] = "Thailand",
-    ["PH"] = "Philippines",
-    ["VN"] = "Vietnam",
-    ["TW"] = "Taiwan",
-    ["HK"] = "Hong Kong",
-    ["MO"] = "Macau",
+            -- Asia-Pacific (major markets)
+            ["JP"] = "Japan",
+            ["KR"] = "South Korea",
+            ["CN"] = "China",
+            ["IN"] = "India",
+            ["AU"] = "Australia",
+            ["NZ"] = "New Zealand",
+            ["SG"] = "Singapore",
+            ["ID"] = "Indonesia",
+            ["MY"] = "Malaysia",
+            ["TH"] = "Thailand",
+            ["PH"] = "Philippines",
+            ["VN"] = "Vietnam",
+            ["TW"] = "Taiwan",
+            ["HK"] = "Hong Kong",
+            ["MO"] = "Macau",
 
-    -- Middle East & Africa (frequently supported nowadays)
-    ["AE"] = "United Arab Emirates",
-    ["SA"] = "Saudi Arabia",
-    ["IL"] = "Israel",
-    ["ZA"] = "South Africa",
-    ["EG"] = "Egypt",
-    ["NG"] = "Nigeria",
-    ["KE"] = "Kenya",
+            -- Middle East & Africa
+            ["AE"] = "United Arab Emirates",
+            ["SA"] = "Saudi Arabia",
+            ["IL"] = "Israel",
+            ["ZA"] = "South Africa",
+            ["EG"] = "Egypt",
+            ["NG"] = "Nigeria",
+            ["KE"] = "Kenya",
 
-    -- Smaller but still often appearing regions
-    ["LU"] = "Luxembourg",
-    ["IS"] = "Iceland",
-    ["EE"] = "Estonia",
-    ["LV"] = "Latvia",
-    ["LT"] = "Lithuania",
-    ["HR"] = "Croatia",
-    ["SI"] = "Slovenia",
-    ["SK"] = "Slovakia",
-    ["BG"] = "Bulgaria",
-}
-
--- Bonus: very short alias-style version if you prefer minimal keys
--- local regionNamesShort = {
---     US="USA", GB="UK", DE="Germany", FR="France", CA="Canada", AU="Australia",
---     JP="Japan", KR="Korea", CN="China", IN="India", BR="Brazil", TR="Turkey",
---     SG="Singapore", AE="UAE", SA="Saudi", ZA="South Africa", TW="Taiwan",
---     HK="Hong Kong", ID="Indonesia", MY="Malaysia", TH="Thailand", PH="Philippines",
--- }
-	
+            -- Smaller regions
+            ["LU"] = "Luxembourg",
+            ["IS"] = "Iceland",
+            ["EE"] = "Estonia",
+            ["LV"] = "Latvia",
+            ["LT"] = "Lithuania",
+            ["HR"] = "Croatia",
+            ["SI"] = "Slovenia",
+            ["SK"] = "Slovakia",
+            ["BG"] = "Bulgaria",
+        }
+        
         return regionNames[result] or result
     end
     
@@ -6432,7 +6423,7 @@ end
 function Library:CreateStatsPanel(ParentWindow, Config)
     Config = Config or {}
     
-    local PanelSize = Config.Size or UDim2.fromOffset(220, 140)
+    local PanelSize = Config.Size or UDim2.fromOffset(220, 180)  -- Increased height for 2 more stats
     local OffsetY = Config.OffsetY or 320
     
     -- Create outer frame
@@ -6580,9 +6571,9 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     
     -- Stats labels (premium look) - Left aligned
     local MemoryLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0.2, 0),
+        Size = UDim2.new(1, 0, 0, 16),
         Position = UDim2.new(0, 0, 0, 0),
-        Text = 'Memory: 0.0 MB',
+        Text = 'Memory: 0 MB',
         TextSize = 9,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -6591,9 +6582,20 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local FPSLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0.2, 0),
-        Position = UDim2.new(0, 0, 0.2, 0),
-        Text = 'FPS: 0 | Ping: 0ms',
+        Size = UDim2.new(1, 0, 0, 16),
+        Position = UDim2.new(0, 0, 0, 18),
+        Text = 'FPS: 0',
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = StatsContainer,
+    })
+    
+    local PingLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 16),
+        Position = UDim2.new(0, 0, 0, 36),
+        Text = 'Ping: 0ms',
         TextSize = 9,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -6602,8 +6604,8 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local ExecutorLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0.2, 0),
-        Position = UDim2.new(0, 0, 0.4, 0),
+        Size = UDim2.new(1, 0, 0, 16),
+        Position = UDim2.new(0, 0, 0, 54),
         Text = 'Executor: ' .. GetExecutorName(),
         TextSize = 9,
         FontFace = fonts["ProggyClean"],
@@ -6613,8 +6615,8 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local RegionLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0.2, 0),
-        Position = UDim2.new(0, 0, 0.6, 0),
+        Size = UDim2.new(1, 0, 0, 16),
+        Position = UDim2.new(0, 0, 0, 72),
         Text = 'Region: Loading...',
         TextSize = 9,
         FontFace = fonts["ProggyClean"],
@@ -6623,9 +6625,31 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Parent = StatsContainer,
     })
     
+    local PlayerCountLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 16),
+        Position = UDim2.new(0, 0, 0, 90),
+        Text = 'Players: 0/0',
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = StatsContainer,
+    })
+    
+    local ServerIDLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 16),
+        Position = UDim2.new(0, 0, 0, 108),
+        Text = 'Server ID: ...',
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = StatsContainer,
+    })
+    
     local UpTimeLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0.2, 0),
-        Position = UDim2.new(0, 0, 0.8, 0),
+        Size = UDim2.new(1, 0, 0, 16),
+        Position = UDim2.new(0, 0, 0, 126),
         Text = 'UpTime: 0m 0s',
         TextSize = 9,
         FontFace = fonts["ProggyClean"],
@@ -6634,83 +6658,100 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Parent = StatsContainer,
     })
     
-    -- Async fetch server region (runs once)
+    -- Async fetch server region and ID (runs once)
     task.spawn(function()
         local region = GetServerRegion()
         RegionLabel.Text = 'Region: ' .. region
+        
+        -- Get server job ID
+        local jobId = game.JobId
+        if jobId and jobId ~= "" then
+            local shortId = string.sub(jobId, 1, 8)
+            ServerIDLabel.Text = 'Server ID: ' .. shortId
+        else
+            ServerIDLabel.Text = 'Server ID: N/A'
+        end
     end)
+    
+    -- FPS tracking variables
+    local fpsFrameCount = 0
+    local fpsLastTime = tick()
+    local currentFPS = 0
+    
+    -- Ping tracking variables
+    local currentPing = 0
+    local Stats = game:GetService("Stats")
+    
+    -- Player count tracking
+    local Players = game:GetService("Players")
     
     -- Optimized stats update loop
     local startTime = tick()
-    local frameCount = 0
-    local lastFrameTime = tick()
-    local lastMemoryUpdate = tick()
-    local lastPingUpdate = tick()
-    local cachedMemory = 0
-    local cachedPing = "0ms"
-    local statsService = game:GetService("Stats")
     local UpdateStatsConnection
     
-local lastUpdate = 0
-local UPDATE_INTERVAL = 0.1 -- Update every 100ms instead of every frame
-
-UpdateStatsConnection = RunService.Heartbeat:Connect(function()
-    local now = tick()
-    if now - lastUpdate < UPDATE_INTERVAL then return end
-    lastUpdate = now
+    UpdateStatsConnection = RunService.Heartbeat:Connect(function()
         if not StatsInner.Parent then
             UpdateStatsConnection:Disconnect()
             colorChangeConnection:Disconnect()
             return
         end
         
-        frameCount = frameCount + 1
         local currentTime = tick()
-        local deltaTime = currentTime - lastFrameTime
         
-        -- Update FPS every 0.2 seconds
-        if deltaTime >= 0.2 then
-            local fps = math.floor(frameCount / deltaTime)
-            FPSLabel.Text = "FPS: " .. fps .. " | Ping: " .. cachedPing
-            frameCount = 0
-            lastFrameTime = currentTime
+        -- FPS Calculation (update every frame, display every 0.5s)
+        fpsFrameCount = fpsFrameCount + 1
+        local fpsDelta = currentTime - fpsLastTime
+        
+        if fpsDelta >= 0.5 then
+            currentFPS = math.floor(fpsFrameCount / fpsDelta)
+            fpsFrameCount = 0
+            fpsLastTime = currentTime
+            
+            FPSLabel.Text = "FPS: " .. currentFPS
         end
         
-        -- Update Ping every 0.5 seconds
-        if currentTime - lastPingUpdate >= 0.5 then
-            local pingValue = statsService:FindFirstChild("Network")
-            if pingValue then
-                local pingItem = pingValue:FindFirstChild("ServerStatsItem")
-                if pingItem then
-                    local success, result = pcall(function()
-                        return pingItem:GetValueString()
-                    end)
-                    if success then
-                        cachedPing = result
+        -- Ping Update (every 0.5 seconds)
+        if fpsFrameCount % 30 == 0 then  -- Roughly every 0.5s at 60fps
+            local success, ping = pcall(function()
+                local networkStats = Stats.Network
+                if networkStats then
+                    local serverStatsItem = networkStats:FindFirstChild("ServerStatsItem")
+                    if serverStatsItem then
+                        local pingStr = serverStatsItem["Value"]
+                        -- Extract number from format like "123 ms" or "123ms"
+                        local pingNum = tonumber(string.match(tostring(pingStr), "%d+"))
+                        return pingNum or 0
                     end
                 end
-            end
-            lastPingUpdate = currentTime
-        end
-        
-        -- Update Memory every 0.5 seconds
-        if currentTime - lastMemoryUpdate >= 0.5 then
-            cachedMemory = math.floor(gcinfo() / 1024)
+                return 0
+            end)
             
-            if cachedMemory >= 80 then
-                MemoryLabel.Text = "Memory: " .. cachedMemory .. "MB [HIGH]"
-getgenv().logMessage(3, "Huge Memory Leak Detected")
-                MemoryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            if success and ping then
+                currentPing = ping
+            end
+            
+            PingLabel.Text = "Ping: " .. currentPing .. "ms"
+            
+            -- Update Memory
+            local memoryMB = math.floor(gcinfo() / 1024)
+            
+            if memoryMB >= 80 then
+                MemoryLabel.Text = "Memory: " .. memoryMB .. "MB [HIGH]"
+                if getgenv().logMessage then
+                    getgenv().logMessage(3, "High Memory Usage Detected")
+                end
+                MemoryLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
             else
-
-                MemoryLabel.Text = "Memory: " .. cachedMemory .. " MB"
+                MemoryLabel.Text = "Memory: " .. memoryMB .. " MB"
                 MemoryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
-            lastMemoryUpdate = currentTime
-        end
-        
-        -- Update UpTime every second
-        if frameCount % 60 == 0 then
+            
+            -- Update Player Count
+            local playerCount = #Players:GetPlayers()
+            local maxPlayers = Players.MaxPlayers
+            PlayerCountLabel.Text = "Players: " .. playerCount .. "/" .. maxPlayers
+            
+            -- Update UpTime (every second)
             local upTime = math.floor(currentTime - startTime)
             local minutes = math.floor(upTime / 60)
             local seconds = upTime % 60
@@ -6722,8 +6763,11 @@ getgenv().logMessage(3, "Huge Memory Leak Detected")
         Outer = StatsOuter,
         MemoryLabel = MemoryLabel,
         FPSLabel = FPSLabel,
+        PingLabel = PingLabel,
         ExecutorLabel = ExecutorLabel,
         RegionLabel = RegionLabel,
+        PlayerCountLabel = PlayerCountLabel,
+        ServerIDLabel = ServerIDLabel,
         UpTimeLabel = UpTimeLabel,
         Disconnect = function(self)
             if UpdateStatsConnection then
@@ -7005,12 +7049,6 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
         end,
     }
 end
-
-
-
-
-
-
 
 
 
