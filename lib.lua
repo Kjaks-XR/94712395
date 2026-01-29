@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5T- OPT"
+local version = "0.5A- OPT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -6296,6 +6296,14 @@ end
 
 
 
+
+
+
+
+
+
+
+
 -- Utility functions for executor and region detection
 local function GetExecutorName()
     -- Detect executor environment
@@ -6336,94 +6344,27 @@ local function GetServerRegion()
     end)
     
     if success and result then
-        -- Common region codes to full names
         local regionNames = {
-            -- North America
-            ["US"] = "United States",
-            ["CA"] = "Canada",
-            ["MX"] = "Mexico",
-
-            -- South America
-            ["BR"] = "Brazil",
-            ["AR"] = "Argentina",
-            ["CL"] = "Chile",
-            ["CO"] = "Colombia",
-            ["PE"] = "Peru",
-            ["VE"] = "Venezuela",
-
-            -- Europe (most common)
-            ["GB"] = "United Kingdom",
-            ["DE"] = "Germany",
-            ["FR"] = "France",
-            ["IT"] = "Italy",
-            ["ES"] = "Spain",
-            ["NL"] = "Netherlands",
-            ["BE"] = "Belgium",
-            ["SE"] = "Sweden",
-            ["NO"] = "Norway",
-            ["DK"] = "Denmark",
-            ["FI"] = "Finland",
-            ["PL"] = "Poland",
-            ["CZ"] = "Czech Republic",
-            ["AT"] = "Austria",
-            ["CH"] = "Switzerland",
-            ["PT"] = "Portugal",
-            ["IE"] = "Ireland",
-            ["GR"] = "Greece",
-            ["HU"] = "Hungary",
-            ["RO"] = "Romania",
-            ["TR"] = "Turkey",
-            ["UA"] = "Ukraine",
-            ["RU"] = "Russia",
-
-            -- Asia-Pacific (major markets)
-            ["JP"] = "Japan",
-            ["KR"] = "South Korea",
-            ["CN"] = "China",
-            ["IN"] = "India",
-            ["AU"] = "Australia",
-            ["NZ"] = "New Zealand",
-            ["SG"] = "Singapore",
-            ["ID"] = "Indonesia",
-            ["MY"] = "Malaysia",
-            ["TH"] = "Thailand",
-            ["PH"] = "Philippines",
-            ["VN"] = "Vietnam",
-            ["TW"] = "Taiwan",
-            ["HK"] = "Hong Kong",
-            ["MO"] = "Macau",
-
-            -- Middle East & Africa
-            ["AE"] = "United Arab Emirates",
-            ["SA"] = "Saudi Arabia",
-            ["IL"] = "Israel",
-            ["ZA"] = "South Africa",
-            ["EG"] = "Egypt",
-            ["NG"] = "Nigeria",
-            ["KE"] = "Kenya",
-
-            -- Smaller regions
-            ["LU"] = "Luxembourg",
-            ["IS"] = "Iceland",
-            ["EE"] = "Estonia",
-            ["LV"] = "Latvia",
-            ["LT"] = "Lithuania",
-            ["HR"] = "Croatia",
-            ["SI"] = "Slovenia",
-            ["SK"] = "Slovakia",
-            ["BG"] = "Bulgaria",
+            ["US"] = "United States", ["CA"] = "Canada", ["MX"] = "Mexico",
+            ["BR"] = "Brazil", ["AR"] = "Argentina", ["CL"] = "Chile", ["CO"] = "Colombia",
+            ["GB"] = "United Kingdom", ["DE"] = "Germany", ["FR"] = "France", ["IT"] = "Italy",
+            ["ES"] = "Spain", ["NL"] = "Netherlands", ["SE"] = "Sweden", ["NO"] = "Norway",
+            ["PL"] = "Poland", ["TR"] = "Turkey", ["RU"] = "Russia",
+            ["JP"] = "Japan", ["KR"] = "South Korea", ["CN"] = "China", ["IN"] = "India",
+            ["AU"] = "Australia", ["SG"] = "Singapore", ["ID"] = "Indonesia", ["MY"] = "Malaysia",
+            ["TH"] = "Thailand", ["PH"] = "Philippines", ["VN"] = "Vietnam", ["TW"] = "Taiwan",
+            ["HK"] = "Hong Kong", ["AE"] = "UAE", ["SA"] = "Saudi Arabia", ["IL"] = "Israel",
+            ["ZA"] = "South Africa", ["EG"] = "Egypt", ["NG"] = "Nigeria",
         }
-        
         return regionNames[result] or result
     end
-    
     return "Unknown"
 end
 
 function Library:CreateStatsPanel(ParentWindow, Config)
     Config = Config or {}
     
-    local PanelSize = Config.Size or UDim2.fromOffset(220, 180)  -- Increased height for 2 more stats
+    local PanelSize = Config.Size or UDim2.fromOffset(240, 190)
     local OffsetY = Config.OffsetY or 320
     
     -- Create outer frame
@@ -6436,7 +6377,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         ZIndex = 50,
     })
     
-    -- Create glow effect (matching preview style)
+    -- Create glow effect
     local glow = Instance.new("ImageLabel", StatsOuter)
     glow.Name = "GlowEffect"
     glow.Image = "rbxassetid://18245826428"
@@ -6449,46 +6390,30 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     glow.Position = UDim2.new(0, -20, 0, -20)
     glow.ZIndex = -1
     
-    -- Create pulsing animation
-    local startTransparency = 0.6
-    local minTransparency = 0.3
+    -- Pulsing animation
     local pulseDuration = getgenv().glowwatermarkspeed or 5
-    
-    local pulseInfo = TweenInfo.new(
-        pulseDuration / 2,
-        Enum.EasingStyle.Sine,
-        Enum.EasingDirection.InOut
-    )
+    local pulseInfo = TweenInfo.new(pulseDuration / 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
     
     local function createPulseTween()
-        local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = minTransparency})
-        local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = startTransparency})
-        
-        tweenOut.Completed:Connect(function()
-            tweenIn:Play()
-        end)
-        
-        tweenIn.Completed:Connect(function()
-            tweenOut:Play()
-        end)
-        
+        local tweenOut = TweenService:Create(glow, pulseInfo, {ImageTransparency = 0.3})
+        local tweenIn = TweenService:Create(glow, pulseInfo, {ImageTransparency = 0.6})
+        tweenOut.Completed:Connect(function() tweenIn:Play() end)
+        tweenIn.Completed:Connect(function() tweenOut:Play() end)
         tweenOut:Play()
     end
-    
     createPulseTween()
     
-    -- Color change detection (optimized)
+    -- Color change detection
     local lastColor = Library.AccentColor
-    local colorChangeConnection
-    colorChangeConnection = game:GetService("RunService").Heartbeat:Connect(function()
+    local colorChangeConnection = RunService.Heartbeat:Connect(function()
         if Library.AccentColor ~= lastColor then
             lastColor = Library.AccentColor
-            local colorTweenInfo = TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-            TweenService:Create(glow, colorTweenInfo, {ImageColor3 = Library.AccentColor}):Play()
+            TweenService:Create(glow, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+                {ImageColor3 = Library.AccentColor}):Play()
         end
     end)
     
-    -- Create inner frame with gradient effect
+    -- Inner frame
     local StatsInner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor,
         BorderColor3 = Library.AccentColor,
@@ -6499,7 +6424,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Parent = StatsOuter,
     })
     
-    -- Premium gradient overlay
+    -- Gradient overlay
     local gradientOverlay = Instance.new("Frame", StatsInner)
     gradientOverlay.Name = "GradientOverlay"
     gradientOverlay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -6523,22 +6448,18 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Parent = StatsInner,
     })
     
-    -- Color sync loop (optimized to only check when needed)
-    local colorSyncTask = task.defer(function()
+    -- Color sync (optimized)
+    task.spawn(function()
         local lastMain, lastAccent = Library.MainColor, Library.AccentColor
         while task.wait(2) do
             if lastMain ~= Library.MainColor or lastAccent ~= Library.AccentColor then
                 lastMain, lastAccent = Library.MainColor, Library.AccentColor
-                
                 TweenService:Create(StatsInner, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                    BackgroundColor3 = lastMain,
-                    BorderColor3 = lastAccent
+                    BackgroundColor3 = lastMain, BorderColor3 = lastAccent
                 }):Play()
-                
                 TweenService:Create(Highlight, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
                     BackgroundColor3 = lastAccent
                 }):Play()
-                
                 gradient.Color = ColorSequence.new({
                     ColorSequenceKeypoint.new(0, lastAccent),
                     ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
@@ -6547,19 +6468,18 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         end
     end)
     
-    -- Premium title with subtle styling
+    -- Title
     Library:CreateLabel({
         Size = UDim2.new(1, 0, 0, 18),
         Position = UDim2.new(0, 4, 0, 2),
         Text = 'STATS',
         TextSize = 11,
-        TextScaled = false,
         FontFace = fonts["ProggyClean"],
         ZIndex = 53,
         Parent = StatsInner,
     })
     
-    -- Create container for stats with better spacing
+    -- Stats container
     local StatsContainer = Library:Create('Frame', {
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
@@ -6569,12 +6489,12 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Parent = StatsInner,
     })
     
-    -- Stats labels (premium look) - Left aligned
+    -- Stats labels with better sizing
     local MemoryLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 16),
+        Size = UDim2.new(1, 0, 0, 18),
         Position = UDim2.new(0, 0, 0, 0),
         Text = 'Memory: 0 MB',
-        TextSize = 9,
+        TextSize = 10,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
@@ -6582,10 +6502,10 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local FPSLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 16),
-        Position = UDim2.new(0, 0, 0, 18),
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 0, 0, 20),
         Text = 'FPS: 0',
-        TextSize = 9,
+        TextSize = 10,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
@@ -6593,10 +6513,10 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local PingLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 16),
-        Position = UDim2.new(0, 0, 0, 36),
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 0, 0, 40),
         Text = 'Ping: 0ms',
-        TextSize = 9,
+        TextSize = 10,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
@@ -6604,10 +6524,10 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local ExecutorLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 16),
-        Position = UDim2.new(0, 0, 0, 54),
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 0, 0, 60),
         Text = 'Executor: ' .. GetExecutorName(),
-        TextSize = 9,
+        TextSize = 10,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
@@ -6615,10 +6535,10 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local RegionLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 16),
-        Position = UDim2.new(0, 0, 0, 72),
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 0, 0, 80),
         Text = 'Region: Loading...',
-        TextSize = 9,
+        TextSize = 10,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
@@ -6626,21 +6546,21 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local PlayerCountLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 16),
-        Position = UDim2.new(0, 0, 0, 90),
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 0, 0, 100),
         Text = 'Players: 0/0',
-        TextSize = 9,
+        TextSize = 10,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
     })
     
-    local ServerIDLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 16),
-        Position = UDim2.new(0, 0, 0, 108),
-        Text = 'Server ID: ...',
-        TextSize = 9,
+    local TimeLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 0, 0, 120),
+        Text = 'Time: 00:00',
+        TextSize = 10,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
@@ -6648,45 +6568,35 @@ function Library:CreateStatsPanel(ParentWindow, Config)
     })
     
     local UpTimeLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 16),
-        Position = UDim2.new(0, 0, 0, 126),
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 0, 0, 140),
         Text = 'UpTime: 0m 0s',
-        TextSize = 9,
+        TextSize = 10,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
     })
     
-    -- Async fetch server region and ID (runs once)
+    -- Async fetch region (runs once)
     task.spawn(function()
-        local region = GetServerRegion()
-        RegionLabel.Text = 'Region: ' .. region
-        
-        -- Get server job ID
-        local jobId = game.JobId
-        if jobId and jobId ~= "" then
-            local shortId = string.sub(jobId, 1, 8)
-            ServerIDLabel.Text = 'Server ID: ' .. shortId
-        else
-            ServerIDLabel.Text = 'Server ID: N/A'
-        end
+        RegionLabel.Text = 'Region: ' .. GetServerRegion()
     end)
     
-    -- FPS tracking variables
-    local fpsFrameCount = 0
-    local fpsLastTime = tick()
+    -- Optimized tracking variables
+    local fpsFrames = 0
+    local fpsLastUpdate = tick()
     local currentFPS = 0
     
-    -- Ping tracking variables
+    local pingLastUpdate = 0
     local currentPing = 0
-    local Stats = game:GetService("Stats")
     
-    -- Player count tracking
-    local Players = game:GetService("Players")
-    
-    -- Optimized stats update loop
     local startTime = tick()
+    local Players = game:GetService("Players")
+    local Lighting = game:GetService("Lighting")
+    
+    -- Main update loop (HIGHLY OPTIMIZED)
+    local updateCounter = 0
     local UpdateStatsConnection
     
     UpdateStatsConnection = RunService.Heartbeat:Connect(function()
@@ -6696,66 +6606,68 @@ function Library:CreateStatsPanel(ParentWindow, Config)
             return
         end
         
-        local currentTime = tick()
+        local now = tick()
+        updateCounter = updateCounter + 1
         
-        -- FPS Calculation (update every frame, display every 0.5s)
-        fpsFrameCount = fpsFrameCount + 1
-        local fpsDelta = currentTime - fpsLastTime
-        
-        if fpsDelta >= 0.5 then
-            currentFPS = math.floor(fpsFrameCount / fpsDelta)
-            fpsFrameCount = 0
-            fpsLastTime = currentTime
-            
+        -- FPS: Count every frame, update display every 0.5s
+        fpsFrames = fpsFrames + 1
+        if now - fpsLastUpdate >= 0.5 then
+            currentFPS = math.floor(fpsFrames / (now - fpsLastUpdate))
             FPSLabel.Text = "FPS: " .. currentFPS
+            fpsFrames = 0
+            fpsLastUpdate = now
         end
         
-        -- Ping Update (every 0.5 seconds)
-        if fpsFrameCount % 30 == 0 then  -- Roughly every 0.5s at 60fps
+        -- Other stats: Update every ~30 frames (0.5s at 60fps)
+        if updateCounter % 30 == 0 then
+            -- Ping (FIXED METHOD)
             local success, ping = pcall(function()
-                local networkStats = Stats.Network
-                if networkStats then
-                    local serverStatsItem = networkStats:FindFirstChild("ServerStatsItem")
-                    if serverStatsItem then
-                        local pingStr = serverStatsItem["Value"]
-                        -- Extract number from format like "123 ms" or "123ms"
-                        local pingNum = tonumber(string.match(tostring(pingStr), "%d+"))
-                        return pingNum or 0
-                    end
-                end
-                return 0
+                return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()
             end)
-            
             if success and ping then
-                currentPing = ping
+                currentPing = math.floor(ping)
+                PingLabel.Text = "Ping: " .. currentPing .. "ms"
+            else
+                -- Fallback method
+                local success2, replicatorPing = pcall(function()
+                    local rep = game:GetService("NetworkClient"):FindFirstChildOfClass("ClientReplicator")
+                    if rep then
+                        return rep:GetLastPing() * 1000
+                    end
+                    return 0
+                end)
+                if success2 and replicatorPing then
+                    currentPing = math.floor(replicatorPing)
+                    PingLabel.Text = "Ping: " .. currentPing .. "ms"
+                end
             end
             
-            PingLabel.Text = "Ping: " .. currentPing .. "ms"
-            
-            -- Update Memory
-            local memoryMB = math.floor(gcinfo() / 1024)
-            
-            if memoryMB >= 80 then
-                MemoryLabel.Text = "Memory: " .. memoryMB .. "MB [HIGH]"
-                if getgenv().logMessage then
-                    getgenv().logMessage(3, "High Memory Usage Detected")
-                end
+            -- Memory
+            local memMB = math.floor(gcinfo() / 1024)
+            if memMB >= 80 then
+                MemoryLabel.Text = "Memory: " .. memMB .. "MB [HIGH]"
                 MemoryLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+                if getgenv().logMessage then
+                    getgenv().logMessage(3, "High Memory Usage: " .. memMB .. "MB")
+                end
             else
-                MemoryLabel.Text = "Memory: " .. memoryMB .. " MB"
+                MemoryLabel.Text = "Memory: " .. memMB .. " MB"
                 MemoryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
             end
             
-            -- Update Player Count
-            local playerCount = #Players:GetPlayers()
-            local maxPlayers = Players.MaxPlayers
-            PlayerCountLabel.Text = "Players: " .. playerCount .. "/" .. maxPlayers
+            -- Player Count
+            PlayerCountLabel.Text = "Players: " .. #Players:GetPlayers() .. "/" .. Players.MaxPlayers
             
-            -- Update UpTime (every second)
-            local upTime = math.floor(currentTime - startTime)
-            local minutes = math.floor(upTime / 60)
-            local seconds = upTime % 60
-            UpTimeLabel.Text = "UpTime: " .. minutes .. "m " .. seconds .. "s"
+            -- In-Game Time
+            local minutes = math.floor(Lighting.ClockTime * 60) % 60
+            local hours = math.floor(Lighting.ClockTime)
+            TimeLabel.Text = string.format("Time: %02d:%02d", hours, minutes)
+            
+            -- UpTime
+            local upTime = math.floor(now - startTime)
+            local upMins = math.floor(upTime / 60)
+            local upSecs = upTime % 60
+            UpTimeLabel.Text = "UpTime: " .. upMins .. "m " .. upSecs .. "s"
         end
     end)
     
@@ -6767,19 +6679,265 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         ExecutorLabel = ExecutorLabel,
         RegionLabel = RegionLabel,
         PlayerCountLabel = PlayerCountLabel,
-        ServerIDLabel = ServerIDLabel,
+        TimeLabel = TimeLabel,
         UpTimeLabel = UpTimeLabel,
         Disconnect = function(self)
-            if UpdateStatsConnection then
-                UpdateStatsConnection:Disconnect()
-            end
-            if colorChangeConnection then
-                colorChangeConnection:Disconnect()
-            end
+            if UpdateStatsConnection then UpdateStatsConnection:Disconnect() end
+            if colorChangeConnection then colorChangeConnection:Disconnect() end
         end,
     }
 end
 
+
+function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
+    Config = Config or {}
+    
+    local PanelSize = Config.Size or UDim2.fromOffset(250, 280)
+    local MaxLogs = Config.MaxLogs or 50
+    
+    -- Create outer frame
+    local LogOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        BorderColor3 = Color3.new(0, 0, 0),
+        Size = PanelSize,
+        Position = UDim2.fromOffset(5, 50),
+        Parent = ScreenGui,
+        ZIndex = 50,
+        Visible = true,
+    })
+    
+    -- Position below PlayerList
+    local function UpdatePosition()
+        if PlayerListFrame and PlayerListFrame.Holder and PlayerListFrame.Holder.Parent then
+            local playerListPos = PlayerListFrame.Holder.AbsolutePosition
+            local playerListSize = PlayerListFrame.Holder.AbsoluteSize
+            LogOuter.Position = UDim2.fromOffset(playerListPos.X, playerListPos.Y + playerListSize.Y + 10)
+        end
+    end
+    
+    if PlayerListFrame and PlayerListFrame.Holder then
+        Library:GiveSignal(PlayerListFrame.Holder:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdatePosition))
+        Library:GiveSignal(PlayerListFrame.Holder:GetPropertyChangedSignal('AbsoluteSize'):Connect(UpdatePosition))
+        UpdatePosition()
+    end
+    
+    -- Glow effect
+    local glow = Instance.new("ImageLabel", LogOuter)
+    glow.Name = "GlowEffect"
+    glow.Image = "rbxassetid://18245826428"
+    glow.ScaleType = Enum.ScaleType.Slice
+    glow.SliceCenter = Rect.new(21, 21, 79, 79)
+    glow.ImageColor3 = Library.AccentColor
+    glow.ImageTransparency = 0.6
+    glow.BackgroundTransparency = 1
+    glow.Size = UDim2.new(1, 40, 1, 40)
+    glow.Position = UDim2.new(0, -20, 0, -20)
+    glow.ZIndex = -1
+    
+    -- Pulse animation
+    local function createPulseTween()
+        local tweenOut = TweenService:Create(glow, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.3})
+        local tweenIn = TweenService:Create(glow, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.6})
+        tweenOut.Completed:Connect(function() tweenIn:Play() end)
+        tweenIn.Completed:Connect(function() tweenOut:Play() end)
+        tweenOut:Play()
+    end
+    createPulseTween()
+    
+    -- Color change detection
+    local lastColor = Library.AccentColor
+    Library:GiveSignal(RunService.Heartbeat:Connect(function()
+        if Library.AccentColor ~= lastColor then
+            lastColor = Library.AccentColor
+            TweenService:Create(glow, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageColor3 = Library.AccentColor}):Play()
+        end
+    end))
+    
+    -- Inner frame
+    local LogInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor,
+        BorderColor3 = Library.AccentColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 1, 0, 1),
+        ZIndex = 51,
+        Parent = LogOuter,
+    })
+    
+    Library:AddToRegistry(LogInner, {BackgroundColor3 = 'MainColor', BorderColor3 = 'AccentColor'})
+    
+    local Highlight = Library:Create('Frame', {
+        BackgroundColor3 = Library.AccentColor,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 2),
+        ZIndex = 52,
+        Parent = LogInner,
+    })
+    
+    Library:AddToRegistry(Highlight, {BackgroundColor3 = 'AccentColor'})
+    
+    -- Title
+    local TitleContainer = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 18),
+        Position = UDim2.new(0, 0, 0, 2),
+        ZIndex = 52,
+        Parent = LogInner,
+    })
+    
+    local TitleGradient = Library:Create('UIGradient', {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
+            ColorSequenceKeypoint.new(1, Library.MainColor),
+        }),
+        Rotation = 90,
+        Parent = TitleContainer,
+    })
+    
+    Library:CreateLabel({
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 4, 0, 0),
+        Text = 'LOGS',
+        TextSize = 12,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 53,
+        Parent = TitleContainer,
+    })
+    
+    -- Scrolling frame
+    local ScrollingFrame = Library:Create('ScrollingFrame', {
+        BackgroundColor3 = Library.BackgroundColor,
+        BackgroundTransparency = 0,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 4, 0, 24),
+        Size = UDim2.new(1, -8, 1, -28),
+        CanvasSize = UDim2.new(0, 0, 0, 0),
+        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = Library.AccentColor,
+        ZIndex = 52,
+        Parent = LogInner,
+        TopImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+        BottomImage = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+    })
+    
+    Library:AddToRegistry(ScrollingFrame, {
+        ScrollBarImageColor3 = 'AccentColor',
+        BackgroundColor3 = 'BackgroundColor'
+    })
+    
+    local ListLayout = Library:Create('UIListLayout', {
+        Padding = UDim.new(0, 2),
+        FillDirection = Enum.FillDirection.Vertical,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = ScrollingFrame,
+    })
+    
+    local LogMessages = {}
+    local LogTypes = {
+        [0] = {prefix = "OUT", color = Color3.fromRGB(230, 230, 230), bgColor = Color3.fromRGB(40, 40, 45)},
+        [1] = {prefix = "INFO", color = Color3.fromRGB(100, 180, 255), bgColor = Color3.fromRGB(30, 40, 50)},
+        [2] = {prefix = "WARN", color = Color3.fromRGB(255, 200, 80), bgColor = Color3.fromRGB(50, 45, 30)},
+        [3] = {prefix = "ERR", color = Color3.fromRGB(255, 100, 100), bgColor = Color3.fromRGB(50, 30, 30)},
+    }
+    
+    local function AddLog(logType, message)
+        local logInfo = LogTypes[logType] or LogTypes[0]
+        
+        if #LogMessages >= MaxLogs then
+            local oldest = table.remove(LogMessages, 1)
+            if oldest then oldest:Destroy() end
+        end
+        
+        local LogEntry = Library:Create('Frame', {
+            BackgroundColor3 = logInfo.bgColor,
+            BorderColor3 = Library.OutlineColor,
+            BorderMode = Enum.BorderMode.Inset,
+            Size = UDim2.new(1, -2, 0, 22),
+            ZIndex = 53,
+            Parent = ScrollingFrame,
+        })
+        
+        local ColorAccent = Library:Create('Frame', {
+            BackgroundColor3 = logInfo.color,
+            BorderSizePixel = 0,
+            Size = UDim2.new(0, 2, 1, 0),
+            ZIndex = 54,
+            Parent = LogEntry,
+        })
+        
+        local PrefixLabel = Library:Create('TextLabel', {
+            BackgroundColor3 = logInfo.color,
+            BackgroundTransparency = 0.9,
+            BorderSizePixel = 0,
+            Size = UDim2.new(0, 40, 0, 14),
+            Position = UDim2.new(0, 6, 0.5, -7),
+            Text = logInfo.prefix,
+            TextColor3 = logInfo.color,
+            TextSize = 10,
+            FontFace = fonts["ProggyClean"],
+            ZIndex = 55,
+            Parent = LogEntry,
+        })
+        
+        Library:Create('UICorner', {CornerRadius = UDim.new(0, 2), Parent = PrefixLabel})
+        
+        local MessageLabel = Library:Create('TextLabel', {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -52, 1, 0),
+            Position = UDim2.new(0, 50, 0, 0),
+            Text = message,
+            TextColor3 = Color3.fromRGB(220, 220, 220),
+            TextSize = 13,
+            FontFace = fonts["ProggyClean"],
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = Enum.TextYAlignment.Center,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 55,
+            Parent = LogEntry,
+        })
+        
+        table.insert(LogMessages, LogEntry)
+        
+        -- Fade in
+        LogEntry.BackgroundTransparency = 1
+        ColorAccent.BackgroundTransparency = 1
+        PrefixLabel.TextTransparency = 1
+        PrefixLabel.BackgroundTransparency = 1
+        MessageLabel.TextTransparency = 1
+        
+        TweenService:Create(LogEntry, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+        TweenService:Create(ColorAccent, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
+        TweenService:Create(PrefixLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {TextTransparency = 0, BackgroundTransparency = 0.9}):Play()
+        TweenService:Create(MessageLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {TextTransparency = 0}):Play()
+        
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y)
+        task.wait()
+        ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
+    end
+    
+    getgenv().logMessage = function(logType, message)
+        AddLog(logType, tostring(message))
+    end
+    
+    if ParentWindow and ParentWindow.Holder then
+        ParentWindow.Holder:GetPropertyChangedSignal('Visible'):Connect(function()
+            LogOuter.Visible = ParentWindow.Holder.Visible
+        end)
+        LogOuter.Visible = ParentWindow.Holder.Visible
+    end
+    
+    return {
+        Outer = LogOuter,
+        AddLog = AddLog,
+        Clear = function()
+            for _, log in ipairs(LogMessages) do log:Destroy() end
+            LogMessages = {}
+            ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        end,
+    }
+end
 
 
 
