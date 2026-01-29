@@ -770,52 +770,120 @@ function Library:CreateLabel(Properties, IsHud)
     return Library:Create(_Instance, Properties);
 end;
 
+
+
+
+
+
 function Library:MakeDraggable(Instance, Cutoff)
-    Instance.Active = true;
-    local dragging = false
-    local dragInput, dragStart, startPos
+    Instance.Active = true
     
-    Instance.InputBegan:Connect(function(Input)
-        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local ObjPos = Vector2.new(
-                Mouse.X - Instance.AbsolutePosition.X,
-                Mouse.Y - Instance.AbsolutePosition.Y
-            );
-            if ObjPos.Y > (Cutoff or 40) then
-                return;
-            end;
-            
-            dragging = true
-            dragStart = Input.Position
-            startPos = Instance.Position
-            
-            -- Capture the input to prevent other interactions
-            Input.Changed:Connect(function()
-                if Input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
+    local dragging = false
+    local dragInput = nil
+    local dragStart = nil
+    local startPos = nil
+    
+    -- Throttling variables
+    local lastFrameUpdate = 0
+    local FRAME_BUDGET = 1/120 -- 120 FPS cap (smoother than 60)
+    
+    -- Connection cleanup
+    local connections = {}
+    
+    -- Mouse down handler
+    connections[#connections + 1] = Instance.InputBegan:Connect(function(Input)
+        if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+        
+        -- Check if click is in draggable area
+        local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+        local instancePos = Instance.AbsolutePosition
+        local relativeY = mousePos.Y - instancePos.Y
+        
+        if relativeY > (Cutoff or 40) then return end
+        
+        -- Start dragging
+        dragging = true
+        dragStart = Input.Position
+        startPos = Instance.Position
+        
+        -- Signal to other systems to pause heavy operations
+        Library._isDragging = true
+        
+        -- Mouse release handler (one-time connection)
+        local releaseConnection
+        releaseConnection = Input.Changed:Connect(function()
+            if Input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+                dragInput = nil
+                Library._isDragging = false
+                
+                -- Cleanup
+                if releaseConnection then
+                    releaseConnection:Disconnect()
+                    releaseConnection = nil
                 end
-            end)
-        end;
+            end
+        end)
     end)
     
-    Instance.InputChanged:Connect(function(Input)
+    -- Mouse move tracker
+    connections[#connections + 1] = Instance.InputChanged:Connect(function(Input)
         if Input.UserInputType == Enum.UserInputType.MouseMovement then
             dragInput = Input
         end
     end)
     
-    InputService.InputChanged:Connect(function(Input)
-        if Input == dragInput and dragging then
-            local delta = Input.Position - dragStart
-            Instance.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-        end
+    -- Optimized position update loop (RenderStepped for smoothness)
+    connections[#connections + 1] = RunService.RenderStepped:Connect(function(deltaTime)
+        if not dragging or not dragInput then return end
+        
+        -- Throttle updates to maintain performance
+        lastFrameUpdate = lastFrameUpdate + deltaTime
+        if lastFrameUpdate < FRAME_BUDGET then return end
+        lastFrameUpdate = 0
+        
+        -- Calculate new position
+        local delta = dragInput.Position - dragStart
+        
+        -- Directly set position (no tween needed)
+        Instance.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
     end)
+    
+    -- Cleanup connections when instance is destroyed
+    Instance.Destroying:Connect(function()
+        for _, connection in ipairs(connections) do
+            connection:Disconnect()
+        end
+        connections = {}
+    end)
+    
+    -- Optional: Add boundaries to prevent dragging off-screen
+    --[[ Uncomment if needed
+    local camera = workspace.CurrentCamera
+    local function clampPosition()
+        local viewportSize = camera.ViewportSize
+        local absPos = Instance.AbsolutePosition
+        local absSize = Instance.AbsoluteSize
+        
+        local clampedX = math.clamp(absPos.X, 0, viewportSize.X - absSize.X)
+        local clampedY = math.clamp(absPos.Y, 0, viewportSize.Y - absSize.Y)
+        
+        Instance.Position = UDim2.fromOffset(clampedX, clampedY)
+    end
+    
+    -- Call after each position update
+    clampPosition()
+    ]]--
 end
+
+
+
+
 
 
 function Library:AddToolTip(InfoStr, HoverInstance)
@@ -5812,17 +5880,44 @@ end
         PlayerListFrame:UpdatePlayerList();
     end));
 
-    task.spawn(function()
-        local lastFlagCount = 0
-        while Outer.Parent do
-            task.wait(0.1)
+
+
+
+
+
+
+local flagCheckConnection
+
+ function startFlagCheck()
+    local lastFlagCount = 0
+    flagCheckConnection = RunService.Heartbeat:Connect(function()
+        if not Outer.Parent then
+            if flagCheckConnection then
+                flagCheckConnection:Disconnect()
+            end
+            return
+        end
+        
+        -- Only check every ~0.1 seconds instead of every frame
+        if tick() % 0.1 < 0.016 then
             local currentFlagCount = #getgenv().playerstoflag
             if currentFlagCount ~= lastFlagCount then
                 lastFlagCount = currentFlagCount
                 PlayerListFrame:UpdatePlayerList()
             end
         end
-    end);
+    end)
+end
+
+startFlagCheck()
+
+Outer.Destroying:Connect(function()
+    if flagCheckConnection then
+        flagCheckConnection:Disconnect()
+    end
+end)
+
+
 
     task.spawn(function()
         local lastToggleState = getgenv().statusshowtoggle
