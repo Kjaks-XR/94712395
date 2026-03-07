@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5A- OPT"
+local version = "0.22S OPT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -676,34 +676,6 @@ table.insert(Library.Signals, RenderStepped:Connect(LPH_NO_VIRTUALIZE(function(D
     end
 end)))
 
--- [OPT] Merkezi renk watcher - tum Heartbeat color spam'ini onler
--- Butun glow/renk izleyiciler Library:WatchColors() kullanmali
-do
-    local _watchCallbacks = {}
-    local _lastMain = Library.MainColor
-    local _lastAccent = Library.AccentColor
-    local _watchFrame = 0
-
-    function Library:WatchColors(callback)
-        table.insert(_watchCallbacks, callback)
-        pcall(callback, Library.MainColor, Library.AccentColor)
-    end
-
-    Library:GiveSignal(RunService.Heartbeat:Connect(function()
-        _watchFrame = _watchFrame + 1
-        if _watchFrame < 30 then return end -- ~0.5 saniyede bir kontrol
-        _watchFrame = 0
-        local mainChanged = _lastMain ~= Library.MainColor
-        local accentChanged = _lastAccent ~= Library.AccentColor
-        if mainChanged or accentChanged then
-            _lastMain = Library.MainColor
-            _lastAccent = Library.AccentColor
-            for _, cb in ipairs(_watchCallbacks) do
-                pcall(cb, Library.MainColor, Library.AccentColor)
-            end
-        end
-    end))
-end
 
 local function GetPlayersString()
     local PlayerList = Players:GetPlayers();
@@ -1210,6 +1182,34 @@ Library:GiveSignal(ScreenGui.DescendantRemoving:Connect(function(Instance)
         Library:RemoveFromRegistry(Instance);
     end;
 end))
+
+-- [OPT] Merkezi renk watcher - GiveSignal tanimlandiktan SONRA cagrilir
+do
+    local _watchCallbacks = {}
+    local _lastMain = Library.MainColor
+    local _lastAccent = Library.AccentColor
+    local _watchFrame = 0
+
+    function Library:WatchColors(callback)
+        table.insert(_watchCallbacks, callback)
+        pcall(callback, Library.MainColor, Library.AccentColor)
+    end
+
+    Library:GiveSignal(RunService.Heartbeat:Connect(function()
+        _watchFrame = _watchFrame + 1
+        if _watchFrame < 30 then return end -- ~0.5 saniyede bir kontrol
+        _watchFrame = 0
+        local mainChanged = _lastMain ~= Library.MainColor
+        local accentChanged = _lastAccent ~= Library.AccentColor
+        if mainChanged or accentChanged then
+            _lastMain = Library.MainColor
+            _lastAccent = Library.AccentColor
+            for _, cb in ipairs(_watchCallbacks) do
+                pcall(cb, Library.MainColor, Library.AccentColor)
+            end
+        end
+    end))
+end
 
 local BaseAddons = {};
 
