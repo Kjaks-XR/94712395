@@ -476,7 +476,7 @@ end
 
 local terminalLines = {
 	{text = "[ LDR ] Initializing libraries...", color = Color3.fromRGB(123, 140, 255)};
-
+--[[
 	{text = "[ SYS ] Mounting metatable (setmetatable)...", color = Color3.fromRGB(255, 190, 100)};
 	{text = "[ SYS ] Allocating memory blocks...", color = Color3.fromRGB(255, 190, 100)};
 	{text = "[ SYS ] Registering runtime handlers...", color = Color3.fromRGB(255, 190, 100)};
@@ -488,13 +488,14 @@ local terminalLines = {
 	--{text = "[ NET ] Establishing internal communication channel...", color = Color3.fromRGB(120, 200, 255)};
 	--{text = "[ NET ] Resolving gateway routes...", color = Color3.fromRGB(120, 200, 255)};
 	{text = "[ NET ] Luarmor Webhook.", color = Color3.fromRGB(120, 200, 255)};
-
+]]
 	{text = "[ SEC ] Authenticating runtime context...", color = Color3.fromRGB(255, 140, 140)};
+		--[[
 	{text = "[ SEC ] Validating Key", color = Color3.fromRGB(255, 140, 140)};
 	--{text = "[ SEC ] Secure session active.", color = Color3.fromRGB(255, 140, 140)};
 
 	{text = "[ FRM ] Framework verified", color = Color3.fromRGB(110, 255, 180)};
-	{text = "[ LDR  ] Done.", color = Color3.fromRGB(123, 140, 255)};
+	{text = "[ LDR  ] Done.", color = Color3.fromRGB(123, 140, 255)};--]]
 };
 
 
