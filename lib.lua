@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.22S OPT"
+local version = "0.5A- OPT"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -657,25 +657,23 @@ local Library = {
 
 local RainbowStep = 0
 local Hue = 0
-local _rfSkip = 0
 
--- [OPT] Rainbow: her 4 frame'de bir guncelle, gorsel fark yok
 table.insert(Library.Signals, RenderStepped:Connect(LPH_NO_VIRTUALIZE(function(Delta)
-    _rfSkip = _rfSkip + 1
-    if _rfSkip < 4 then return end
-    _rfSkip = 0
-
-    RainbowStep = RainbowStep + Delta * 4
+    RainbowStep = RainbowStep + Delta
 
     if RainbowStep >= (1 / 60) then
         RainbowStep = 0
-        Hue = Hue + (1 / 400)
-        if Hue > 1 then Hue = 0 end
-        Library.CurrentRainbowHue = Hue
-        Library.CurrentRainbowColor = Color3.fromHSV(Hue, 0.8, 1)
+
+        Hue = Hue + (1 / 400);
+
+        if Hue > 1 then
+            Hue = 0;
+        end;
+
+        Library.CurrentRainbowHue = Hue;
+        Library.CurrentRainbowColor = Color3.fromHSV(Hue, 0.8, 1);
     end
 end)))
-
 
 local function GetPlayersString()
     local PlayerList = Players:GetPlayers();
@@ -1095,54 +1093,31 @@ end;
 
 
 function Library:UpdateColorsUsingRegistry()
-    -- [OPT] Throttle: ayni frame'de gelen coklu cagrilari tek birlestirir
-    if Library._RegistryUpdatePending then return end
-    Library._RegistryUpdatePending = true
-
-    task.defer(function()
-        Library._RegistryUpdatePending = false
-        local registry = Library.Registry
-        local count = #registry
-
-        -- 40'dan fazla item varsa chunk'lara bol, frameler arasi bekle
-        if count > 40 then
-            local CHUNK = 40
-            local i = 1
-            while i <= count do
-                local limit = math.min(i + CHUNK - 1, count)
-                for j = i, limit do
-                    local Object = registry[j]
-                    if Object and Object.Instance and Object.Instance.Parent then
-                        for Property, ColorIdx in next, Object.Properties do
-                            local ok, val = pcall(function()
-                                if type(ColorIdx) == 'string' then return Library[ColorIdx]
-                                elseif type(ColorIdx) == 'function' then return ColorIdx() end
-                            end)
-                            if ok and val then
-                                pcall(function() Object.Instance[Property] = val end)
-                            end
-                        end
+    for Idx, Object in next, Library.Registry do
+        -- Make sure the instance still exists and has a parent
+        if Object.Instance and Object.Instance.Parent then
+            -- Update all registered properties
+            for Property, ColorIdx in next, Object.Properties do
+                -- Safely get the new color/value
+                local success, result = pcall(function()
+                    if type(ColorIdx) == 'string' then
+                        -- Reference to Library.AccentColor, Library.MainColor, etc.
+                        return Library[ColorIdx]
+                    elseif type(ColorIdx) == 'function' then
+                        -- Function that returns a color
+                        return ColorIdx()
                     end
-                end
-                i = i + CHUNK
-                if i <= count then task.wait() end
-            end
-        else
-            for _, Object in next, registry do
-                if Object and Object.Instance and Object.Instance.Parent then
-                    for Property, ColorIdx in next, Object.Properties do
-                        local ok, val = pcall(function()
-                            if type(ColorIdx) == 'string' then return Library[ColorIdx]
-                            elseif type(ColorIdx) == 'function' then return ColorIdx() end
-                        end)
-                        if ok and val then
-                            pcall(function() Object.Instance[Property] = val end)
-                        end
-                    end
+                end)
+                
+                -- If we got a valid value, apply it safely
+                if success and result then
+                    pcall(function()
+                        Object.Instance[Property] = result
+                    end)
                 end
             end
         end
-    end)
+    end
 end
 
 
@@ -1182,34 +1157,6 @@ Library:GiveSignal(ScreenGui.DescendantRemoving:Connect(function(Instance)
         Library:RemoveFromRegistry(Instance);
     end;
 end))
-
--- [OPT] Merkezi renk watcher - GiveSignal tanimlandiktan SONRA cagrilir
-do
-    local _watchCallbacks = {}
-    local _lastMain = Library.MainColor
-    local _lastAccent = Library.AccentColor
-    local _watchFrame = 0
-
-    function Library:WatchColors(callback)
-        table.insert(_watchCallbacks, callback)
-        pcall(callback, Library.MainColor, Library.AccentColor)
-    end
-
-    Library:GiveSignal(RunService.Heartbeat:Connect(function()
-        _watchFrame = _watchFrame + 1
-        if _watchFrame < 30 then return end -- ~0.5 saniyede bir kontrol
-        _watchFrame = 0
-        local mainChanged = _lastMain ~= Library.MainColor
-        local accentChanged = _lastAccent ~= Library.AccentColor
-        if mainChanged or accentChanged then
-            _lastMain = Library.MainColor
-            _lastAccent = Library.AccentColor
-            for _, cb in ipairs(_watchCallbacks) do
-                pcall(cb, Library.MainColor, Library.AccentColor)
-            end
-        end
-    end))
-end
 
 local BaseAddons = {};
 
@@ -2939,31 +2886,30 @@ end
         Toggle:Display()
     end
 
-    -- [OPT] Toggle:Display - onceki tweenler iptal edilir, sure 0.6->0.2
-    local _toggleTweens = {}
-    local _toggleTI = TweenInfo.new(0.2, Enum.EasingStyle.Quad)
     function Toggle:Display()
         local bgColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(25, 25, 25)
         local borderColor = Toggle.Value and Library.AccentColorDark or Color3.fromRGB(40, 40, 40)
         local outerColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(30, 30, 30))
         local textColor = Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
-        local strokeColor = Toggle.Value and Library.AccentColor or Color3.fromRGB(60, 60, 60)
 
-        -- Onceki tween'leri iptal et (spam'i onler)
-        for k, tw in pairs(_toggleTweens) do
-            tw:Cancel()
-            _toggleTweens[k] = nil
-        end
+        TweenService:Create(ToggleInner, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = bgColor,
+            BorderColor3 = borderColor
+        }):Play()
 
-        _toggleTweens[1] = TweenService:Create(ToggleInner, _toggleTI, {BackgroundColor3 = bgColor, BorderColor3 = borderColor})
-        _toggleTweens[2] = TweenService:Create(ToggleOuter, _toggleTI, {BorderColor3 = outerColor})
-        _toggleTweens[3] = TweenService:Create(Stroke, _toggleTI, {Color = strokeColor})
-        for _, tw in pairs(_toggleTweens) do tw:Play() end
+        TweenService:Create(ToggleOuter, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
+            BorderColor3 = outerColor
+        }):Play()
+
+			TweenService:Create(Stroke, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
+    Color = Toggle.Value and Library.AccentColor or Color3.fromRGB(60, 60, 60)
+}):Play()
+
 
         if not Toggle.Risky then
-            local t = TweenService:Create(ToggleLabel, _toggleTI, {TextColor3 = textColor})
-            _toggleTweens[4] = t
-            t:Play()
+            TweenService:Create(ToggleLabel, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
+                TextColor3 = textColor
+            }):Play()
         end
     end
 
@@ -3039,15 +2985,20 @@ end
 end
 
 	
--- [OPT] AccentColorDark watcher: while true loop kaldirildi, WatchColors ile optimize edildi
-Library:WatchColors(function(main, accent)
-    Library.AccentColorDark = Library:GetDarkerColor(accent)
-    for _, t in next, Toggles do
-        if t.Display and t.Value ~= nil then
-            t:Display()
-        end
-    end
-end)
+task.spawn(function()
+	local lastColor = Library.AccentColorDark;
+	while true do
+		task.wait(0.31);
+		local current = Library.AccentColorDark;
+		if current ~= lastColor then
+			lastColor = current;
+			for _, t in next, Toggles do
+				local d = t.Display;
+				if d then d(t); end;
+			end;
+		end;
+	end;
+end);
 
 
 function Funcs:AddSlider(Idx, Info)
@@ -3167,15 +3118,21 @@ local DisplayLabel = Library:CreateLabel({
 
         -- Smooth tween fonksiyonu
 -- Add to slider creation:
--- [OPT] Slider TweenFill - daha hizli, daha az memory leak
-local _sliderTween = nil
+local ActiveTweens = {}
+
 function Slider:TweenFill(targetSize)
-    if _sliderTween then
-        _sliderTween:Cancel()
-        _sliderTween = nil
+    -- Cancel previous tween
+    if ActiveTweens[Fill] then
+        ActiveTweens[Fill]:Cancel()
     end
-    _sliderTween = TweenService:Create(Fill, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = targetSize})
-    _sliderTween:Play()
+    
+    local tween = TweenService:Create(Fill, TweenInfo.new(0.75, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = targetSize})
+    ActiveTweens[Fill] = tween
+    tween:Play()
+    
+    tween.Completed:Connect(function()
+        ActiveTweens[Fill] = nil
+    end)
 end
 
         -- Text renk değiştirme fonksiyonu (Title için)
@@ -4712,49 +4669,6 @@ function Library:CreateWindow(...)
             end);
         end;
 
-        -- [OPT] Virtual scroll: sadece gorunen elementleri render et
-        -- 30-60 toggle'li tablarda buyuk performans artisi saglar
-        local function SetupScrollOptimizer(scrollFrame)
-            local BUFFER = 40
-
-            local function UpdateVisibility()
-                if not scrollFrame.Parent then return end
-                local frameH = scrollFrame.AbsoluteSize.Y
-                local scrollY = scrollFrame.CanvasPosition.Y
-                local visTop = scrollY - BUFFER
-                local visBot = scrollY + frameH + BUFFER
-
-                local cumY = 0
-                for _, child in ipairs(scrollFrame:GetChildren()) do
-                    if child:IsA('UIListLayout') or child:IsA('UIPadding') then continue end
-                    local h = child.Size.Y.Offset
-                    local childBot = cumY + h
-                    local shouldShow = childBot >= visTop and cumY <= visBot
-                    if child.Visible ~= shouldShow then
-                        child.Visible = shouldShow
-                    end
-                    cumY = childBot + 8
-                end
-            end
-
-            local _scrollPending = false
-            scrollFrame:GetPropertyChangedSignal('CanvasPosition'):Connect(function()
-                if _scrollPending then return end
-                _scrollPending = true
-                task.defer(function()
-                    _scrollPending = false
-                    UpdateVisibility()
-                end)
-            end)
-            scrollFrame:GetPropertyChangedSignal('CanvasSize'):Connect(function()
-                task.defer(UpdateVisibility)
-            end)
-            task.defer(UpdateVisibility)
-        end
-
-        SetupScrollOptimizer(LeftSide)
-        SetupScrollOptimizer(RightSide)
-
         function Tab:ShowTab()
             for _, Tab in next, Window.Tabs do
                 Tab:HideTab();
@@ -4845,21 +4759,16 @@ function Library:CreateWindow(...)
                 Parent = Container;
             });
 
-            -- [OPT] Groupbox:Resize debounce - ayni frame'deki coklu cagrilari birlestir
-            local _grpResizePending = false
             function Groupbox:Resize()
-                if _grpResizePending then return end
-                _grpResizePending = true
-                task.defer(function()
-                    _grpResizePending = false
-                    local Size = 0
-                    for _, Element in next, Groupbox.Container:GetChildren() do
-                        if (not Element:IsA('UIListLayout')) and Element.Visible then
-                            Size = Size + Element.Size.Y.Offset
-                        end
-                    end
-                    BoxOuter.Size = UDim2.new(1, 0, 0, 20 + Size + 2 + 2)
-                end)
+                local Size = 0;
+
+                for _, Element in next, Groupbox.Container:GetChildren() do
+                    if (not Element:IsA('UIListLayout')) and Element.Visible then
+                        Size = Size + Element.Size.Y.Offset;
+                    end;
+                end;
+
+                BoxOuter.Size = UDim2.new(1, 0, 0, 20 + Size + 2 + 2);
             end;
 
             Groupbox.Container = Container;
