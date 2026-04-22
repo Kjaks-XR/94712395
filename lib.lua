@@ -6368,6 +6368,287 @@ local function GetServerRegion()
     return "Unknown"
 end
 
+
+
+
+
+
+
+
+
+
+
+
+
+function Library:CreateModJoinChanceBar(ParentWindow, Config)
+    Config = Config or {}
+    
+    local BarWidth = Config.Width or 200
+    local BarHeight = Config.Height or 12
+    local OffsetY = Config.OffsetY or 520
+    local UpdateInterval = Config.UpdateInterval or 3
+    
+    -- Ana Frame
+    local ChanceOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        BorderColor3 = Color3.new(0, 0, 0),
+        Size = UDim2.fromOffset(BarWidth, BarHeight + 20),
+        Position = UDim2.new(1, 10, 0, OffsetY),
+        Parent = ParentWindow.Holder,
+        ZIndex = 50,
+    })
+    
+    -- Glow efekti
+    local glow = Instance.new("ImageLabel", ChanceOuter)
+    glow.Name = "GlowEffect"
+    glow.Image = "rbxassetid://18245826428"
+    glow.ScaleType = Enum.ScaleType.Slice
+    glow.SliceCenter = Rect.new(21, 21, 79, 79)
+    glow.ImageColor3 = Library.AccentColor
+    glow.ImageTransparency = 0.6
+    glow.BackgroundTransparency = 1
+    glow.Size = UDim2.new(1, 40, 1, 40)
+    glow.Position = UDim2.new(0, -20, 0, -20)
+    glow.ZIndex = -1
+    
+    -- Pulse animasyonu
+    local function createPulseTween()
+        local tweenOut = TweenService:Create(glow, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.3})
+        local tweenIn = TweenService:Create(glow, TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {ImageTransparency = 0.6})
+        tweenOut.Completed:Connect(function() tweenIn:Play() end)
+        tweenIn.Completed:Connect(function() tweenOut:Play() end)
+        tweenOut:Play()
+    end
+    createPulseTween()
+    
+    -- Renk değişim takibi
+    local lastColor = Library.AccentColor
+    local colorChangeConnection = RunService.Heartbeat:Connect(function()
+        if Library.AccentColor ~= lastColor then
+            lastColor = Library.AccentColor
+            TweenService:Create(glow, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+                {ImageColor3 = Library.AccentColor}):Play()
+        end
+    end)
+    
+    -- İç Frame
+    local ChanceInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor,
+        BorderColor3 = Library.AccentColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0, 1, 0, 1),
+        ZIndex = 51,
+        Parent = ChanceOuter,
+    })
+    
+    -- Başlık
+    local TitleLabel = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 0, 16),
+        Position = UDim2.new(0, 4, 0, 2),
+        Text = 'Chance For A Mod To Join',
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 52,
+        Parent = ChanceInner,
+    })
+    
+    -- Yüzde gösterimi
+    local PercentLabel = Library:CreateLabel({
+        Size = UDim2.new(1, -8, 0, 14),
+        Position = UDim2.new(0, 4, 0, 18),
+        Text = '0%',
+        TextSize = 10,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Center,
+        ZIndex = 52,
+        Parent = ChanceInner,
+    })
+    
+    -- Bar container
+    local BarContainer = Library:Create('Frame', {
+        BackgroundColor3 = Color3.fromRGB(30, 30, 35),
+        BorderColor3 = Library.OutlineColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Position = UDim2.new(0, 4, 0, 34),
+        Size = UDim2.new(1, -8, 0, BarHeight),
+        ZIndex = 52,
+        Parent = ChanceInner,
+    })
+    
+    -- Progress bar (ana dolgu)
+    local ProgressBar = Library:Create('Frame', {
+        BackgroundColor3 = Color3.fromRGB(50, 200, 50),
+        BorderSizePixel = 0,
+        Size = UDim2.new(0, 0, 1, 0),
+        ZIndex = 53,
+        Parent = BarContainer,
+    })
+    
+    -- Color sections için yardımcı fonksiyon
+    local function GetBarColor(percent)
+        if percent <= 35 then
+            return Color3.fromRGB(50, 200, 50)  -- Yeşil
+        elseif percent <= 50 then
+            return Color3.fromRGB(230, 200, 50) -- Sarı
+        elseif percent <= 75 then
+            return Color3.fromRGB(230, 120, 50) -- Turuncu
+        else
+            return Color3.fromRGB(200, 50, 50)  -- Kırmızı
+        end
+    end
+    
+    -- Progress bar'ı güncelle
+    local function UpdateBar(percent)
+        local barWidth = BarContainer.AbsoluteSize.X
+        local targetWidth = (percent / 100) * barWidth
+        
+        ProgressBar.Size = UDim2.new(0, targetWidth, 1, 0)
+        ProgressBar.BackgroundColor3 = GetBarColor(percent)
+        PercentLabel.Text = string.format("%.1f%%", percent)
+        
+        -- Tooltip için
+        local tooltipText = string.format("Chance: %.1f%%\n", percent)
+        if percent <= 35 then
+            tooltipText = tooltipText .. "Status: Low Risk"
+        elseif percent <= 50 then
+            tooltipText = tooltipText .. "Status: Moderate"
+        elseif percent <= 75 then
+            tooltipText = tooltipText .. "Status: Elevated Risk"
+        else
+            tooltipText = tooltipText .. "Status: HIGH RISK!"
+        end
+        
+        if ChanceOuter.Tooltip then
+            ChanceOuter.Tooltip.Text = tooltipText
+        end
+    end
+    
+    -- Formül ile hesaplama: totalplayer count / max player count for the server + math.random(2,6) - 2
+    local function CalculateChance()
+        local totalPlayers = #game.Players:GetPlayers()
+        local maxPlayers = game.Players.MaxPlayers
+        
+        if maxPlayers == 0 then return 0 end
+        
+        local baseChance = (totalPlayers / maxPlayers) * 100
+        local randomMod = math.random(2, 6) - 2  -- 0 ile 4 arasında
+        local finalChance = baseChance + randomMod
+        
+        -- Clamp between 0 and 100
+        return math.clamp(finalChance, 0, 100)
+    end
+    
+    -- Tooltip ekle
+    local Tooltip = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor,
+        BorderColor3 = Library.OutlineColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Position = UDim2.new(0, 0, 1, 2),
+        Size = UDim2.fromOffset(140, 40),
+        Visible = false,
+        ZIndex = 60,
+        Parent = ChanceOuter,
+    })
+    
+    local TooltipLabel = Library:CreateLabel({
+        Size = UDim2.new(1, -4, 1, -4),
+        Position = UDim2.new(0, 2, 0, 2),
+        Text = "",
+        TextSize = 9,
+        FontFace = fonts["ProggyClean"],
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextWrapped = true,
+        ZIndex = 61,
+        Parent = Tooltip,
+    })
+    
+    ChanceOuter.Tooltip = TooltipLabel
+    
+    -- Mouse hover tooltip
+    BarContainer.MouseEnter:Connect(function()
+        Tooltip.Visible = true
+        Tooltip.Position = UDim2.new(0, 0, 1, 2)
+    end)
+    
+    BarContainer.MouseLeave:Connect(function()
+        Tooltip.Visible = false
+    end)
+    
+    -- Güncelleme döngüsü
+    local updateConnection
+    local function StartUpdateLoop()
+        updateConnection = RunService.Heartbeat:Connect(function()
+            if not ChanceOuter.Parent then
+                if updateConnection then updateConnection:Disconnect() end
+                if colorChangeConnection then colorChangeConnection:Disconnect() end
+                return
+            end
+            
+            -- Her UpdateInterval saniyede bir güncelle (örn: 3 saniye)
+            if tick() % UpdateInterval < 0.1 then
+                local newChance = CalculateChance()
+                UpdateBar(newChance)
+                
+                -- Log'a yaz (opsiyonel)
+                if getgenv().logMessage and Config.LogUpdates then
+                    getgenv().logMessage(1, string.format("Mod Join Chance: %.1f%%", newChance))
+                end
+            end
+        end)
+    end
+    
+    StartUpdateLoop()
+    
+    -- İlk güncelleme
+    task.wait(0.1)
+    UpdateBar(CalculateChance())
+    
+    -- Renk senkronizasyonu
+    task.spawn(function()
+        local lastMain, lastAccent = Library.MainColor, Library.AccentColor
+        while task.wait(2) do
+            if ChanceOuter.Parent and (lastMain ~= Library.MainColor or lastAccent ~= Library.AccentColor) then
+                lastMain, lastAccent = Library.MainColor, Library.AccentColor
+                TweenService:Create(ChanceInner, TweenInfo.new(5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = lastMain,
+                    BorderColor3 = lastAccent
+                }):Play()
+            end
+        end
+    end)
+    
+    -- Parent window ile görünürlük senkronizasyonu
+    if ParentWindow and ParentWindow.Holder then
+        ParentWindow.Holder:GetPropertyChangedSignal('Visible'):Connect(function()
+            ChanceOuter.Visible = ParentWindow.Holder.Visible
+        end)
+        ChanceOuter.Visible = ParentWindow.Holder.Visible
+    end
+    
+    return {
+        Outer = ChanceOuter,
+        Update = function() UpdateBar(CalculateChance()) end,
+        SetUpdateInterval = function(interval) UpdateInterval = interval end,
+        GetCurrentChance = CalculateChance,
+        Disconnect = function()
+            if updateConnection then updateConnection:Disconnect() end
+            if colorChangeConnection then colorChangeConnection:Disconnect() end
+        end,
+    }
+end
+
+
+
+
+
+
+
+
+
+
+
 function Library:CreateStatsPanel(ParentWindow, Config)
     Config = Config or {}
     
