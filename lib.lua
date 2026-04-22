@@ -7215,11 +7215,9 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
     }
 end
 
-
-
 -- ╔══════════════════════════════════════════╗
 -- ║         XWARE COMMAND BAR MODULE         ║
--- ║         Black / White  •  v1.0           ║
+-- ║         Black / White  •  v1.1           ║
 -- ╚══════════════════════════════════════════╝
 --
 -- USAGE:
@@ -7232,65 +7230,70 @@ end
 --   set-drop    "name" "value"
 --   help
 --   clear
+--
+-- KEYBIND: RightAlt  —  toggle open/close
 
 function Library:CreateCommandBar(Toggles, Options)
     Toggles = Toggles or {}
     Options = Options or {}
 
-    local TweenService  = game:GetService("TweenService")
-    local InputService  = game:GetService("UserInputService")
-    local RunService    = game:GetService("RunService")
+    local TweenService = game:GetService("TweenService")
+    local InputService = game:GetService("UserInputService")
+
+    -- ─── Sizing constants ────────────────────────────────────────
+    local BAR_W    = 700   -- total width of the bar
+    local BAR_H    = 40    -- height of the input bar
+    local SUGG_H   = 26    -- height of each suggestion row
+    local OUT_H    = 24    -- height of the output feedback strip
+    local MAX_SUGG = 6     -- max visible suggestions before scroll
 
     -- ─── Palette ─────────────────────────────────────────────────
     local C = {
-        bg          = Color3.fromRGB(8,   8,   8),
-        bgHover     = Color3.fromRGB(14,  14,  14),
-        border      = Color3.fromRGB(40,  40,  40),
-        borderFocus = Color3.fromRGB(200, 200, 200),
-        text        = Color3.fromRGB(220, 220, 220),
-        textDim     = Color3.fromRGB(90,  90,  90),
+        bg          = Color3.fromRGB(7,   7,   7),
+        border      = Color3.fromRGB(38,  38,  38),
+        borderFocus = Color3.fromRGB(210, 210, 210),
+        text        = Color3.fromRGB(210, 210, 210),
+        textDim     = Color3.fromRGB(75,  75,  75),
         textAccent  = Color3.fromRGB(255, 255, 255),
-        textGreen   = Color3.fromRGB(130, 255, 130),
-        textRed     = Color3.fromRGB(255, 110, 110),
-        textYellow  = Color3.fromRGB(255, 220, 80),
-        textBlue    = Color3.fromRGB(140, 180, 255),
-        cursorColor = Color3.fromRGB(255, 255, 255),
+        textGreen   = Color3.fromRGB(120, 255, 140),
+        textRed     = Color3.fromRGB(255, 100, 100),
+        textYellow  = Color3.fromRGB(255, 215, 70),
+        textBlue    = Color3.fromRGB(130, 175, 255),
         acStrip     = Color3.fromRGB(255, 255, 255),
-        suggBg      = Color3.fromRGB(12,  12,  12),
-        suggSel     = Color3.fromRGB(22,  22,  22),
-        suggBorder  = Color3.fromRGB(35,  35,  35),
+        suggBg      = Color3.fromRGB(10,  10,  10),
+        suggSel     = Color3.fromRGB(20,  20,  20),
+        suggBorder  = Color3.fromRGB(32,  32,  32),
+        modeText    = Color3.fromRGB(55,  55,  55),
     }
 
-    -- ─── Fonts ───────────────────────────────────────────────────
-    local FontMono = Library.Font   -- your custom font (ProggyClean)
+    local FontMono = Library.Font
 
-    -- ─── Tween helpers ───────────────────────────────────────────
+    -- ─── Helpers ─────────────────────────────────────────────────
     local function Tw(inst, t, props)
-        TweenService:Create(inst, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
+        TweenService:Create(inst,
+            TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            props):Play()
     end
-
-    -- ─── Frame helpers ───────────────────────────────────────────
-    local function F(props)  return Library:Create("Frame",      props) end
-    local function T(props)  return Library:Create("TextLabel",  props) end
-    local function TB(props) return Library:Create("TextBox",    props) end
-    local function IL(props) return Library:Create("ImageLabel", props) end
+    local function Fr(p) return Library:Create("Frame",     p) end
+    local function Lb(p) return Library:Create("TextLabel", p) end
+    local function Bx(p) return Library:Create("TextBox",   p) end
 
     -- ─────────────────────────────────────────────────────────────
-    -- ROOT  (sits in ScreenGui, toggle with RightAlt)
+    -- ROOT
     -- ─────────────────────────────────────────────────────────────
-    local Root = F({
-        Name              = "CommandBar";
+    local Root = Fr({
+        Name                   = "CommandBar";
         BackgroundTransparency = 1;
-        AnchorPoint       = Vector2.new(0.5, 1);
-        Position          = UDim2.new(0.5, 0, 1, -28);
-        Size              = UDim2.fromOffset(560, 28);
-        ZIndex            = 300;
-        Parent            = Library.ScreenGui;
-        Visible           = false;
+        AnchorPoint            = Vector2.new(0.5, 1);
+        Position               = UDim2.new(0.5, 0, 1, -(BAR_H + 12));
+        Size                   = UDim2.fromOffset(BAR_W, BAR_H);
+        ZIndex                 = 300;
+        Parent                 = Library.ScreenGui;
+        Visible                = false;
     })
 
-    -- Outer shell (black bg + white border on focus)
-    local Shell = F({
+    -- ─── Main shell ──────────────────────────────────────────────
+    local Shell = Fr({
         BackgroundColor3 = C.bg;
         BorderColor3     = C.border;
         Size             = UDim2.new(1, 0, 1, 0);
@@ -7298,410 +7301,392 @@ function Library:CreateCommandBar(Toggles, Options)
         Parent           = Root;
     })
 
-    -- Left accent strip (white, 2 px)
-    local Strip = F({
-        BackgroundColor3 = C.acStrip;
-        BackgroundTransparency = 0.3;
+    -- Animated focus underline (slides from left)
+    local BottomLine = Fr({
+        BackgroundColor3 = C.border;
         BorderSizePixel  = 0;
-        Size             = UDim2.fromOffset(2, 28);
-        Position         = UDim2.fromOffset(0, 0);
+        AnchorPoint      = Vector2.new(0, 1);
+        Position         = UDim2.new(0, 0, 1, 0);
+        Size             = UDim2.fromOffset(0, 1);
         ZIndex           = 302;
         Parent           = Shell;
     })
 
-    -- Prompt label  ›
-    local Prompt = T({
-        BackgroundTransparency = 1;
-        Position  = UDim2.fromOffset(10, 0);
-        Size      = UDim2.fromOffset(14, 28);
-        FontFace  = FontMono;
-        Text      = "›";
-        TextColor3 = C.textDim;
-        TextSize  = 13;
-        ZIndex    = 302;
-        Parent    = Shell;
+    -- Left accent strip
+    local Strip = Fr({
+        BackgroundColor3       = C.acStrip;
+        BackgroundTransparency = 0.4;
+        BorderSizePixel        = 0;
+        Size                   = UDim2.fromOffset(3, BAR_H);
+        ZIndex                 = 302;
+        Parent                 = Shell;
     })
 
-    -- Input Box
-    local Input = TB({
+    -- Vertical separator after strip
+    local Sep = Fr({
+        BackgroundColor3 = C.border;
+        BorderSizePixel  = 0;
+        Position         = UDim2.fromOffset(28, 8);
+        Size             = UDim2.fromOffset(1, BAR_H - 16);
+        ZIndex           = 303;
+        Parent           = Shell;
+    })
+
+    -- Prompt glyph
+    local Prompt = Lb({
         BackgroundTransparency = 1;
-        Position  = UDim2.fromOffset(26, 0);
-        Size      = UDim2.new(1, -36, 1, 0);
-        FontFace  = FontMono;
-        PlaceholderText = 'set-toggle "name" true  •  type help';
-        PlaceholderColor3 = C.textDim;
-        Text      = "";
-        TextColor3 = C.textAccent;
-        TextSize  = 12;
+        Position               = UDim2.fromOffset(12, 0);
+        Size                   = UDim2.fromOffset(16, BAR_H);
+        FontFace               = FontMono;
+        Text                   = "›";
+        TextColor3             = C.textDim;
+        TextSize               = 16;
+        ZIndex                 = 303;
+        Parent                 = Shell;
+    })
+
+    -- Command input box
+    local Input = Bx({
+        BackgroundTransparency = 1;
+        Position               = UDim2.fromOffset(34, 0);
+        Size                   = UDim2.new(1, -140, 1, 0);
+        FontFace               = FontMono;
+        PlaceholderText        = 'set-toggle "name" true   —   type help';
+        PlaceholderColor3      = C.textDim;
+        Text                   = "";
+        TextColor3             = C.textAccent;
+        TextSize               = 14;
         TextStrokeTransparency = 1;
-        TextXAlignment = Enum.TextXAlignment.Left;
-        ClearTextOnFocus = false;
-        ZIndex    = 303;
-        Parent    = Shell;
+        TextXAlignment         = Enum.TextXAlignment.Left;
+        ClearTextOnFocus       = false;
+        ZIndex                 = 304;
+        Parent                 = Shell;
     })
 
-    -- Status icon (right side, 8×8 dot)
-    local StatusDot = F({
+    -- Right-side keybind hint
+    local ModeHint = Lb({
+        BackgroundTransparency = 1;
+        AnchorPoint            = Vector2.new(1, 0.5);
+        Position               = UDim2.new(1, -22, 0.5, 0);
+        Size                   = UDim2.fromOffset(100, BAR_H);
+        FontFace               = FontMono;
+        Text                   = "RightAlt  ×";
+        TextColor3             = C.modeText;
+        TextSize               = 10;
+        TextXAlignment         = Enum.TextXAlignment.Right;
+        ZIndex                 = 303;
+        Parent                 = Shell;
+    })
+
+    -- Status dot (far right)
+    local StatusDot = Fr({
         BackgroundColor3 = C.textDim;
         BorderSizePixel  = 0;
         AnchorPoint      = Vector2.new(1, 0.5);
-        Position         = UDim2.new(1, -8, 0.5, 0);
-        Size             = UDim2.fromOffset(5, 5);
-        ZIndex           = 302;
+        Position         = UDim2.new(1, -9, 0.5, 0);
+        Size             = UDim2.fromOffset(6, 6);
+        ZIndex           = 303;
         Parent           = Shell;
     })
     Library:Create("UICorner", { CornerRadius = UDim.new(1, 0); Parent = StatusDot })
 
     -- ─────────────────────────────────────────────────────────────
-    -- AUTOCOMPLETE DROPDOWN  (above the bar)
+    -- SUGGESTION DROPDOWN
     -- ─────────────────────────────────────────────────────────────
-    local SuggFrame = F({
+    local SuggFrame = Fr({
         BackgroundColor3 = C.suggBg;
         BorderColor3     = C.suggBorder;
         AnchorPoint      = Vector2.new(0, 1);
-        Position         = UDim2.new(0, 0, 0, -2);
-        Size             = UDim2.fromOffset(560, 0);   -- height animated
+        Position         = UDim2.new(0, 0, 0, -1);
+        Size             = UDim2.fromOffset(BAR_W, 0);
         ZIndex           = 310;
         ClipsDescendants = true;
         Visible          = false;
         Parent           = Root;
     })
 
+    -- Thin separator line at top of suggestion frame
+    Fr({
+        BackgroundColor3 = C.border;
+        BorderSizePixel  = 0;
+        Size             = UDim2.new(1, 0, 0, 1);
+        ZIndex           = 312;
+        Parent           = SuggFrame;
+    })
+
     local SuggScroll = Library:Create("ScrollingFrame", {
         BackgroundTransparency = 1;
-        BorderSizePixel  = 0;
-        Size             = UDim2.new(1, 0, 1, 0);
-        CanvasSize       = UDim2.new(0, 0, 0, 0);
-        ScrollBarThickness = 2;
-        ScrollBarImageColor3 = C.border;
-        TopImage    = "";
-        BottomImage = "";
-        ZIndex      = 311;
-        Parent      = SuggFrame;
+        BorderSizePixel        = 0;
+        Position               = UDim2.fromOffset(0, 1);
+        Size                   = UDim2.new(1, 0, 1, -1);
+        CanvasSize             = UDim2.new(0, 0, 0, 0);
+        ScrollBarThickness     = 2;
+        ScrollBarImageColor3   = C.border;
+        TopImage               = "";
+        BottomImage            = "";
+        ZIndex                 = 311;
+        Parent                 = SuggFrame;
     })
 
-    local SuggLayout = Library:Create("UIListLayout", {
-        Padding     = UDim.new(0, 0);
-        SortOrder   = Enum.SortOrder.LayoutOrder;
-        Parent      = SuggScroll;
+    Library:Create("UIListLayout", {
+        Padding   = UDim.new(0, 0);
+        SortOrder = Enum.SortOrder.LayoutOrder;
+        Parent    = SuggScroll;
     })
 
     -- ─────────────────────────────────────────────────────────────
-    -- OUTPUT BAR  (appears for 2 s above the command bar)
+    -- OUTPUT BAR
     -- ─────────────────────────────────────────────────────────────
-    local OuterBar = F({
-        BackgroundColor3 = C.bg;
-        BorderColor3     = C.border;
-        AnchorPoint      = Vector2.new(0, 1);
-        Position         = UDim2.new(0, 0, 0, -4);
-        Size             = UDim2.fromOffset(560, 20);
-        ZIndex           = 320;
+    local OutBar = Fr({
+        BackgroundColor3       = C.bg;
+        BorderColor3           = C.suggBorder;
+        AnchorPoint            = Vector2.new(0, 1);
+        Position               = UDim2.new(0, 0, 0, -1);
+        Size                   = UDim2.fromOffset(BAR_W, OUT_H);
+        ZIndex                 = 320;
         BackgroundTransparency = 1;
-        Visible          = false;
-        Parent           = Root;
+        Visible                = false;
+        Parent                 = Root;
     })
 
-    -- Left accent (colored per result type)
-    local OutStrip = F({
+    local OutStrip = Fr({
         BackgroundColor3 = C.textGreen;
         BorderSizePixel  = 0;
-        Size             = UDim2.fromOffset(2, 20);
+        Size             = UDim2.fromOffset(3, OUT_H);
         ZIndex           = 321;
-        Parent           = OuterBar;
+        Parent           = OutBar;
     })
 
-    local OutLabel = T({
+    local OutLabel = Lb({
         BackgroundTransparency = 1;
-        Position  = UDim2.fromOffset(10, 0);
-        Size      = UDim2.new(1, -14, 1, 0);
-        FontFace  = FontMono;
-        Text      = "";
-        TextColor3 = C.textGreen;
-        TextSize  = 11;
+        Position               = UDim2.fromOffset(12, 0);
+        Size                   = UDim2.new(1, -16, 1, 0);
+        FontFace               = FontMono;
+        Text                   = "";
+        TextColor3             = C.textGreen;
+        TextSize               = 12;
         TextStrokeTransparency = 1;
-        TextXAlignment = Enum.TextXAlignment.Left;
-        ZIndex    = 322;
-        Parent    = OuterBar;
+        TextXAlignment         = Enum.TextXAlignment.Left;
+        ZIndex                 = 322;
+        Parent                 = OutBar;
     })
 
     -- ─────────────────────────────────────────────────────────────
     -- COMMAND ENGINE
     -- ─────────────────────────────────────────────────────────────
 
-    local cmdHistory   = {}
-    local histIdx      = 0
-    local suggestions  = {}
-    local selSuggIdx   = 0
-    local outputTimer  = nil
-    local isVisible    = false
+    local cmdHistory  = {}
+    local histIdx     = 0
+    local suggestions = {}
+    local selSuggIdx  = 0
+    local outputTimer = nil
+    local isVisible   = false
+    local _pendingCmd = nil
 
-    -- Known commands for autocomplete
     local COMMAND_NAMES = {
         "set-toggle", "set-slider", "set-color", "set-drop", "help", "clear"
     }
 
-    -- ── Tokenise input ─────────────────────────────────────────
-    -- Returns a list of tokens, stripping quotes
+    -- ── Tokeniser ────────────────────────────────────────────────
     local function Tokenise(str)
         local tokens = {}
         local i = 1
         while i <= #str do
-            -- skip whitespace
-            local ws = str:match('^%s+', i)
+            local ws = str:match("^%s+", i)
             if ws then i = i + #ws end
             if i > #str then break end
-
-            if str:sub(i, i) == '"' then
-                -- quoted token (may be empty "")
-                local close = str:find('"', i + 1, true)
+            if str:sub(i,i) == '"' then
+                local close = str:find('"', i+1, true)
                 if close then
-                    table.insert(tokens, str:sub(i + 1, close - 1))
+                    table.insert(tokens, str:sub(i+1, close-1))
                     i = close + 1
                 else
-                    table.insert(tokens, str:sub(i + 1))
+                    table.insert(tokens, str:sub(i+1))
                     break
                 end
             else
-                -- unquoted word
-                local tok = str:match('^%S+', i)
+                local tok = str:match("^%S+", i)
                 if tok then
                     table.insert(tokens, tok)
                     i = i + #tok
-                else
-                    break
-                end
+                else break end
             end
         end
         return tokens
     end
 
-    -- ── Output helper ──────────────────────────────────────────
+    -- ── Output flash ─────────────────────────────────────────────
+    local colorMap = {
+        ok   = C.textGreen;
+        err  = C.textRed;
+        warn = C.textYellow;
+        info = C.textBlue;
+    }
+
     local function ShowOutput(msg, kind)
-        -- kind: "ok" | "err" | "warn" | "info"
-        local colorMap = {
-            ok   = C.textGreen;
-            err  = C.textRed;
-            warn = C.textYellow;
-            info = C.textBlue;
-        }
         local col = colorMap[kind] or C.text
-
-        OutLabel.Text      = msg
-        OutLabel.TextColor3 = col
+        OutLabel.Text             = msg
+        OutLabel.TextColor3       = col
         OutStrip.BackgroundColor3 = col
-
-        OuterBar.BackgroundTransparency = 1
-        OuterBar.Visible = true
-
-        Tw(OuterBar, 0.12, { BackgroundTransparency = 0 })
-        Tw(OutStrip, 0.12, { BackgroundTransparency = 0 })
-
-        -- Flash status dot
-        Tw(StatusDot, 0.1, { BackgroundColor3 = col })
-        task.delay(1.2, function()
-            Tw(StatusDot, 0.4, { BackgroundColor3 = C.textDim })
+        OutBar.BackgroundTransparency = 1
+        OutBar.Visible = true
+        Tw(OutBar, 0.14, { BackgroundTransparency = 0 })
+        Tw(StatusDot, 0.1,  { BackgroundColor3 = col })
+        task.delay(1.4, function()
+            Tw(StatusDot, 0.5, { BackgroundColor3 = C.textDim })
         end)
-
-        -- Auto-hide after 2.5 s
-        if outputTimer then
-            task.cancel(outputTimer)
-        end
-        outputTimer = task.delay(2.5, function()
-            Tw(OuterBar, 0.2, { BackgroundTransparency = 1 })
-            task.wait(0.22)
-            OuterBar.Visible = false
+        if outputTimer then task.cancel(outputTimer) end
+        outputTimer = task.delay(3, function()
+            Tw(OutBar, 0.25, { BackgroundTransparency = 1 })
+            task.wait(0.27)
+            OutBar.Visible = false
         end)
     end
 
-    -- ── Command: help ──────────────────────────────────────────
-    local HELP_TEXT = {
-        'set-toggle "name" true|false|on|off|1|0',
-        'set-slider  "name" <number>',
-        'set-color   "name" #RRGGBB',
-        'set-drop    "name" "value"',
-        'help  •  clear',
-    }
+    -- ── Execute (forward declared, patched below) ────────────────
+    local Execute
 
-    -- ── Command executor ───────────────────────────────────────
-    local function Execute(raw)
-        raw = raw:match("^%s*(.-)%s*$")  -- trim
+    local function _baseExecute(raw)
+        raw = raw:match("^%s*(.-)%s*$")
         if raw == "" then return end
-
-        -- history
         table.insert(cmdHistory, 1, raw)
         histIdx = 0
 
         local tokens = Tokenise(raw)
-        local cmd = (tokens[1] or ""):lower()
+        local cmd    = (tokens[1] or ""):lower()
 
-        -- ── help ────────────────────────────────────────────
+        -- help
         if cmd == "help" then
-            ShowOutput("Commands: set-toggle | set-slider | set-color | set-drop | help | clear", "info")
-            return
-        end
-
-        -- ── clear ───────────────────────────────────────────
-        if cmd == "clear" then
-            Input.Text = ""
-            ShowOutput("Cleared.", "info")
-            return
-        end
-
-        -- ── set-toggle ──────────────────────────────────────
-        if cmd == "set-toggle" then
-            local name  = tokens[2]
-            local state = (tokens[3] or ""):lower()
-
-            if not name then
-                ShowOutput('Error: missing name — set-toggle "name" true', "err")
-                return
-            end
-
-            -- fuzzy-find toggle (case-insensitive exact then prefix)
-            local found = nil
-            for k, v in pairs(Toggles) do
-                if k:lower() == name:lower() then
-                    found = { key = k, obj = v }
-                    break
-                end
-            end
-            if not found then
-                for k, v in pairs(Toggles) do
-                    if k:lower():find(name:lower(), 1, true) then
-                        found = { key = k, obj = v }
-                        break
-                    end
-                end
-            end
-
-            if not found then
-                ShowOutput('Toggle "' .. name .. '" not found.', "err")
-                return
-            end
-
-            local boolVal
-            if state == "true"  or state == "on"  or state == "1" then boolVal = true
-            elseif state == "false" or state == "off" or state == "0" then boolVal = false
-            else
-                ShowOutput('Bad value "' .. state .. '" — use true/false/on/off/1/0', "err")
-                return
-            end
-
-            found.obj:SetValue(boolVal)
             ShowOutput(
-                '✓ ' .. found.key .. '  →  ' .. (boolVal and "ON" or "OFF"),
-                "ok"
+                "set-toggle  |  set-slider  |  set-color  |  set-drop  |  help  |  clear",
+                "info"
             )
             return
         end
 
-        -- ── set-slider ──────────────────────────────────────
+        -- clear
+        if cmd == "clear" then
+            Input.Text = ""
+            ShowOutput("Input cleared.", "info")
+            return
+        end
+
+        -- set-toggle
+        if cmd == "set-toggle" then
+            local name  = tokens[2]
+            local state = (tokens[3] or ""):lower()
+            if not name then
+                ShowOutput('Usage:  set-toggle "name" true|false', "err"); return
+            end
+            local found
+            for k, v in pairs(Toggles) do
+                if k:lower() == name:lower() then found={key=k,obj=v}; break end
+            end
+            if not found then
+                for k, v in pairs(Toggles) do
+                    if k:lower():find(name:lower(), 1, true) then
+                        found={key=k,obj=v}; break
+                    end
+                end
+            end
+            if not found then
+                ShowOutput('Toggle "' .. name .. '" not found.', "err"); return
+            end
+            local boolVal
+            if     state=="true"  or state=="on"  or state=="1" then boolVal = true
+            elseif state=="false" or state=="off" or state=="0" then boolVal = false
+            else ShowOutput('Bad value — use true/false/on/off/1/0', "err"); return
+            end
+            found.obj:SetValue(boolVal)
+            ShowOutput(found.key .. "  →  " .. (boolVal and "ON" or "OFF"), "ok")
+            return
+        end
+
+        -- set-slider
         if cmd == "set-slider" then
             local name = tokens[2]
             local numS = tokens[3]
-
             if not name then
-                ShowOutput('Error: set-slider "name" <number>', "err")
-                return
+                ShowOutput('Usage:  set-slider "name" <number>', "err"); return
             end
-
-            local found = nil
+            local found
             for k, v in pairs(Options) do
-                if v.Type == "Slider" and k:lower() == name:lower() then
-                    found = { key = k, obj = v }; break
+                if v.Type=="Slider" and k:lower()==name:lower() then
+                    found={key=k,obj=v}; break
                 end
             end
             if not found then
                 for k, v in pairs(Options) do
-                    if v.Type == "Slider" and k:lower():find(name:lower(), 1, true) then
-                        found = { key = k, obj = v }; break
+                    if v.Type=="Slider" and k:lower():find(name:lower(),1,true) then
+                        found={key=k,obj=v}; break
                     end
                 end
             end
-
             if not found then
-                ShowOutput('Slider "' .. name .. '" not found.', "err")
-                return
+                ShowOutput('Slider "' .. name .. '" not found.', "err"); return
             end
-
             local num = tonumber(numS)
             if not num then
-                ShowOutput('Bad number "' .. (numS or "?") .. '"', "err")
-                return
+                ShowOutput('Bad number "' .. (numS or "?") .. '"', "err"); return
             end
-
             found.obj:SetValue(num)
-            ShowOutput('✓ ' .. found.key .. '  →  ' .. num, "ok")
+            ShowOutput(found.key .. "  →  " .. num, "ok")
             return
         end
 
-        -- ── set-color ───────────────────────────────────────
+        -- set-color
         if cmd == "set-color" then
             local name = tokens[2]
             local hex  = tokens[3]
-
             if not name or not hex then
-                ShowOutput('Error: set-color "name" #RRGGBB', "err")
-                return
+                ShowOutput('Usage:  set-color "name" #RRGGBB', "err"); return
             end
-
-            local found = nil
+            local found
             for k, v in pairs(Options) do
-                if v.Type == "ColorPicker" and k:lower() == name:lower() then
-                    found = { key = k, obj = v }; break
+                if v.Type=="ColorPicker" and k:lower()==name:lower() then
+                    found={key=k,obj=v}; break
                 end
             end
-
             if not found then
-                ShowOutput('ColorPicker "' .. name .. '" not found.', "err")
-                return
+                ShowOutput('ColorPicker "' .. name .. '" not found.', "err"); return
             end
-
-            local clean = hex:gsub("#", "")
-            local ok, col = pcall(Color3.fromHex, clean)
+            local ok, col = pcall(Color3.fromHex, hex:gsub("#",""))
             if not ok then
-                ShowOutput('Bad hex "' .. hex .. '"', "err")
-                return
+                ShowOutput('Bad hex "' .. hex .. '"', "err"); return
             end
-
             found.obj:SetValueRGB(col)
-            ShowOutput('✓ ' .. found.key .. '  →  ' .. hex, "ok")
+            ShowOutput(found.key .. "  →  " .. hex, "ok")
             return
         end
 
-        -- ── set-drop ────────────────────────────────────────
+        -- set-drop
         if cmd == "set-drop" then
             local name = tokens[2]
             local val  = tokens[3]
-
             if not name then
-                ShowOutput('Error: set-drop "name" "value"', "err")
-                return
+                ShowOutput('Usage:  set-drop "name" "value"', "err"); return
             end
-
-            local found = nil
+            local found
             for k, v in pairs(Options) do
-                if v.Type == "Dropdown" and k:lower() == name:lower() then
-                    found = { key = k, obj = v }; break
+                if v.Type=="Dropdown" and k:lower()==name:lower() then
+                    found={key=k,obj=v}; break
                 end
             end
-
             if not found then
-                ShowOutput('Dropdown "' .. name .. '" not found.', "err")
-                return
+                ShowOutput('Dropdown "' .. name .. '" not found.', "err"); return
             end
-
             found.obj:SetValue(val)
-            ShowOutput('✓ ' .. found.key .. '  →  ' .. (val or "nil"), "ok")
+            ShowOutput(found.key .. "  →  " .. (val or "nil"), "ok")
             return
         end
 
-        -- ── unknown ─────────────────────────────────────────
-        ShowOutput('Unknown command "' .. cmd .. '" — type help', "err")
+        ShowOutput('Unknown command "' .. cmd .. '"  —  type help', "err")
     end
 
+    Execute = _baseExecute
+
     -- ─────────────────────────────────────────────────────────────
-    -- AUTOCOMPLETE ENGINE
+    -- AUTOCOMPLETE
     -- ─────────────────────────────────────────────────────────────
 
     local suggButtons = {}
@@ -7716,70 +7701,82 @@ function Library:CreateCommandBar(Toggles, Options)
 
     local function BuildSuggestions(raw)
         ClearSuggestions()
+        if raw == "" then return end
 
-        local tokens  = Tokenise(raw)
-        local cmd     = (tokens[1] or ""):lower()
-        local partial = raw:match('"([^"]*)"?%s*$') or tokens[#tokens] or ""
-        local candidates = {}
+        local tokens       = Tokenise(raw)
+        local cmd          = (tokens[1] or ""):lower()
+        local partial      = tokens[#tokens] or ""
+        local endsSpace    = raw:sub(-1) == " "
+        local candidates   = {}
 
-        if #tokens <= 1 and not raw:find('"') then
-            -- suggest command names
+        if #tokens <= 1 and not endsSpace then
             for _, name in ipairs(COMMAND_NAMES) do
-                if name:lower():find(cmd, 1, true) and name:lower() ~= cmd then
-                    table.insert(candidates, { display = name, insert = name })
+                if name:find(cmd, 1, true) and name ~= cmd then
+                    table.insert(candidates, {
+                        display = name,
+                        insert  = name .. " ",
+                    })
                 end
             end
+
         elseif cmd == "set-toggle" then
-            if #tokens == 1 or (#tokens == 2 and not raw:match('".-"')) then
-                -- suggest toggle names
+            if (#tokens==1 and endsSpace) or (#tokens==2 and not endsSpace) then
+                local p = endsSpace and "" or partial:lower()
                 for k in pairs(Toggles) do
-                    if k:lower():find(partial:lower(), 1, true) then
+                    if k:lower():find(p, 1, true) then
                         table.insert(candidates, {
-                            display = 'set-toggle "' .. k .. '" …',
-                            insert  = 'set-toggle "' .. k .. '" '
+                            display = 'set-toggle  "' .. k .. '"  …',
+                            insert  = 'set-toggle "' .. k .. '" ',
                         })
                     end
                 end
-            elseif #tokens == 2 then
-                -- suggest states
+            elseif (#tokens==2 and endsSpace) or (#tokens==3 and not endsSpace) then
+                local name = tokens[2] or ""
+                local p    = endsSpace and "" or partial:lower()
                 for _, s in ipairs({"true", "false"}) do
-                    if s:find(partial, 1, true) then
+                    if s:find(p, 1, true) then
                         table.insert(candidates, {
-                            display = tokens[1] .. ' "' .. tokens[2] .. '" ' .. s,
-                            insert  = tokens[1] .. ' "' .. tokens[2] .. '" ' .. s
+                            display = 'set-toggle  "' .. name .. '"  ' .. s,
+                            insert  = 'set-toggle "' .. name .. '" ' .. s,
                         })
                     end
                 end
             end
+
         elseif cmd == "set-slider" then
-            if #tokens == 1 or (#tokens == 2 and not raw:match('".-"')) then
+            if (#tokens==1 and endsSpace) or (#tokens==2 and not endsSpace) then
+                local p = endsSpace and "" or partial:lower()
                 for k, v in pairs(Options) do
-                    if v.Type == "Slider" and k:lower():find(partial:lower(), 1, true) then
+                    if v.Type=="Slider" and k:lower():find(p, 1, true) then
                         table.insert(candidates, {
-                            display = 'set-slider "' .. k .. '" …',
-                            insert  = 'set-slider "' .. k .. '" '
+                            display = 'set-slider  "' .. k .. '"  <number>',
+                            insert  = 'set-slider "' .. k .. '" ',
                         })
                     end
                 end
             end
+
         elseif cmd == "set-color" then
-            if #tokens == 1 or (#tokens == 2 and not raw:match('".-"')) then
+            if (#tokens==1 and endsSpace) or (#tokens==2 and not endsSpace) then
+                local p = endsSpace and "" or partial:lower()
                 for k, v in pairs(Options) do
-                    if v.Type == "ColorPicker" and k:lower():find(partial:lower(), 1, true) then
+                    if v.Type=="ColorPicker" and k:lower():find(p, 1, true) then
                         table.insert(candidates, {
-                            display = 'set-color "' .. k .. '" #RRGGBB',
-                            insert  = 'set-color "' .. k .. '" #'
+                            display = 'set-color  "' .. k .. '"  #RRGGBB',
+                            insert  = 'set-color "' .. k .. '" #',
                         })
                     end
                 end
             end
+
         elseif cmd == "set-drop" then
-            if #tokens == 1 or (#tokens == 2 and not raw:match('".-"')) then
+            if (#tokens==1 and endsSpace) or (#tokens==2 and not endsSpace) then
+                local p = endsSpace and "" or partial:lower()
                 for k, v in pairs(Options) do
-                    if v.Type == "Dropdown" and k:lower():find(partial:lower(), 1, true) then
+                    if v.Type=="Dropdown" and k:lower():find(p, 1, true) then
                         table.insert(candidates, {
-                            display = 'set-drop "' .. k .. '" …',
-                            insert  = 'set-drop "' .. k .. '" '
+                            display = 'set-drop  "' .. k .. '"  …',
+                            insert  = 'set-drop "' .. k .. '" ',
                         })
                     end
                 end
@@ -7787,66 +7784,98 @@ function Library:CreateCommandBar(Toggles, Options)
         end
 
         if #candidates == 0 then return end
+        table.sort(candidates, function(a,b) return a.display < b.display end)
 
-        -- cap at 6
-        local MAX = 6
-        for i = 1, math.min(#candidates, MAX) do
+        for i = 1, math.min(#candidates, MAX_SUGG) do
             table.insert(suggestions, candidates[i])
         end
 
-        -- Build buttons (bottom-most first = index 1 visually)
-        local ITEM_H = 20
         for idx, sugg in ipairs(suggestions) do
-            local Btn = F({
+            local Row = Fr({
                 BackgroundColor3 = C.suggBg;
-                BorderColor3     = C.suggBorder;
-                Size             = UDim2.new(1, 0, 0, ITEM_H);
+                BorderSizePixel  = 0;
+                Size             = UDim2.new(1, 0, 0, SUGG_H);
                 ZIndex           = 312;
                 Active           = true;
                 LayoutOrder      = idx;
                 Parent           = SuggScroll;
             })
 
-            -- index glyph
-            T({
+            -- Index gutter
+            Lb({
                 BackgroundTransparency = 1;
-                Size      = UDim2.fromOffset(16, ITEM_H);
-                Position  = UDim2.fromOffset(6, 0);
+                Size      = UDim2.fromOffset(22, SUGG_H);
                 FontFace  = FontMono;
                 Text      = tostring(idx);
                 TextColor3 = C.textDim;
                 TextSize  = 10;
                 ZIndex    = 313;
-                Parent    = Btn;
+                Parent    = Row;
             })
 
-            -- display text  (highlight matching part)
-            T({
+            -- Gutter separator
+            Fr({
+                BackgroundColor3 = C.border;
+                BorderSizePixel  = 0;
+                Position         = UDim2.fromOffset(21, 3);
+                Size             = UDim2.fromOffset(1, SUGG_H - 6);
+                ZIndex           = 313;
+                Parent           = Row;
+            })
+
+            -- Display text
+            Lb({
                 BackgroundTransparency = 1;
-                Size      = UDim2.new(1, -26, 1, 0);
-                Position  = UDim2.fromOffset(22, 0);
-                FontFace  = FontMono;
-                Text      = sugg.display;
-                TextColor3 = C.text;
-                TextSize  = 11;
+                Size           = UDim2.new(1, -52, 1, 0);
+                Position       = UDim2.fromOffset(27, 0);
+                FontFace       = FontMono;
+                Text           = sugg.display;
+                TextColor3     = C.text;
+                TextSize       = 12;
                 TextXAlignment = Enum.TextXAlignment.Left;
                 TextTruncate   = Enum.TextTruncate.AtEnd;
-                ZIndex    = 313;
-                Parent    = Btn;
+                ZIndex         = 313;
+                Parent         = Row;
+            })
+
+            -- Tab hint (only on first row)
+            Lb({
+                BackgroundTransparency = 1;
+                AnchorPoint    = Vector2.new(1, 0.5);
+                Position       = UDim2.new(1, -8, 0.5, 0);
+                Size           = UDim2.fromOffset(32, SUGG_H);
+                FontFace       = FontMono;
+                Text           = idx == 1 and "TAB" or "";
+                TextColor3     = C.textDim;
+                TextSize       = 9;
+                TextXAlignment = Enum.TextXAlignment.Right;
+                ZIndex         = 313;
+                Parent         = Row;
+            })
+
+            -- Row bottom separator
+            Fr({
+                BackgroundColor3 = C.suggBorder;
+                BorderSizePixel  = 0;
+                AnchorPoint      = Vector2.new(0, 1);
+                Position         = UDim2.new(0, 0, 1, 0);
+                Size             = UDim2.new(1, 0, 0, 1);
+                ZIndex           = 313;
+                Parent           = Row;
             })
 
             local thisIdx = idx
 
-            Btn.MouseEnter:Connect(function()
+            Row.MouseEnter:Connect(function()
                 selSuggIdx = thisIdx
                 for si, sb in ipairs(suggButtons) do
                     Tw(sb, 0.08, {
-                        BackgroundColor3 = si == selSuggIdx and C.suggSel or C.suggBg
+                        BackgroundColor3 = si==selSuggIdx and C.suggSel or C.suggBg
                     })
                 end
             end)
 
-            Btn.InputBegan:Connect(function(inp)
+            Row.InputBegan:Connect(function(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     Input.Text = suggestions[thisIdx].insert
                     Input.CursorPosition = #Input.Text + 1
@@ -7855,24 +7884,22 @@ function Library:CreateCommandBar(Toggles, Options)
                 end
             end)
 
-            table.insert(suggButtons, Btn)
+            table.insert(suggButtons, Row)
         end
 
-        -- Animate frame open
-        local targetH = math.min(#suggestions, MAX) * ITEM_H
-        SuggScroll.CanvasSize = UDim2.new(0, 0, 0, #suggestions * ITEM_H)
-        SuggFrame.Visible = true
-        SuggFrame.Size    = UDim2.fromOffset(560, 0)
-        Tw(SuggFrame, 0.14, { Size = UDim2.fromOffset(560, targetH) })
+        local targetH = math.min(#suggestions, MAX_SUGG) * SUGG_H + 1
+        SuggScroll.CanvasSize = UDim2.new(0, 0, 0, #suggestions * SUGG_H)
+        SuggFrame.Visible     = true
+        SuggFrame.Size        = UDim2.fromOffset(BAR_W, 0)
+        Tw(SuggFrame, 0.15, { Size = UDim2.fromOffset(BAR_W, targetH) })
     end
 
-    -- Keyboard navigation in suggestions
     local function NavigateSugg(dir)
         if #suggestions == 0 then return end
         selSuggIdx = ((selSuggIdx - 1 + dir) % #suggestions) + 1
         for si, sb in ipairs(suggButtons) do
             Tw(sb, 0.08, {
-                BackgroundColor3 = si == selSuggIdx and C.suggSel or C.suggBg
+                BackgroundColor3 = si==selSuggIdx and C.suggSel or C.suggBg
             })
         end
     end
@@ -7889,29 +7916,49 @@ function Library:CreateCommandBar(Toggles, Options)
     -- INPUT EVENTS
     -- ─────────────────────────────────────────────────────────────
 
-    -- Capture the pending command here so Enter in InputBegan
-    -- reads it BEFORE any Text-changed callbacks mutate the box.
-    local _pendingCmd = nil
-
     Input:GetPropertyChangedSignal("Text"):Connect(function()
-        -- Don't rebuild suggestions while we're mid-submit
         if _pendingCmd ~= nil then return end
         BuildSuggestions(Input.Text)
     end)
 
     Input.Focused:Connect(function()
-        Tw(Shell, 0.12, { BorderColor3 = C.borderFocus })
-        Tw(Strip,  0.12, { BackgroundTransparency = 0 })
-        Tw(Prompt, 0.12, { TextColor3 = C.textAccent })
+        Tw(Shell,      0.14, { BorderColor3 = C.borderFocus })
+        Tw(Strip,      0.14, { BackgroundTransparency = 0 })
+        Tw(Prompt,     0.14, { TextColor3 = C.textAccent })
+        Tw(BottomLine, 0.22, {
+            Size             = UDim2.fromOffset(BAR_W, 1);
+            BackgroundColor3 = C.borderFocus;
+        })
         BuildSuggestions(Input.Text)
     end)
 
-    -- Capture text the instant Enter is pressed, before anything else fires
+    Input.FocusLost:Connect(function(enter)
+        Tw(Shell,      0.22, { BorderColor3 = C.border })
+        Tw(Strip,      0.22, { BackgroundTransparency = 0.4 })
+        Tw(Prompt,     0.22, { TextColor3 = C.textDim })
+        Tw(BottomLine, 0.22, {
+            Size             = UDim2.fromOffset(0, 1);
+            BackgroundColor3 = C.border;
+        })
+        if enter then
+            local cmd = _pendingCmd or Input.Text
+            _pendingCmd  = nil
+            Input.Text   = ""
+            ClearSuggestions()
+            cmd = cmd:match("^%s*(.-)%s*$")
+            if cmd ~= "" then Execute(cmd) end
+        else
+            _pendingCmd = nil
+            task.delay(0.15, ClearSuggestions)
+        end
+    end)
+
+    -- Capture BEFORE any Text-changed races
     InputService.InputBegan:Connect(function(inp)
         if not Root.Visible then return end
         if not Input:IsFocused() then return end
-        if inp.KeyCode == Enum.KeyCode.Return or inp.KeyCode == Enum.KeyCode.KeypadEnter then
-            -- If a suggestion is selected, apply it instead
+        if inp.KeyCode == Enum.KeyCode.Return
+        or inp.KeyCode == Enum.KeyCode.KeypadEnter then
             if selSuggIdx > 0 and suggestions[selSuggIdx] then
                 _pendingCmd = suggestions[selSuggIdx].insert
             else
@@ -7920,31 +7967,9 @@ function Library:CreateCommandBar(Toggles, Options)
         end
     end)
 
-    Input.FocusLost:Connect(function(enter)
-        Tw(Shell,  0.2, { BorderColor3 = C.border })
-        Tw(Strip,  0.2, { BackgroundTransparency = 0.3 })
-        Tw(Prompt, 0.2, { TextColor3 = C.textDim })
-
-        if enter then
-            local cmd = _pendingCmd or Input.Text
-            _pendingCmd = nil
-            Input.Text = ""
-            ClearSuggestions()
-            -- Trim and guard against blank submit
-            cmd = cmd:match("^%s*(.-)%s*$")
-            if cmd ~= "" then
-                Execute(cmd)
-            end
-        else
-            _pendingCmd = nil
-            task.delay(0.15, ClearSuggestions)
-        end
-    end)
-
     Library:GiveSignal(InputService.InputBegan:Connect(function(inp, processed)
         if not Root.Visible then return end
 
-        -- Tab → apply or cycle suggestion
         if inp.KeyCode == Enum.KeyCode.Tab then
             if #suggestions > 0 then
                 if selSuggIdx == 0 then selSuggIdx = 1 end
@@ -7953,12 +7978,10 @@ function Library:CreateCommandBar(Toggles, Options)
             return
         end
 
-        -- Arrow keys navigate suggestions
         if inp.KeyCode == Enum.KeyCode.Up then
             if #suggestions > 0 then
                 NavigateSugg(-1)
             else
-                -- history
                 histIdx = math.min(histIdx + 1, #cmdHistory)
                 if cmdHistory[histIdx] then
                     Input.Text = cmdHistory[histIdx]
@@ -7979,7 +8002,6 @@ function Library:CreateCommandBar(Toggles, Options)
             return
         end
 
-        -- Escape → close bar
         if inp.KeyCode == Enum.KeyCode.Escape then
             ClearSuggestions()
             Input:ReleaseFocus(false)
@@ -7992,17 +8014,14 @@ function Library:CreateCommandBar(Toggles, Options)
     -- ─────────────────────────────────────────────────────────────
 
     local function ShowBar()
-        isVisible = true
+        isVisible    = true
         Root.Visible = true
-        Root.Position = UDim2.new(0.5, 0, 1, -28)
+        Root.Position = UDim2.new(0.5, 0, 1, -(BAR_H + 12))
         Shell.BackgroundTransparency = 1
-        OuterBar.Visible = false
-
-        Tw(Shell, 0.18, { BackgroundTransparency = 0 })
-        task.delay(0.05, function()
-            if Root.Visible then
-                Input:CaptureFocus()
-            end
+        OutBar.Visible = false
+        Tw(Shell, 0.2, { BackgroundTransparency = 0 })
+        task.delay(0.06, function()
+            if Root.Visible then Input:CaptureFocus() end
         end)
     end
 
@@ -8010,14 +8029,13 @@ function Library:CreateCommandBar(Toggles, Options)
         isVisible = false
         ClearSuggestions()
         Input:ReleaseFocus(false)
-        Tw(Shell, 0.15, { BackgroundTransparency = 1 })
-        task.delay(0.17, function()
+        Tw(Shell, 0.16, { BackgroundTransparency = 1 })
+        task.delay(0.18, function()
             Root.Visible = false
             Input.Text   = ""
         end)
     end
 
-    -- RightAlt toggles the bar
     Library:GiveSignal(InputService.InputBegan:Connect(function(inp, processed)
         if processed then return end
         if inp.KeyCode == Enum.KeyCode.RightAlt then
@@ -8033,31 +8051,26 @@ function Library:CreateCommandBar(Toggles, Options)
         Root    = Root;
         Show    = ShowBar;
         Hide    = HideBar;
-        Execute = Execute;
+        Execute = function(raw) Execute(raw) end;
     }
 
-    -- Register a custom command
-    -- callback(tokens) → string (output msg) or nil
     CB._custom = {}
+
     function CB:AddCommand(name, callback)
         table.insert(COMMAND_NAMES, name:lower())
         CB._custom[name:lower()] = callback
     end
 
-    -- Patch Execute to also call custom commands
     local _origExec = Execute
     Execute = function(raw)
         raw = raw:match("^%s*(.-)%s*$")
         if raw == "" then return end
         local tokens = Tokenise(raw)
-        local cmd = (tokens[1] or ""):lower()
+        local cmd    = (tokens[1] or ""):lower()
         if CB._custom[cmd] then
             local ok, msg = pcall(CB._custom[cmd], tokens)
-            if ok and msg then
-                ShowOutput(msg, "ok")
-            elseif not ok then
-                ShowOutput(tostring(msg), "err")
-            end
+            if ok and msg then ShowOutput(tostring(msg), "ok")
+            elseif not ok then ShowOutput(tostring(msg), "err") end
             return
         end
         _origExec(raw)
@@ -8066,7 +8079,6 @@ function Library:CreateCommandBar(Toggles, Options)
 
     return CB
 end
-
 
 
 local function OnPlayerChange()
