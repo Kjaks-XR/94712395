@@ -6378,20 +6378,19 @@ end
 
 
 
-
 function Library:CreateModJoinChanceBar(ParentWindow, Config)
     Config = Config or {}
     
-    local BarWidth = Config.Width or 200
-    local BarHeight = Config.Height or 12
-    local OffsetY = Config.OffsetY or 520
+    local BarWidth = Config.Width or 280
+    local BarHeight = Config.Height or 18
+    local OffsetY = Config.OffsetY or 580
     local UpdateInterval = Config.UpdateInterval or 3
     
     -- Ana Frame
     local ChanceOuter = Library:Create('Frame', {
         BackgroundColor3 = Color3.new(0, 0, 0),
         BorderColor3 = Color3.new(0, 0, 0),
-        Size = UDim2.fromOffset(BarWidth, BarHeight + 20),
+        Size = UDim2.fromOffset(BarWidth, BarHeight + 28),
         Position = UDim2.new(1, 10, 0, OffsetY),
         Parent = ParentWindow.Holder,
         ZIndex = 50,
@@ -6443,40 +6442,40 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
     
     -- Başlık
     local TitleLabel = Library:CreateLabel({
-        Size = UDim2.new(1, 0, 0, 16),
+        Size = UDim2.new(1, 0, 0, 18),
         Position = UDim2.new(0, 4, 0, 2),
         Text = 'Chance For A Mod To Join',
-        TextSize = 9,
+        TextSize = 10,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 52,
         Parent = ChanceInner,
     })
     
-    -- Yüzde gösterimi
+    -- Yüzde gösterimi (daha büyük font)
     local PercentLabel = Library:CreateLabel({
-        Size = UDim2.new(1, -8, 0, 14),
-        Position = UDim2.new(0, 4, 0, 18),
+        Size = UDim2.new(1, -8, 0, 18),
+        Position = UDim2.new(0, 4, 0, 22),
         Text = '0%',
-        TextSize = 10,
+        TextSize = 12,
         FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Center,
         ZIndex = 52,
         Parent = ChanceInner,
     })
     
-    -- Bar container
+    -- Bar container (daha büyük)
     local BarContainer = Library:Create('Frame', {
         BackgroundColor3 = Color3.fromRGB(30, 30, 35),
         BorderColor3 = Library.OutlineColor,
         BorderMode = Enum.BorderMode.Inset,
-        Position = UDim2.new(0, 4, 0, 34),
+        Position = UDim2.new(0, 4, 0, 42),
         Size = UDim2.new(1, -8, 0, BarHeight),
         ZIndex = 52,
         Parent = ChanceInner,
     })
     
-    -- Progress bar (ana dolgu)
+    -- Progress bar (ana dolgu) - SMOOTH TWEEN ile
     local ProgressBar = Library:Create('Frame', {
         BackgroundColor3 = Color3.fromRGB(50, 200, 50),
         BorderSizePixel = 0,
@@ -6484,6 +6483,9 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
         ZIndex = 53,
         Parent = BarContainer,
     })
+    
+    -- Aktif tween için referans
+    local activeTween = nil
     
     -- Color sections için yardımcı fonksiyon
     local function GetBarColor(percent)
@@ -6498,17 +6500,44 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
         end
     end
     
-    -- Progress bar'ı güncelle
+    -- Progress bar'ı SMOOTH TWEEN ile güncelle
     local function UpdateBar(percent)
         local barWidth = BarContainer.AbsoluteSize.X
         local targetWidth = (percent / 100) * barWidth
         
-        ProgressBar.Size = UDim2.new(0, targetWidth, 1, 0)
-        ProgressBar.BackgroundColor3 = GetBarColor(percent)
+        -- Önceki tween'i iptal et
+        if activeTween then
+            activeTween:Cancel()
+        end
+        
+        -- Renk değişimi için tween
+        local newColor = GetBarColor(percent)
+        local colorTween = TweenService:Create(ProgressBar, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = newColor
+        })
+        colorTween:Play()
+        
+        -- Boyut değişimi için smooth tween (daha uzun ve yumuşak)
+        local sizeTween = TweenService:Create(ProgressBar, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(0, targetWidth, 1, 0)
+        })
+        sizeTween:Play()
+        activeTween = sizeTween
+        
+        -- Yüzde text'ini güncelle
         PercentLabel.Text = string.format("%.1f%%", percent)
+        
+        -- Text rengini de bara göre değiştir (opsiyonel)
+        if percent > 75 then
+            PercentLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        elseif percent > 50 then
+            PercentLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+        else
+            PercentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        end
     end
     
-    -- Formül ile hesaplama: totalplayer count / max player count for the server + math.random(2,6) - 2
+    -- Formül ile hesaplama
     local function CalculateChance()
         local totalPlayers = #game.Players:GetPlayers()
         local maxPlayers = game.Players.MaxPlayers
@@ -6522,17 +6551,22 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
         return math.clamp(finalChance, 0, 100)
     end
     
-    -- Güncelleme döngüsü
+    -- Güncelleme döngüsü (daha hassas timer ile)
     local updateConnection
+    local lastUpdateTime = 0
+    
     local function StartUpdateLoop()
-        updateConnection = RunService.Heartbeat:Connect(function()
+        updateConnection = RunService.Heartbeat:Connect(function(deltaTime)
             if not ChanceOuter.Parent then
                 if updateConnection then updateConnection:Disconnect() end
                 if colorChangeConnection then colorChangeConnection:Disconnect() end
                 return
             end
             
-            if tick() % UpdateInterval < 0.1 then
+            lastUpdateTime = lastUpdateTime + deltaTime
+            
+            if lastUpdateTime >= UpdateInterval then
+                lastUpdateTime = 0
                 local newChance = CalculateChance()
                 UpdateBar(newChance)
             end
@@ -6575,11 +6609,10 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
         Disconnect = function()
             if updateConnection then updateConnection:Disconnect() end
             if colorChangeConnection then colorChangeConnection:Disconnect() end
+            if activeTween then activeTween:Cancel() end
         end,
     }
 end
-
-
 
 
 
