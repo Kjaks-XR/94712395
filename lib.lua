@@ -5023,7 +5023,11 @@ function Library:CreateWindow(...)
     function Library:Toggle()
 
 getgenv().uiisopen = not Toggled
-
+local success, err = pcall(function()
+    local Hotbar = game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainFrame.Hotbar
+    Hotbar.Visible = not (not Toggled)
+end)
+if not success then warn("Hotbar toggle failed: " .. tostring(err)) end
 
 
         if Fading then
