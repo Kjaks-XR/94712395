@@ -7217,16 +7217,30 @@ end
 
 
 
-
+-- ╔══════════════════════════════════════════╗
+-- ║         XWARE COMMAND BAR MODULE         ║
+-- ║         Black / White  •  v1.0           ║
+-- ╚══════════════════════════════════════════╝
+--
+-- USAGE:
+--   local CmdBar = Library:CreateCommandBar(Toggles, Options)
+--
+-- COMMANDS:
+--   set-toggle "name" true/false/on/off/1/0
+--   set-slider  "name" <number>
+--   set-color   "name" #RRGGBB
+--   set-drop    "name" "value"
+--   help
+--   clear
 
 function Library:CreateCommandBar(Toggles, Options)
     Toggles = Toggles or {}
     Options = Options or {}
- 
+
     local TweenService  = game:GetService("TweenService")
     local InputService  = game:GetService("UserInputService")
     local RunService    = game:GetService("RunService")
- 
+
     -- ─── Palette ─────────────────────────────────────────────────
     local C = {
         bg          = Color3.fromRGB(8,   8,   8),
@@ -7246,21 +7260,21 @@ function Library:CreateCommandBar(Toggles, Options)
         suggSel     = Color3.fromRGB(22,  22,  22),
         suggBorder  = Color3.fromRGB(35,  35,  35),
     }
- 
+
     -- ─── Fonts ───────────────────────────────────────────────────
     local FontMono = Library.Font   -- your custom font (ProggyClean)
- 
+
     -- ─── Tween helpers ───────────────────────────────────────────
     local function Tw(inst, t, props)
         TweenService:Create(inst, TweenInfo.new(t, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
     end
- 
+
     -- ─── Frame helpers ───────────────────────────────────────────
     local function F(props)  return Library:Create("Frame",      props) end
     local function T(props)  return Library:Create("TextLabel",  props) end
     local function TB(props) return Library:Create("TextBox",    props) end
     local function IL(props) return Library:Create("ImageLabel", props) end
- 
+
     -- ─────────────────────────────────────────────────────────────
     -- ROOT  (sits in ScreenGui, toggle with RightAlt)
     -- ─────────────────────────────────────────────────────────────
@@ -7274,7 +7288,7 @@ function Library:CreateCommandBar(Toggles, Options)
         Parent            = Library.ScreenGui;
         Visible           = false;
     })
- 
+
     -- Outer shell (black bg + white border on focus)
     local Shell = F({
         BackgroundColor3 = C.bg;
@@ -7283,7 +7297,7 @@ function Library:CreateCommandBar(Toggles, Options)
         ZIndex           = 301;
         Parent           = Root;
     })
- 
+
     -- Left accent strip (white, 2 px)
     local Strip = F({
         BackgroundColor3 = C.acStrip;
@@ -7294,7 +7308,7 @@ function Library:CreateCommandBar(Toggles, Options)
         ZIndex           = 302;
         Parent           = Shell;
     })
- 
+
     -- Prompt label  ›
     local Prompt = T({
         BackgroundTransparency = 1;
@@ -7307,7 +7321,7 @@ function Library:CreateCommandBar(Toggles, Options)
         ZIndex    = 302;
         Parent    = Shell;
     })
- 
+
     -- Input Box
     local Input = TB({
         BackgroundTransparency = 1;
@@ -7325,7 +7339,7 @@ function Library:CreateCommandBar(Toggles, Options)
         ZIndex    = 303;
         Parent    = Shell;
     })
- 
+
     -- Status icon (right side, 8×8 dot)
     local StatusDot = F({
         BackgroundColor3 = C.textDim;
@@ -7337,7 +7351,7 @@ function Library:CreateCommandBar(Toggles, Options)
         Parent           = Shell;
     })
     Library:Create("UICorner", { CornerRadius = UDim.new(1, 0); Parent = StatusDot })
- 
+
     -- ─────────────────────────────────────────────────────────────
     -- AUTOCOMPLETE DROPDOWN  (above the bar)
     -- ─────────────────────────────────────────────────────────────
@@ -7352,7 +7366,7 @@ function Library:CreateCommandBar(Toggles, Options)
         Visible          = false;
         Parent           = Root;
     })
- 
+
     local SuggScroll = Library:Create("ScrollingFrame", {
         BackgroundTransparency = 1;
         BorderSizePixel  = 0;
@@ -7365,13 +7379,13 @@ function Library:CreateCommandBar(Toggles, Options)
         ZIndex      = 311;
         Parent      = SuggFrame;
     })
- 
+
     local SuggLayout = Library:Create("UIListLayout", {
         Padding     = UDim.new(0, 0);
         SortOrder   = Enum.SortOrder.LayoutOrder;
         Parent      = SuggScroll;
     })
- 
+
     -- ─────────────────────────────────────────────────────────────
     -- OUTPUT BAR  (appears for 2 s above the command bar)
     -- ─────────────────────────────────────────────────────────────
@@ -7386,7 +7400,7 @@ function Library:CreateCommandBar(Toggles, Options)
         Visible          = false;
         Parent           = Root;
     })
- 
+
     -- Left accent (colored per result type)
     local OutStrip = F({
         BackgroundColor3 = C.textGreen;
@@ -7395,7 +7409,7 @@ function Library:CreateCommandBar(Toggles, Options)
         ZIndex           = 321;
         Parent           = OuterBar;
     })
- 
+
     local OutLabel = T({
         BackgroundTransparency = 1;
         Position  = UDim2.fromOffset(10, 0);
@@ -7409,33 +7423,58 @@ function Library:CreateCommandBar(Toggles, Options)
         ZIndex    = 322;
         Parent    = OuterBar;
     })
- 
+
     -- ─────────────────────────────────────────────────────────────
     -- COMMAND ENGINE
     -- ─────────────────────────────────────────────────────────────
- 
+
     local cmdHistory   = {}
     local histIdx      = 0
     local suggestions  = {}
     local selSuggIdx   = 0
     local outputTimer  = nil
     local isVisible    = false
- 
+
     -- Known commands for autocomplete
     local COMMAND_NAMES = {
         "set-toggle", "set-slider", "set-color", "set-drop", "help", "clear"
     }
- 
+
     -- ── Tokenise input ─────────────────────────────────────────
     -- Returns a list of tokens, stripping quotes
     local function Tokenise(str)
         local tokens = {}
-        for token in str:gmatch('"([^"]+)"|(%S+)') do
-            table.insert(tokens, token)
+        local i = 1
+        while i <= #str do
+            -- skip whitespace
+            local ws = str:match('^%s+', i)
+            if ws then i = i + #ws end
+            if i > #str then break end
+
+            if str:sub(i, i) == '"' then
+                -- quoted token (may be empty "")
+                local close = str:find('"', i + 1, true)
+                if close then
+                    table.insert(tokens, str:sub(i + 1, close - 1))
+                    i = close + 1
+                else
+                    table.insert(tokens, str:sub(i + 1))
+                    break
+                end
+            else
+                -- unquoted word
+                local tok = str:match('^%S+', i)
+                if tok then
+                    table.insert(tokens, tok)
+                    i = i + #tok
+                else
+                    break
+                end
+            end
         end
         return tokens
     end
- 
+
     -- ── Output helper ──────────────────────────────────────────
     local function ShowOutput(msg, kind)
         -- kind: "ok" | "err" | "warn" | "info"
@@ -7446,23 +7485,23 @@ function Library:CreateCommandBar(Toggles, Options)
             info = C.textBlue;
         }
         local col = colorMap[kind] or C.text
- 
+
         OutLabel.Text      = msg
         OutLabel.TextColor3 = col
         OutStrip.BackgroundColor3 = col
- 
+
         OuterBar.BackgroundTransparency = 1
         OuterBar.Visible = true
- 
+
         Tw(OuterBar, 0.12, { BackgroundTransparency = 0 })
         Tw(OutStrip, 0.12, { BackgroundTransparency = 0 })
- 
+
         -- Flash status dot
         Tw(StatusDot, 0.1, { BackgroundColor3 = col })
         task.delay(1.2, function()
             Tw(StatusDot, 0.4, { BackgroundColor3 = C.textDim })
         end)
- 
+
         -- Auto-hide after 2.5 s
         if outputTimer then
             task.cancel(outputTimer)
@@ -7473,7 +7512,7 @@ function Library:CreateCommandBar(Toggles, Options)
             OuterBar.Visible = false
         end)
     end
- 
+
     -- ── Command: help ──────────────────────────────────────────
     local HELP_TEXT = {
         'set-toggle "name" true|false|on|off|1|0',
@@ -7482,42 +7521,42 @@ function Library:CreateCommandBar(Toggles, Options)
         'set-drop    "name" "value"',
         'help  •  clear',
     }
- 
+
     -- ── Command executor ───────────────────────────────────────
     local function Execute(raw)
         raw = raw:match("^%s*(.-)%s*$")  -- trim
         if raw == "" then return end
- 
+
         -- history
         table.insert(cmdHistory, 1, raw)
         histIdx = 0
- 
+
         local tokens = Tokenise(raw)
         local cmd = (tokens[1] or ""):lower()
- 
+
         -- ── help ────────────────────────────────────────────
         if cmd == "help" then
             ShowOutput("Commands: set-toggle | set-slider | set-color | set-drop | help | clear", "info")
             return
         end
- 
+
         -- ── clear ───────────────────────────────────────────
         if cmd == "clear" then
             Input.Text = ""
             ShowOutput("Cleared.", "info")
             return
         end
- 
+
         -- ── set-toggle ──────────────────────────────────────
         if cmd == "set-toggle" then
             local name  = tokens[2]
             local state = (tokens[3] or ""):lower()
- 
+
             if not name then
                 ShowOutput('Error: missing name — set-toggle "name" true', "err")
                 return
             end
- 
+
             -- fuzzy-find toggle (case-insensitive exact then prefix)
             local found = nil
             for k, v in pairs(Toggles) do
@@ -7534,12 +7573,12 @@ function Library:CreateCommandBar(Toggles, Options)
                     end
                 end
             end
- 
+
             if not found then
                 ShowOutput('Toggle "' .. name .. '" not found.', "err")
                 return
             end
- 
+
             local boolVal
             if state == "true"  or state == "on"  or state == "1" then boolVal = true
             elseif state == "false" or state == "off" or state == "0" then boolVal = false
@@ -7547,7 +7586,7 @@ function Library:CreateCommandBar(Toggles, Options)
                 ShowOutput('Bad value "' .. state .. '" — use true/false/on/off/1/0', "err")
                 return
             end
- 
+
             found.obj:SetValue(boolVal)
             ShowOutput(
                 '✓ ' .. found.key .. '  →  ' .. (boolVal and "ON" or "OFF"),
@@ -7555,17 +7594,17 @@ function Library:CreateCommandBar(Toggles, Options)
             )
             return
         end
- 
+
         -- ── set-slider ──────────────────────────────────────
         if cmd == "set-slider" then
             local name = tokens[2]
             local numS = tokens[3]
- 
+
             if not name then
                 ShowOutput('Error: set-slider "name" <number>', "err")
                 return
             end
- 
+
             local found = nil
             for k, v in pairs(Options) do
                 if v.Type == "Slider" and k:lower() == name:lower() then
@@ -7579,94 +7618,94 @@ function Library:CreateCommandBar(Toggles, Options)
                     end
                 end
             end
- 
+
             if not found then
                 ShowOutput('Slider "' .. name .. '" not found.', "err")
                 return
             end
- 
+
             local num = tonumber(numS)
             if not num then
                 ShowOutput('Bad number "' .. (numS or "?") .. '"', "err")
                 return
             end
- 
+
             found.obj:SetValue(num)
             ShowOutput('✓ ' .. found.key .. '  →  ' .. num, "ok")
             return
         end
- 
+
         -- ── set-color ───────────────────────────────────────
         if cmd == "set-color" then
             local name = tokens[2]
             local hex  = tokens[3]
- 
+
             if not name or not hex then
                 ShowOutput('Error: set-color "name" #RRGGBB', "err")
                 return
             end
- 
+
             local found = nil
             for k, v in pairs(Options) do
                 if v.Type == "ColorPicker" and k:lower() == name:lower() then
                     found = { key = k, obj = v }; break
                 end
             end
- 
+
             if not found then
                 ShowOutput('ColorPicker "' .. name .. '" not found.', "err")
                 return
             end
- 
+
             local clean = hex:gsub("#", "")
             local ok, col = pcall(Color3.fromHex, clean)
             if not ok then
                 ShowOutput('Bad hex "' .. hex .. '"', "err")
                 return
             end
- 
+
             found.obj:SetValueRGB(col)
             ShowOutput('✓ ' .. found.key .. '  →  ' .. hex, "ok")
             return
         end
- 
+
         -- ── set-drop ────────────────────────────────────────
         if cmd == "set-drop" then
             local name = tokens[2]
             local val  = tokens[3]
- 
+
             if not name then
                 ShowOutput('Error: set-drop "name" "value"', "err")
                 return
             end
- 
+
             local found = nil
             for k, v in pairs(Options) do
                 if v.Type == "Dropdown" and k:lower() == name:lower() then
                     found = { key = k, obj = v }; break
                 end
             end
- 
+
             if not found then
                 ShowOutput('Dropdown "' .. name .. '" not found.', "err")
                 return
             end
- 
+
             found.obj:SetValue(val)
             ShowOutput('✓ ' .. found.key .. '  →  ' .. (val or "nil"), "ok")
             return
         end
- 
+
         -- ── unknown ─────────────────────────────────────────
         ShowOutput('Unknown command "' .. cmd .. '" — type help', "err")
     end
- 
+
     -- ─────────────────────────────────────────────────────────────
     -- AUTOCOMPLETE ENGINE
     -- ─────────────────────────────────────────────────────────────
- 
+
     local suggButtons = {}
- 
+
     local function ClearSuggestions()
         for _, b in ipairs(suggButtons) do b:Destroy() end
         suggButtons = {}
@@ -7674,15 +7713,15 @@ function Library:CreateCommandBar(Toggles, Options)
         selSuggIdx  = 0
         SuggFrame.Visible = false
     end
- 
+
     local function BuildSuggestions(raw)
         ClearSuggestions()
- 
+
         local tokens  = Tokenise(raw)
         local cmd     = (tokens[1] or ""):lower()
         local partial = raw:match('"([^"]*)"?%s*$') or tokens[#tokens] or ""
         local candidates = {}
- 
+
         if #tokens <= 1 and not raw:find('"') then
             -- suggest command names
             for _, name in ipairs(COMMAND_NAMES) do
@@ -7746,15 +7785,15 @@ function Library:CreateCommandBar(Toggles, Options)
                 end
             end
         end
- 
+
         if #candidates == 0 then return end
- 
+
         -- cap at 6
         local MAX = 6
         for i = 1, math.min(#candidates, MAX) do
             table.insert(suggestions, candidates[i])
         end
- 
+
         -- Build buttons (bottom-most first = index 1 visually)
         local ITEM_H = 20
         for idx, sugg in ipairs(suggestions) do
@@ -7767,7 +7806,7 @@ function Library:CreateCommandBar(Toggles, Options)
                 LayoutOrder      = idx;
                 Parent           = SuggScroll;
             })
- 
+
             -- index glyph
             T({
                 BackgroundTransparency = 1;
@@ -7780,7 +7819,7 @@ function Library:CreateCommandBar(Toggles, Options)
                 ZIndex    = 313;
                 Parent    = Btn;
             })
- 
+
             -- display text  (highlight matching part)
             T({
                 BackgroundTransparency = 1;
@@ -7795,9 +7834,9 @@ function Library:CreateCommandBar(Toggles, Options)
                 ZIndex    = 313;
                 Parent    = Btn;
             })
- 
+
             local thisIdx = idx
- 
+
             Btn.MouseEnter:Connect(function()
                 selSuggIdx = thisIdx
                 for si, sb in ipairs(suggButtons) do
@@ -7806,7 +7845,7 @@ function Library:CreateCommandBar(Toggles, Options)
                     })
                 end
             end)
- 
+
             Btn.InputBegan:Connect(function(inp)
                 if inp.UserInputType == Enum.UserInputType.MouseButton1 then
                     Input.Text = suggestions[thisIdx].insert
@@ -7815,10 +7854,10 @@ function Library:CreateCommandBar(Toggles, Options)
                     Input:CaptureFocus()
                 end
             end)
- 
+
             table.insert(suggButtons, Btn)
         end
- 
+
         -- Animate frame open
         local targetH = math.min(#suggestions, MAX) * ITEM_H
         SuggScroll.CanvasSize = UDim2.new(0, 0, 0, #suggestions * ITEM_H)
@@ -7826,7 +7865,7 @@ function Library:CreateCommandBar(Toggles, Options)
         SuggFrame.Size    = UDim2.fromOffset(560, 0)
         Tw(SuggFrame, 0.14, { Size = UDim2.fromOffset(560, targetH) })
     end
- 
+
     -- Keyboard navigation in suggestions
     local function NavigateSugg(dir)
         if #suggestions == 0 then return end
@@ -7837,7 +7876,7 @@ function Library:CreateCommandBar(Toggles, Options)
             })
         end
     end
- 
+
     local function ApplySelected()
         if selSuggIdx > 0 and suggestions[selSuggIdx] then
             Input.Text = suggestions[selSuggIdx].insert
@@ -7845,40 +7884,66 @@ function Library:CreateCommandBar(Toggles, Options)
             ClearSuggestions()
         end
     end
- 
+
     -- ─────────────────────────────────────────────────────────────
     -- INPUT EVENTS
     -- ─────────────────────────────────────────────────────────────
- 
+
+    -- Capture the pending command here so Enter in InputBegan
+    -- reads it BEFORE any Text-changed callbacks mutate the box.
+    local _pendingCmd = nil
+
     Input:GetPropertyChangedSignal("Text"):Connect(function()
+        -- Don't rebuild suggestions while we're mid-submit
+        if _pendingCmd ~= nil then return end
         BuildSuggestions(Input.Text)
     end)
- 
+
     Input.Focused:Connect(function()
         Tw(Shell, 0.12, { BorderColor3 = C.borderFocus })
         Tw(Strip,  0.12, { BackgroundTransparency = 0 })
         Tw(Prompt, 0.12, { TextColor3 = C.textAccent })
         BuildSuggestions(Input.Text)
     end)
- 
+
+    -- Capture text the instant Enter is pressed, before anything else fires
+    InputService.InputBegan:Connect(function(inp)
+        if not Root.Visible then return end
+        if not Input:IsFocused() then return end
+        if inp.KeyCode == Enum.KeyCode.Return or inp.KeyCode == Enum.KeyCode.KeypadEnter then
+            -- If a suggestion is selected, apply it instead
+            if selSuggIdx > 0 and suggestions[selSuggIdx] then
+                _pendingCmd = suggestions[selSuggIdx].insert
+            else
+                _pendingCmd = Input.Text
+            end
+        end
+    end)
+
     Input.FocusLost:Connect(function(enter)
         Tw(Shell,  0.2, { BorderColor3 = C.border })
         Tw(Strip,  0.2, { BackgroundTransparency = 0.3 })
         Tw(Prompt, 0.2, { TextColor3 = C.textDim })
- 
+
         if enter then
-            local cmd = Input.Text
+            local cmd = _pendingCmd or Input.Text
+            _pendingCmd = nil
             Input.Text = ""
             ClearSuggestions()
-            Execute(cmd)
+            -- Trim and guard against blank submit
+            cmd = cmd:match("^%s*(.-)%s*$")
+            if cmd ~= "" then
+                Execute(cmd)
+            end
         else
+            _pendingCmd = nil
             task.delay(0.15, ClearSuggestions)
         end
     end)
- 
+
     Library:GiveSignal(InputService.InputBegan:Connect(function(inp, processed)
         if not Root.Visible then return end
- 
+
         -- Tab → apply or cycle suggestion
         if inp.KeyCode == Enum.KeyCode.Tab then
             if #suggestions > 0 then
@@ -7887,7 +7952,7 @@ function Library:CreateCommandBar(Toggles, Options)
             end
             return
         end
- 
+
         -- Arrow keys navigate suggestions
         if inp.KeyCode == Enum.KeyCode.Up then
             if #suggestions > 0 then
@@ -7902,7 +7967,7 @@ function Library:CreateCommandBar(Toggles, Options)
             end
             return
         end
- 
+
         if inp.KeyCode == Enum.KeyCode.Down then
             if #suggestions > 0 then
                 NavigateSugg(1)
@@ -7913,7 +7978,7 @@ function Library:CreateCommandBar(Toggles, Options)
             end
             return
         end
- 
+
         -- Escape → close bar
         if inp.KeyCode == Enum.KeyCode.Escape then
             ClearSuggestions()
@@ -7921,18 +7986,18 @@ function Library:CreateCommandBar(Toggles, Options)
             return
         end
     end))
- 
+
     -- ─────────────────────────────────────────────────────────────
     -- SHOW / HIDE
     -- ─────────────────────────────────────────────────────────────
- 
+
     local function ShowBar()
         isVisible = true
         Root.Visible = true
         Root.Position = UDim2.new(0.5, 0, 1, -28)
         Shell.BackgroundTransparency = 1
         OuterBar.Visible = false
- 
+
         Tw(Shell, 0.18, { BackgroundTransparency = 0 })
         task.delay(0.05, function()
             if Root.Visible then
@@ -7940,7 +8005,7 @@ function Library:CreateCommandBar(Toggles, Options)
             end
         end)
     end
- 
+
     local function HideBar()
         isVisible = false
         ClearSuggestions()
@@ -7951,7 +8016,7 @@ function Library:CreateCommandBar(Toggles, Options)
             Input.Text   = ""
         end)
     end
- 
+
     -- RightAlt toggles the bar
     Library:GiveSignal(InputService.InputBegan:Connect(function(inp, processed)
         if processed then return end
@@ -7959,18 +8024,18 @@ function Library:CreateCommandBar(Toggles, Options)
             if isVisible then HideBar() else ShowBar() end
         end
     end))
- 
+
     -- ─────────────────────────────────────────────────────────────
     -- PUBLIC API
     -- ─────────────────────────────────────────────────────────────
- 
+
     local CB = {
         Root    = Root;
         Show    = ShowBar;
         Hide    = HideBar;
         Execute = Execute;
     }
- 
+
     -- Register a custom command
     -- callback(tokens) → string (output msg) or nil
     CB._custom = {}
@@ -7978,7 +8043,7 @@ function Library:CreateCommandBar(Toggles, Options)
         table.insert(COMMAND_NAMES, name:lower())
         CB._custom[name:lower()] = callback
     end
- 
+
     -- Patch Execute to also call custom commands
     local _origExec = Execute
     Execute = function(raw)
@@ -7998,10 +8063,9 @@ function Library:CreateCommandBar(Toggles, Options)
         _origExec(raw)
     end
     CB.Execute = Execute
- 
+
     return CB
 end
- 
 
 
 
