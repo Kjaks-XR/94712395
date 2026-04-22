@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.5A- OPT"
+local version = "0.6B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -6379,7 +6379,6 @@ end
 
 
 
-
 function Library:CreateModJoinChanceBar(ParentWindow, Config)
     Config = Config or {}
     
@@ -6507,22 +6506,6 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
         ProgressBar.Size = UDim2.new(0, targetWidth, 1, 0)
         ProgressBar.BackgroundColor3 = GetBarColor(percent)
         PercentLabel.Text = string.format("%.1f%%", percent)
-        
-        -- Tooltip için
-        local tooltipText = string.format("Chance: %.1f%%\n", percent)
-        if percent <= 35 then
-            tooltipText = tooltipText .. "Status: Low Risk"
-        elseif percent <= 50 then
-            tooltipText = tooltipText .. "Status: Moderate"
-        elseif percent <= 75 then
-            tooltipText = tooltipText .. "Status: Elevated Risk"
-        else
-            tooltipText = tooltipText .. "Status: HIGH RISK!"
-        end
-        
-        if ChanceOuter.Tooltip then
-            ChanceOuter.Tooltip.Text = tooltipText
-        end
     end
     
     -- Formül ile hesaplama: totalplayer count / max player count for the server + math.random(2,6) - 2
@@ -6533,48 +6516,11 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
         if maxPlayers == 0 then return 0 end
         
         local baseChance = (totalPlayers / maxPlayers) * 100
-        local randomMod = math.random(2, 6) - 2  -- 0 ile 4 arasında
+        local randomMod = math.random(2, 6) - 2
         local finalChance = baseChance + randomMod
         
-        -- Clamp between 0 and 100
         return math.clamp(finalChance, 0, 100)
     end
-    
-    -- Tooltip ekle
-    local Tooltip = Library:Create('Frame', {
-        BackgroundColor3 = Library.BackgroundColor,
-        BorderColor3 = Library.OutlineColor,
-        BorderMode = Enum.BorderMode.Inset,
-        Position = UDim2.new(0, 0, 1, 2),
-        Size = UDim2.fromOffset(140, 40),
-        Visible = false,
-        ZIndex = 60,
-        Parent = ChanceOuter,
-    })
-    
-    local TooltipLabel = Library:CreateLabel({
-        Size = UDim2.new(1, -4, 1, -4),
-        Position = UDim2.new(0, 2, 0, 2),
-        Text = "",
-        TextSize = 9,
-        FontFace = fonts["ProggyClean"],
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextWrapped = true,
-        ZIndex = 61,
-        Parent = Tooltip,
-    })
-    
-    ChanceOuter.Tooltip = TooltipLabel
-    
-    -- Mouse hover tooltip
-    BarContainer.MouseEnter:Connect(function()
-        Tooltip.Visible = true
-        Tooltip.Position = UDim2.new(0, 0, 1, 2)
-    end)
-    
-    BarContainer.MouseLeave:Connect(function()
-        Tooltip.Visible = false
-    end)
     
     -- Güncelleme döngüsü
     local updateConnection
@@ -6586,15 +6532,9 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
                 return
             end
             
-            -- Her UpdateInterval saniyede bir güncelle (örn: 3 saniye)
             if tick() % UpdateInterval < 0.1 then
                 local newChance = CalculateChance()
                 UpdateBar(newChance)
-                
-                -- Log'a yaz (opsiyonel)
-                if getgenv().logMessage and Config.LogUpdates then
-                    getgenv().logMessage(1, string.format("Mod Join Chance: %.1f%%", newChance))
-                end
             end
         end)
     end
@@ -6638,7 +6578,6 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
         end,
     }
 end
-
 
 
 
