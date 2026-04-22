@@ -4503,7 +4503,7 @@ function Library:CreateWindow(...)
         Size = UDim2.new(1, -14, 0, 25);
         Text = '[' .. (Config.Tag or 'xware') .. '] / ' .. (Config.Title or '') .. ' [build: ' .. (Config.Build or 'public') .. ']';
         TextXAlignment = Enum.TextXAlignment.Left;
-        TextSize = 11;
+        TextSize = 13;
         ZIndex = 1;
         Parent = Inner;
     });
