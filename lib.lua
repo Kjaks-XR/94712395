@@ -8081,6 +8081,446 @@ function Library:CreateCommandBar(Toggles, Options)
 end
 
 
+
+
+
+
+
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║              XWARE DEBUG CONSOLE & MONITOR                   ║
+-- ║         Real-time UI Debugging & Performance Metrics         ║
+-- ╚══════════════════════════════════════════════════════════════╝
+
+function Library:CreateDebugPanel(ParentWindow)
+    local TweenService = game:GetService("TweenService")
+    local RunService = game:GetService("RunService")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local CoreGui = game:GetService("CoreGui")
+    local HttpService = game:GetService("HttpService")
+    
+    -- Debug data storage
+    local DebugData = {
+        startTime = tick(),
+        frameCount = 0,
+        lastFPS = 0,
+        memoryHistory = {},
+        uiElementCount = 0,
+        signalCount = 0,
+        errorLog = {},
+        commandHistory = {},
+        selectedTab = "Overview",
+    }
+    
+    -- Add a tab to the parent window
+    local DebugTab = ParentWindow:AddTab("DEBUG")
+    
+    -- Left side - Debug Info Panel
+    local InfoGroup = DebugTab:AddLeftGroupbox("System Monitor")
+    
+    -- Uptime display
+    local UptimeLabel = InfoGroup:AddVariableLabel("Uptime: ", function()
+        local uptime = tick() - DebugData.startTime
+        local hours = math.floor(uptime / 3600)
+        local minutes = math.floor((uptime % 3600) / 60)
+        local seconds = math.floor(uptime % 60)
+        return string.format("%02dh %02dm %02ds", hours, minutes, seconds)
+    end, 1)
+    
+    -- Memory usage (dynamic)
+    local MemoryLabel = InfoGroup:AddVariableLabel("Memory: ", function()
+        local mem = math.floor(gcinfo() / 1024)
+        local color = mem > 150 and "⚠️ " or ""
+        return color .. mem .. " MB"
+    end, 0.5)
+    
+    -- FPS counter
+    local FPSLabel = InfoGroup:AddVariableLabel("FPS: ", function()
+        return DebugData.lastFPS
+    end, 0.25)
+    
+    -- UI Element counter
+    local UIElementLabel = InfoGroup:AddVariableLabel("UI Elements: ", function()
+        local count = 0
+        local function countDescendants(instance)
+            count = count + 1
+            for _, child in pairs(instance:GetChildren()) do
+                countDescendants(child)
+            end
+        end
+        countDescendants(Library.ScreenGui)
+        DebugData.uiElementCount = count
+        return count
+    end, 2)
+    
+    -- Signal counter
+    local SignalLabel = InfoGroup:AddVariableLabel("Active Signals: ", function()
+        return #Library.Signals
+    end, 1)
+    
+    InfoGroup:AddDivider()
+    
+    -- Executor info
+    local ExecutorLabel = InfoGroup:AddVariableLabel("Executor: ", function()
+        local exec = "Unknown"
+        if identifyexecutor then
+            local success, name = pcall(identifyexecutor)
+            if success then exec = name end
+        elseif syn then exec = "Synapse X"
+        elseif KRNL_LOADED then exec = "Krnl"
+        elseif Fluxus then exec = "Fluxus"
+        end
+        return exec
+    end, 5)
+    
+    local RegionLabel = InfoGroup:AddVariableLabel("Region: ", function()
+        local success, result = pcall(function()
+            return game:GetService("LocalizationService"):GetCountryRegionForPlayerAsync(LocalPlayer)
+        end)
+        return success and result or "Unknown"
+    end, 10)
+    
+    -- Right side - Detailed Debug Info
+    local DetailsGroup = DebugTab:AddRightGroupbox("Internal Statistics")
+    
+    -- Toggle count
+    DetailsGroup:AddLabel(string.format("Toggles Registered: %d", #Toggles))
+    
+    -- Option count by type
+    local optionTypes = { Toggle = 0, Slider = 0, Dropdown = 0, ColorPicker = 0, KeyPicker = 0, Input = 0 }
+    for _, opt in pairs(Options) do
+        if opt.Type and optionTypes[opt.Type] then
+            optionTypes[opt.Type] = optionTypes[opt.Type] + 1
+        end
+    end
+    
+    for optType, count in pairs(optionTypes) do
+        if count > 0 then
+            DetailsGroup:AddLabel(string.format("%s: %d", optType, count))
+        end
+    end
+    
+    DetailsGroup:AddDivider()
+    
+    -- Registry info
+    DetailsGroup:AddLabel(string.format("Registry Entries: %d", #Library.Registry))
+    DetailsGroup:AddLabel(string.format("HUD Registry: %d", #Library.HudRegistry))
+    DetailsGroup:AddLabel(string.format("Dependency Boxes: %d", #Library.DependencyBoxes))
+    
+    -- Second row groupboxes
+    local MemoryGroup = DebugTab:AddLeftGroupbox("Memory Analysis")
+    
+    -- Memory usage bar (visual)
+    local MemoryBarOuter = Library:Create('Frame', {
+        BackgroundColor3 = Color3.new(0, 0, 0);
+        BorderColor3 = Color3.new(0, 0, 0);
+        Size = UDim2.new(1, -4, 0, 16);
+        ZIndex = 5;
+        Parent = MemoryGroup.Container;
+    })
+    
+    local MemoryBarInner = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.OutlineColor;
+        BorderMode = Enum.BorderMode.Inset;
+        Size = UDim2.new(1, 0, 1, 0);
+        ZIndex = 6;
+        Parent = MemoryBarOuter;
+    })
+    
+    local MemoryFill = Library:Create('Frame', {
+        BackgroundColor3 = Color3.fromRGB(100, 200, 100);
+        BorderSizePixel = 0;
+        Size = UDim2.new(0, 0, 1, 0);
+        ZIndex = 7;
+        Parent = MemoryBarInner;
+    })
+    
+    local MemoryPercent = Library:CreateLabel({
+        Size = UDim2.new(1, 0, 1, 0);
+        TextSize = 10;
+        Text = "0%";
+        ZIndex = 8;
+        Parent = MemoryBarInner;
+    })
+    
+    -- Update memory bar
+    task.spawn(function()
+        while MemoryGroup.Container.Parent do
+            local mem = gcinfo() / 1024
+            local percent = math.min(mem / 512, 1) -- Assuming 512MB max
+            
+            local color
+            if percent < 0.3 then
+                color = Color3.fromRGB(100, 200, 100)
+            elseif percent < 0.6 then
+                color = Color3.fromRGB(255, 200, 50)
+            else
+                color = Color3.fromRGB(255, 80, 80)
+            end
+            
+            MemoryFill:TweenSize(UDim2.new(percent, 0, 1, 0), "Out", "Quad", 0.5, true)
+            MemoryFill.BackgroundColor3 = color
+            MemoryPercent.Text = string.format("%.1f MB (%.0f%%)", mem, percent * 100)
+            task.wait(1)
+        end
+    end)
+    
+    MemoryGroup:AddBlank(5)
+    
+    -- Memory history graph (simple text version)
+    local HistoryLabel = MemoryGroup:AddLabel("Memory History (last 10 samples):")
+    local HistoryText = MemoryGroup:AddLabel("")
+    
+    task.spawn(function()
+        while HistoryText.TextLabel.Parent do
+            table.insert(DebugData.memoryHistory, math.floor(gcinfo() / 1024))
+            if #DebugData.memoryHistory > 10 then
+                table.remove(DebugData.memoryHistory, 1)
+            end
+            
+            local graph = ""
+            for i, mem in ipairs(DebugData.memoryHistory) do
+                local bars = math.floor(mem / 10)
+                graph = graph .. string.rep("█", math.min(bars, 20)) .. " " .. mem .. "MB\n"
+            end
+            HistoryText:SetText(graph)
+            task.wait(5)
+        end
+    end)
+    
+    -- Error Log Groupbox
+    local ErrorGroup = DebugTab:AddRightGroupbox("Error Log")
+    
+    local ErrorScroll = Library:Create('ScrollingFrame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BackgroundTransparency = 0;
+        BorderSizePixel = 0;
+        Size = UDim2.new(1, -4, 0, 150);
+        CanvasSize = UDim2.new(0, 0, 0, 0);
+        ScrollBarThickness = 3;
+        ScrollBarImageColor3 = Library.AccentColor;
+        ZIndex = 5;
+        Parent = ErrorGroup.Container;
+    })
+    
+    local ErrorLayout = Library:Create('UIListLayout', {
+        Padding = UDim.new(0, 2);
+        SortOrder = Enum.SortOrder.LayoutOrder;
+        Parent = ErrorScroll;
+    })
+    
+    local ErrorMessages = {}
+    
+    function DebugData:AddError(msg)
+        table.insert(ErrorMessages, 1, {
+            time = os.date("%H:%M:%S"),
+            msg = tostring(msg)
+        })
+        
+        if #ErrorMessages > 20 then
+            table.remove(ErrorMessages)
+        end
+        
+        -- Refresh display
+        for _, child in pairs(ErrorScroll:GetChildren()) do
+            if child:IsA("TextLabel") then
+                child:Destroy()
+            end
+        end
+        
+        for _, err in ipairs(ErrorMessages) do
+            local ErrLabel = Library:CreateLabel({
+                Size = UDim2.new(1, -4, 0, 16);
+                TextSize = 10;
+                Text = string.format("[%s] %s", err.time, err.msg);
+                TextColor3 = Color3.fromRGB(255, 100, 100);
+                TextXAlignment = Enum.TextXAlignment.Left;
+                Parent = ErrorScroll;
+            })
+        end
+        
+        ErrorScroll.CanvasSize = UDim2.new(0, 0, 0, ErrorLayout.AbsoluteContentSize.Y)
+    end
+    
+    local ClearErrorsBtn = ErrorGroup:AddButton("Clear Error Log", function()
+        for _, child in pairs(ErrorScroll:GetChildren()) do
+            if child:IsA("TextLabel") then
+                child:Destroy()
+            end
+        end
+        ErrorMessages = {}
+        ErrorScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    end)
+    
+    -- Performance Group
+    local PerfGroup = DebugTab:AddLeftGroupbox("Performance")
+    
+    -- Frame time graph
+    local FrameTimeLabel = PerfGroup:AddVariableLabel("Frame Time: ", function()
+        return string.format("%.2f ms", (1 / DebugData.lastFPS) * 1000)
+    end, 0.25)
+    
+    -- Update FPS counter
+    local fpsUpdateCount = 0
+    local fpsLastTime = tick()
+    
+    Library:GiveSignal(RunService.RenderStepped:Connect(function()
+        fpsUpdateCount = fpsUpdateCount + 1
+        local now = tick()
+        if now - fpsLastTime >= 1 then
+            DebugData.lastFPS = fpsUpdateCount
+            fpsUpdateCount = 0
+            fpsLastTime = now
+        end
+    end))
+    
+    -- UI Inspector Group
+    local InspectorGroup = DebugTab:AddRightGroupbox("UI Inspector")
+    
+    local InspectorSearch = InspectorGroup:AddInput("inspector_search", {
+        Text = "Search UI Elements",
+        Placeholder = "Type element name...",
+        Callback = function(val)
+            -- Search functionality
+        end
+    })
+    
+    local ElementList = Library:Create('ScrollingFrame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BackgroundTransparency = 0;
+        BorderSizePixel = 0;
+        Size = UDim2.new(1, -4, 0, 120);
+        CanvasSize = UDim2.new(0, 0, 0, 0);
+        ScrollBarThickness = 3;
+        ZIndex = 5;
+        Parent = InspectorGroup.Container;
+    })
+    
+    local function RefreshUIList()
+        for _, child in pairs(ElementList:GetChildren()) do
+            if child:IsA("TextLabel") then
+                child:Destroy()
+            end
+        end
+        
+        local yOffset = 0
+        local function scanUI(instance, depth)
+            if depth > 3 then return end
+            local prefix = string.rep("  ", depth)
+            local label = Library:CreateLabel({
+                Size = UDim2.new(1, -4, 0, 14);
+                TextSize = 9;
+                Text = prefix .. instance.Name .. " (" .. instance.ClassName .. ")";
+                TextColor3 = instance:IsA("ScreenGui") and Color3.fromRGB(255, 200, 100) or Color3.fromRGB(200, 200, 200);
+                TextXAlignment = Enum.TextXAlignment.Left;
+                Parent = ElementList;
+            })
+            
+            for _, child in pairs(instance:GetChildren()) do
+                scanUI(child, depth + 1)
+            end
+        end
+        
+        scanUI(Library.ScreenGui, 0)
+        ElementList.CanvasSize = UDim2.new(0, 0, 0, ElementList.UIListLayout and ElementList.UIListLayout.AbsoluteContentSize.Y or 0)
+    end
+    
+    local RefreshBtn = InspectorGroup:AddButton("Refresh UI List", RefreshUIList)
+    RefreshUIList()
+    
+    -- Debug Actions
+    local ActionsGroup = DebugTab:AddLeftGroupbox("Debug Actions")
+    
+    ActionsGroup:AddButton("Collect Garbage", function()
+        local before = gcinfo()
+        collectgarbage("collect")
+        local after = gcinfo()
+        DebugData:AddError(string.format("GC Collected: %.1f KB freed", (before - after) / 1024))
+    end)
+    
+    ActionsGroup:AddButton("Dump Registry", function()
+        local dump = {}
+        for i, reg in ipairs(Library.Registry) do
+            table.insert(dump, string.format("%d: %s", i, reg.Instance.ClassName))
+        end
+        DebugData:AddError("Registry dump:\n" .. table.concat(dump, "\n"))
+    end)
+    
+    ActionsGroup:AddButton("Check Memory Leaks", function()
+        local leaks = {}
+        for _, reg in ipairs(Library.Registry) do
+            if not reg.Instance.Parent then
+                table.insert(leaks, tostring(reg.Instance))
+            end
+        end
+        if #leaks > 0 then
+            DebugData:AddError(string.format("Found %d potential memory leaks!", #leaks))
+        else
+            DebugData:AddError("No memory leaks detected")
+        end
+    end)
+    
+    -- Override error handler
+    local oldErrorHandler = getgenv().logMessage
+    getgenv().logMessage = function(level, msg)
+        if level >= 2 then -- WARN or ERROR
+            DebugData:AddError(msg)
+        end
+        if oldErrorHandler then
+            oldErrorHandler(level, msg)
+        end
+    end
+    
+    -- FPS Warning System
+    local FPSWarning = Library:CreateLabel({
+        Text = "",
+        TextColor3 = Color3.fromRGB(255, 100, 100),
+        TextSize = 10,
+        Position = UDim2.new(1, -150, 0, 5),
+        Size = UDim2.new(0, 140, 0, 15),
+        BackgroundTransparency = 1,
+        Parent = Library.ScreenGui,
+        ZIndex = 1000,
+    })
+    
+    task.spawn(function()
+        while FPSWarning.Parent do
+            if DebugData.lastFPS < 30 and DebugData.lastFPS > 0 then
+                FPSWarning.Text = "⚠️ LOW FPS: " .. DebugData.lastFPS
+                FPSWarning.Visible = true
+            else
+                FPSWarning.Visible = false
+            end
+            task.wait(1)
+        end
+    end)
+    
+    return {
+        AddError = DebugData.AddError,
+        GetStats = function()
+            return {
+                uptime = tick() - DebugData.startTime,
+                memory = gcinfo() / 1024,
+                fps = DebugData.lastFPS,
+                uiElements = DebugData.uiElementCount,
+                signals = #Library.Signals,
+            }
+        end,
+    }
+end
+
+
+
+
+
+
+
+
+
+
+
+
 local function OnPlayerChange()
     local PlayerList = GetPlayersString();
 
