@@ -933,9 +933,14 @@ function Library:AddToolTip(InfoStr, HoverInstance)
         Tooltip.Position = UDim2.fromOffset(Mouse.X + 15, Mouse.Y + 12)
         Tooltip.Visible = true
 
+        local _lastX, _lastY = Mouse.X, Mouse.Y
         while IsHovering do
             RunService.Heartbeat:Wait()
-            Tooltip.Position = UDim2.fromOffset(Mouse.X + 15, Mouse.Y + 12)
+            local mx, my = Mouse.X, Mouse.Y
+            if mx ~= _lastX or my ~= _lastY then
+                Tooltip.Position = UDim2.fromOffset(mx + 15, my + 12)
+                _lastX, _lastY = mx, my
+            end
         end
     end)
 
@@ -971,16 +976,23 @@ function Library:OnHighlight(HighlightInstance, Instance, Properties, Properties
     end)
 end;
 
+local _mouseOverCache = false
+local _mouseOverTick = 0
 function Library:MouseIsOverOpenedFrame()
+    local now = tick()
+    if now - _mouseOverTick < 0.016 then return _mouseOverCache end
+    _mouseOverTick = now
+    local mx, my = Mouse.X, Mouse.Y
     for Frame, _ in next, Library.OpenedFrames do
         local AbsPos, AbsSize = Frame.AbsolutePosition, Frame.AbsoluteSize;
-
-        if Mouse.X >= AbsPos.X and Mouse.X <= AbsPos.X + AbsSize.X
-            and Mouse.Y >= AbsPos.Y and Mouse.Y <= AbsPos.Y + AbsSize.Y then
-
+        if mx >= AbsPos.X and mx <= AbsPos.X + AbsSize.X
+            and my >= AbsPos.Y and my <= AbsPos.Y + AbsSize.Y then
+            _mouseOverCache = true
             return true;
         end;
     end;
+    _mouseOverCache = false
+    return false
 end;
 
 function Library:IsMouseOverFrame(Frame)
@@ -2865,21 +2877,20 @@ Stroke.Parent = ToggleInner
 end
 		
 
+    local _hoverTweenIn  = TweenService:Create(ToggleOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), { BorderColor3 = Library.AccentColor })
+    local _hoverTweenOut = TweenService:Create(ToggleOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), { BorderColor3 = Color3.new(0, 0, 0) })
+
     ToggleRegion.MouseEnter:Connect(function()
         Toggle.IsHovered = true;
         if not Toggle.Value then
-            TweenService:Create(ToggleOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                BorderColor3 = Library.AccentColor
-            }):Play();
+            _hoverTweenIn:Play();
         end
     end)
 
     ToggleRegion.MouseLeave:Connect(function()
         Toggle.IsHovered = false;
         if not Toggle.Value then
-            TweenService:Create(ToggleOuter, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
-                BorderColor3 = Color3.new(0, 0, 0)
-            }):Play();
+            _hoverTweenOut:Play();
         end
     end)
 
@@ -2893,22 +2904,22 @@ end
         local outerColor = Toggle.Value and Library.AccentColor or (Toggle.IsHovered and Library.AccentColor or Color3.fromRGB(30, 30, 30))
         local textColor = Toggle.Value and Library.FontColor or Color3.fromRGB(150, 150, 150)
 
-        TweenService:Create(ToggleInner, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
+        TweenService:Create(ToggleInner, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {
             BackgroundColor3 = bgColor,
             BorderColor3 = borderColor
         }):Play()
 
-        TweenService:Create(ToggleOuter, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
+        TweenService:Create(ToggleOuter, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {
             BorderColor3 = outerColor
         }):Play()
 
-			TweenService:Create(Stroke, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
+			TweenService:Create(Stroke, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {
     Color = Toggle.Value and Library.AccentColor or Color3.fromRGB(60, 60, 60)
 }):Play()
 
 
         if not Toggle.Risky then
-            TweenService:Create(ToggleLabel, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
+            TweenService:Create(ToggleLabel, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {
                 TextColor3 = textColor
             }):Play()
         end
@@ -3230,8 +3241,8 @@ end;
                     local OldValue = Slider.Value;
                     Slider.Value = nValue;
 
-                    -- Smooth tween ile hareket ettir
-                    Slider:TweenFill(UDim2.new(0, nX, 1, 0));
+                    -- Direct set during drag (no tween = no lag)
+                    Fill.Size = UDim2.new(0, nX, 1, 0);
                     
                     local Suffix = Info.Suffix or '';
                     if Info.Compact then
@@ -4503,7 +4514,7 @@ function Library:CreateWindow(...)
         Size = UDim2.new(1, -14, 0, 25);
         Text = '[' .. (Config.Tag or 'xware') .. '] / ' .. (Config.Title or '') .. ' [build: ' .. (Config.Build or 'public') .. ']';
         TextXAlignment = Enum.TextXAlignment.Left;
-        TextSize = 13;
+        TextSize = 14;
         ZIndex = 1;
         Parent = Inner;
     });
@@ -4667,8 +4678,15 @@ function Library:CreateWindow(...)
         });
 
         for _, Side in next, { LeftSide, RightSide } do
-            Side:WaitForChild('UIListLayout'):GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-                Side.CanvasSize = UDim2.fromOffset(0, Side.UIListLayout.AbsoluteContentSize.Y);
+            local _layout = Side:WaitForChild('UIListLayout')
+            local _debounce = false
+            _layout:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
+                if _debounce then return end
+                _debounce = true
+                task.defer(function()
+                    Side.CanvasSize = UDim2.fromOffset(0, _layout.AbsoluteContentSize.Y)
+                    _debounce = false
+                end)
             end);
         end;
 
@@ -5023,11 +5041,13 @@ function Library:CreateWindow(...)
     function Library:Toggle()
 
 getgenv().uiisopen = not Toggled
-local success, err = pcall(function()
-    local Hotbar = game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainFrame.Hotbar
-    Hotbar.Visible = not (not Toggled)
-end)
-if not success then warn("Hotbar toggle failed: " .. tostring(err)) end
+
+        local success, err = pcall(function()
+            local Hotbar = game:GetService("Players").LocalPlayer.PlayerGui.MainGui.MainFrame.Hotbar
+            Hotbar.Visible = not (not Toggled)
+        end)
+        if not success then warn("Hotbar toggle failed: " .. tostring(err)) end
+
 
 
         if Fading then
