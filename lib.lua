@@ -8742,6 +8742,7 @@ do
 
     -- ── Watcher: poll getgenv().newaclogs ─────────────────────────
     Library:GiveSignal(RunService.Heartbeat:Connect(function()
+        task.wait(0.015)
         local raw = getgenv().newaclogs
         if raw == nil or raw == lastRawValue then return end
         lastRawValue = raw
