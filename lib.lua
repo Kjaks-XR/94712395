@@ -8334,6 +8334,478 @@ function Library:CreateCommandBar(Toggles, Options)
 end
 
 
+
+
+
+
+
+
+-- ╔══════════════════════════════════════════╗
+-- ║         XWARE ACL LOG PANEL MODULE       ║
+-- ║         Alt+A toggle  •  v1.0            ║
+-- ╚══════════════════════════════════════════╝
+--
+-- FORMAT:  s:out;;time:17.40;;m:'''mesaj''';;
+-- s:  → out (beyaz) | warn (sarı) | err (kırmızı) | info (mavi)
+-- time: → saat etiketi
+-- m:'''...''' → mesaj içeriği
+
+do
+    local RunService   = game:GetService("RunService")
+    local TweenService = game:GetService("TweenService")
+    local InputService = game:GetService("UserInputService")
+
+    -- ── Palette ──────────────────────────────────────────────────
+    local C = {
+        bg       = Color3.fromRGB(7,   7,   7),
+        border   = Color3.fromRGB(38,  38,  38),
+        header   = Color3.fromRGB(14,  14,  14),
+        out      = Color3.fromRGB(220, 220, 220),
+        warn     = Color3.fromRGB(255, 200, 70),
+        err      = Color3.fromRGB(255, 90,  90),
+        info     = Color3.fromRGB(100, 170, 255),
+        dimText  = Color3.fromRGB(70,  70,  70),
+        rowEven  = Color3.fromRGB(10,  10,  10),
+        rowOdd   = Color3.fromRGB(14,  14,  14),
+        selRow   = Color3.fromRGB(22,  22,  22),
+        accent   = Color3.fromRGB(200, 200, 200),
+    }
+
+    local SEVERITY_COLOR = {
+        out  = C.out,
+        warn = C.warn,
+        err  = C.err,
+        info = C.info,
+    }
+
+    local SEVERITY_PREFIX = {
+        out  = "OUT",
+        warn = "WRN",
+        err  = "ERR",
+        info = "INF",
+    }
+
+    local FONT      = Library.Font
+    local MAX_LOGS  = 200
+    local ROW_H     = 22
+    local PANEL_W   = 620
+    local PANEL_H   = 340
+
+    -- ── Parser ────────────────────────────────────────────────────
+    local function ParseLog(raw)
+        if type(raw) ~= "string" or raw == "" then return nil end
+
+        local result = { severity = "out", time = "", message = "" }
+
+        -- split by ;;
+        for segment in (raw .. ";;"):gmatch("(.-);;") do
+            segment = segment:match("^%s*(.-)%s*$")
+            if segment ~= "" then
+                local key, val = segment:match("^([%w]+):(.+)$")
+                if key and val then
+                    key = key:lower()
+                    if key == "s" then
+                        result.severity = val:lower():match("^%s*(.-)%s*$")
+                    elseif key == "time" then
+                        result.time = val:match("^%s*(.-)%s*$")
+                    elseif key == "m" then
+                        -- extract content between ''' '''
+                        local inner = val:match("^%s*'''(.-)'''%s*$")
+                        result.message = inner or val:match("^%s*(.-)%s*$")
+                    end
+                end
+            end
+        end
+
+        if result.message == "" then return nil end
+        return result
+    end
+
+    -- ── Root Frame ────────────────────────────────────────────────
+    local AclRoot = Library:Create("Frame", {
+        Name                   = "AclLogPanel",
+        BackgroundColor3       = C.bg,
+        BorderColor3           = C.border,
+        AnchorPoint            = Vector2.new(0.5, 0.5),
+        Position               = UDim2.new(0.5, 0, 0.5, 0),
+        Size                   = UDim2.fromOffset(PANEL_W, PANEL_H),
+        ZIndex                 = 400,
+        Visible                = false,
+        Parent                 = Library.ScreenGui,
+    })
+
+    Library:MakeDraggable(AclRoot, 28)
+
+    -- Accent top line
+    Library:Create("Frame", {
+        BackgroundColor3 = C.accent,
+        BorderSizePixel  = 0,
+        Size             = UDim2.new(1, 0, 0, 1),
+        ZIndex           = 401,
+        Parent           = AclRoot,
+    })
+
+    -- Header bar
+    local Header = Library:Create("Frame", {
+        BackgroundColor3 = C.header,
+        BorderSizePixel  = 0,
+        Position         = UDim2.fromOffset(0, 1),
+        Size             = UDim2.new(1, 0, 0, 26),
+        ZIndex           = 401,
+        Parent           = AclRoot,
+    })
+
+    -- Header separator bottom
+    Library:Create("Frame", {
+        BackgroundColor3 = C.border,
+        BorderSizePixel  = 0,
+        AnchorPoint      = Vector2.new(0, 1),
+        Position         = UDim2.new(0, 0, 1, 0),
+        Size             = UDim2.new(1, 0, 0, 1),
+        ZIndex           = 402,
+        Parent           = Header,
+    })
+
+    -- Title label
+    Library:Create("TextLabel", {
+        BackgroundTransparency = 1,
+        Position               = UDim2.fromOffset(10, 0),
+        Size                   = UDim2.new(0.6, 0, 1, 0),
+        FontFace               = FONT,
+        Text                   = "ACL LOGS",
+        TextColor3             = C.accent,
+        TextSize               = 12,
+        TextXAlignment         = Enum.TextXAlignment.Left,
+        ZIndex                 = 402,
+        Parent                 = Header,
+    })
+
+    -- Keybind hint
+    Library:Create("TextLabel", {
+        BackgroundTransparency = 1,
+        AnchorPoint            = Vector2.new(1, 0.5),
+        Position               = UDim2.new(1, -10, 0.5, 0),
+        Size                   = UDim2.fromOffset(120, 26),
+        FontFace               = FONT,
+        Text                   = "ALT + A  ×",
+        TextColor3             = C.dimText,
+        TextSize               = 10,
+        TextXAlignment         = Enum.TextXAlignment.Right,
+        ZIndex                 = 402,
+        Parent                 = Header,
+    })
+
+    -- Column headers
+    local ColHeader = Library:Create("Frame", {
+        BackgroundColor3 = C.header,
+        BorderSizePixel  = 0,
+        Position         = UDim2.fromOffset(0, 27),
+        Size             = UDim2.new(1, 0, 0, 18),
+        ZIndex           = 401,
+        Parent           = AclRoot,
+    })
+
+    Library:Create("Frame", {
+        BackgroundColor3 = C.border,
+        BorderSizePixel  = 0,
+        AnchorPoint      = Vector2.new(0, 1),
+        Position         = UDim2.new(0, 0, 1, 0),
+        Size             = UDim2.new(1, 0, 0, 1),
+        ZIndex           = 402,
+        Parent           = ColHeader,
+    })
+
+    local function ColLabel(text, x, w)
+        Library:Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Position               = UDim2.fromOffset(x, 0),
+            Size                   = UDim2.fromOffset(w, 18),
+            FontFace               = FONT,
+            Text                   = text,
+            TextColor3             = C.dimText,
+            TextSize               = 9,
+            TextXAlignment         = Enum.TextXAlignment.Left,
+            ZIndex                 = 402,
+            Parent                 = ColHeader,
+        })
+    end
+
+    ColLabel("#",     6,  30)
+    ColLabel("SEV",   32, 32)
+    ColLabel("TIME",  70, 50)
+    ColLabel("MESSAGE", 130, 400)
+
+    -- Vertical separators in column header
+    for _, xPos in ipairs({30, 66, 122}) do
+        Library:Create("Frame", {
+            BackgroundColor3 = C.border,
+            BorderSizePixel  = 0,
+            Position         = UDim2.fromOffset(xPos, 3),
+            Size             = UDim2.fromOffset(1, 12),
+            ZIndex           = 402,
+            Parent           = ColHeader,
+        })
+    end
+
+    -- Scrolling log area
+    local LogScroll = Library:Create("ScrollingFrame", {
+        BackgroundTransparency = 1,
+        BorderSizePixel        = 0,
+        Position               = UDim2.fromOffset(0, 46),
+        Size                   = UDim2.new(1, 0, 1, -70),
+        CanvasSize             = UDim2.new(0, 0, 0, 0),
+        ScrollBarThickness     = 3,
+        ScrollBarImageColor3   = C.border,
+        TopImage               = "",
+        BottomImage            = "",
+        ZIndex                 = 401,
+        Parent                 = AclRoot,
+    })
+
+    local LogLayout = Library:Create("UIListLayout", {
+        Padding   = UDim.new(0, 0),
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent    = LogScroll,
+    })
+
+    -- Status bar at bottom
+    local StatusBar = Library:Create("Frame", {
+        BackgroundColor3 = C.header,
+        BorderSizePixel  = 0,
+        AnchorPoint      = Vector2.new(0, 1),
+        Position         = UDim2.new(0, 0, 1, 0),
+        Size             = UDim2.new(1, 0, 0, 22),
+        ZIndex           = 401,
+        Parent           = AclRoot,
+    })
+
+    Library:Create("Frame", {
+        BackgroundColor3 = C.border,
+        BorderSizePixel  = 0,
+        Size             = UDim2.new(1, 0, 0, 1),
+        ZIndex           = 402,
+        Parent           = StatusBar,
+    })
+
+    local CountLabel = Library:Create("TextLabel", {
+        BackgroundTransparency = 1,
+        Position               = UDim2.fromOffset(10, 0),
+        Size                   = UDim2.new(0.5, 0, 1, 0),
+        FontFace               = FONT,
+        Text                   = "0 entries",
+        TextColor3             = C.dimText,
+        TextSize               = 10,
+        TextXAlignment         = Enum.TextXAlignment.Left,
+        ZIndex                 = 402,
+        Parent                 = StatusBar,
+    })
+
+    local LastTimeLabel = Library:Create("TextLabel", {
+        BackgroundTransparency = 1,
+        AnchorPoint            = Vector2.new(1, 0.5),
+        Position               = UDim2.new(1, -10, 0.5, 0),
+        Size                   = UDim2.fromOffset(200, 22),
+        FontFace               = FONT,
+        Text                   = "",
+        TextColor3             = C.dimText,
+        TextSize               = 10,
+        TextXAlignment         = Enum.TextXAlignment.Right,
+        ZIndex                 = 402,
+        Parent                 = StatusBar,
+    })
+
+    -- ── Log Engine ────────────────────────────────────────────────
+    local logEntries  = {}   -- { frame }
+    local logCount    = 0
+    local isVisible   = false
+    local lastRawValue = nil
+
+    local function AddLogRow(parsed)
+        logCount = logCount + 1
+
+        if logCount > MAX_LOGS then
+            local oldest = table.remove(logEntries, 1)
+            if oldest then oldest:Destroy() end
+            -- re-number would be expensive; skip it, just decrement
+            logCount = MAX_LOGS
+        end
+
+        local col = SEVERITY_COLOR[parsed.severity] or C.out
+        local pfx = SEVERITY_PREFIX[parsed.severity] or "OUT"
+        local rowBg = (#logEntries % 2 == 0) and C.rowEven or C.rowOdd
+
+        local Row = Library:Create("Frame", {
+            BackgroundColor3 = rowBg,
+            BorderSizePixel  = 0,
+            LayoutOrder      = logCount,
+            Size             = UDim2.new(1, 0, 0, ROW_H),
+            ZIndex           = 402,
+            Parent           = LogScroll,
+        })
+
+        -- left color strip
+        Library:Create("Frame", {
+            BackgroundColor3 = col,
+            BorderSizePixel  = 0,
+            Size             = UDim2.fromOffset(2, ROW_H),
+            ZIndex           = 403,
+            Parent           = Row,
+        })
+
+        -- row number
+        Library:Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Position               = UDim2.fromOffset(6, 0),
+            Size                   = UDim2.fromOffset(24, ROW_H),
+            FontFace               = FONT,
+            Text                   = tostring(logCount),
+            TextColor3             = C.dimText,
+            TextSize               = 9,
+            TextXAlignment         = Enum.TextXAlignment.Left,
+            ZIndex                 = 403,
+            Parent                 = Row,
+        })
+
+        -- severity badge
+        local SevLabel = Library:Create("TextLabel", {
+            BackgroundColor3       = col,
+            BackgroundTransparency = 0.88,
+            BorderSizePixel        = 0,
+            Position               = UDim2.fromOffset(32, 4),
+            Size                   = UDim2.fromOffset(30, ROW_H - 8),
+            FontFace               = FONT,
+            Text                   = pfx,
+            TextColor3             = col,
+            TextSize               = 9,
+            ZIndex                 = 403,
+            Parent                 = Row,
+        })
+        Library:Create("UICorner", { CornerRadius = UDim.new(0, 2), Parent = SevLabel })
+
+        -- time
+        Library:Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Position               = UDim2.fromOffset(68, 0),
+            Size                   = UDim2.fromOffset(52, ROW_H),
+            FontFace               = FONT,
+            Text                   = parsed.time,
+            TextColor3             = C.dimText,
+            TextSize               = 10,
+            TextXAlignment         = Enum.TextXAlignment.Left,
+            ZIndex                 = 403,
+            Parent                 = Row,
+        })
+
+        -- message
+        Library:Create("TextLabel", {
+            BackgroundTransparency = 1,
+            Position               = UDim2.fromOffset(128, 0),
+            Size                   = UDim2.new(1, -136, 1, 0),
+            FontFace               = FONT,
+            Text                   = parsed.message,
+            TextColor3             = col,
+            TextSize               = 11,
+            TextXAlignment         = Enum.TextXAlignment.Left,
+            TextTruncate           = Enum.TextTruncate.AtEnd,
+            ZIndex                 = 403,
+            Parent                 = Row,
+        })
+
+        -- bottom separator
+        Library:Create("Frame", {
+            BackgroundColor3 = C.border,
+            BorderSizePixel  = 0,
+            AnchorPoint      = Vector2.new(0, 1),
+            Position         = UDim2.new(0, 0, 1, 0),
+            Size             = UDim2.new(1, 0, 0, 1),
+            ZIndex           = 403,
+            Parent           = Row,
+        })
+
+        -- fade-in
+        Row.BackgroundTransparency = 1
+        TweenService:Create(Row, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            BackgroundTransparency = 0
+        }):Play()
+
+        table.insert(logEntries, Row)
+
+        -- update canvas + scroll to bottom
+        LogScroll.CanvasSize = UDim2.new(0, 0, 0, LogLayout.AbsoluteContentSize.Y)
+        LogScroll.CanvasPosition = Vector2.new(0, math.max(0,
+            LogLayout.AbsoluteContentSize.Y - LogScroll.AbsoluteSize.Y))
+
+        -- status bar
+        CountLabel.Text   = logCount .. " entr" .. (logCount == 1 and "y" or "ies")
+        LastTimeLabel.Text = parsed.time ~= "" and ("last: " .. parsed.time) or ""
+    end
+
+    -- ── Watcher: poll getgenv().newaclogs ─────────────────────────
+    Library:GiveSignal(RunService.Heartbeat:Connect(function()
+        local raw = getgenv().newaclogs
+        if raw == nil or raw == lastRawValue then return end
+        lastRawValue = raw
+
+        local parsed = ParseLog(raw)
+        if parsed then
+            AddLogRow(parsed)
+        end
+    end))
+
+    -- ── Toggle ───────────────────────────────────────────────────
+    local function ShowPanel()
+        isVisible = true
+        AclRoot.Visible = true
+        AclRoot.BackgroundTransparency = 1
+        TweenService:Create(AclRoot, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+            BackgroundTransparency = 0
+        }):Play()
+    end
+
+    local function HidePanel()
+        isVisible = false
+        TweenService:Create(AclRoot, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+            BackgroundTransparency = 1
+        }):Play()
+        task.delay(0.17, function()
+            AclRoot.Visible = false
+        end)
+    end
+
+    -- Alt + A
+    Library:GiveSignal(InputService.InputBegan:Connect(function(inp, processed)
+        if processed then return end
+        if inp.KeyCode == Enum.KeyCode.A
+            and InputService:IsKeyDown(Enum.KeyCode.LeftAlt)
+        then
+            if isVisible then HidePanel() else ShowPanel() end
+        end
+    end))
+
+    -- public API
+    Library.AclLogPanel = {
+        Root    = AclRoot,
+        Show    = ShowPanel,
+        Hide    = HidePanel,
+        AddLog  = function(raw)
+            local p = ParseLog(raw)
+            if p then AddLogRow(p) end
+        end,
+        Clear   = function()
+            for _, f in ipairs(logEntries) do f:Destroy() end
+            logEntries  = {}
+            logCount    = 0
+            lastRawValue = nil
+            LogScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+            CountLabel.Text = "0 entries"
+            LastTimeLabel.Text = ""
+        end,
+    }
+end
+
+
+
+
 local function OnPlayerChange()
     local PlayerList = GetPlayersString();
 
