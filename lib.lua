@@ -4570,59 +4570,674 @@ function Library:CreateWindow(...)
         WindowLabel.Text = Title;
     end;
 
-    function Window:AddTab(Name)
-        local Tab = {
-            Groupboxes = {};
-            Tabboxes = {};
-        };
 
-        local TabButtonWidth = Library:GetTextBounds(Name, Library.Font, 12);
 
-        local TabButton = Library:Create('Frame', {
-            BackgroundColor3 = Library.BackgroundColor;
-            BorderColor3 = Library.OutlineColor;
-            Size = UDim2.new(0, TabButtonWidth + 10, 1, 0);
-            ZIndex = 1;
-            Parent = TabArea;
-        });
+function Window:AddTab(Name, TabType)
+    local Tab = {
+        Groupboxes = {};
+        Tabboxes = {};
+    };
 
-        Library:AddToRegistry(TabButton, {
-            BackgroundColor3 = 'BackgroundColor';
-            BorderColor3 = 'OutlineColor';
-        });
+    local TabButtonWidth = Library:GetTextBounds(Name, Library.Font, 12);
 
-        local TabButtonLabel = Library:CreateLabel({
-            Position = UDim2.new(0, 0, 0, 0);
-            Size = UDim2.new(1, 0, 1, -1);
-            Text = Name;
-            TextSize = 12;
-            ZIndex = 1;
-            Parent = TabButton;
-        });
+    local TabButton = Library:Create('Frame', {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3 = Library.OutlineColor;
+        Size = UDim2.new(0, TabButtonWidth + 10, 1, 0);
+        ZIndex = 1;
+        Parent = TabArea;
+    });
 
-        local Blocker = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderSizePixel = 0;
-            Position = UDim2.new(0, 0, 1, 0);
-            Size = UDim2.new(1, 0, 0, 1);
-            BackgroundTransparency = 1;
-            ZIndex = 3;
-            Parent = TabButton;
-        });
+    Library:AddToRegistry(TabButton, {
+        BackgroundColor3 = 'BackgroundColor';
+        BorderColor3 = 'OutlineColor';
+    });
 
-        Library:AddToRegistry(Blocker, {
-            BackgroundColor3 = 'MainColor';
-        });
+    local TabButtonLabel = Library:CreateLabel({
+        Position = UDim2.new(0, 0, 0, 0);
+        Size = UDim2.new(1, 0, 1, -1);
+        Text = Name;
+        TextSize = 12;
+        ZIndex = 1;
+        Parent = TabButton;
+    });
 
-        local TabFrame = Library:Create('Frame', {
-            Name = 'TabFrame',
-            BackgroundTransparency = 1;
-            Position = UDim2.new(0, 0, 0, 0);
-            Size = UDim2.new(1, 0, 1, 0);
-            Visible = false;
-            ZIndex = 2;
-            Parent = TabContainer;
-        });
+    local Blocker = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor;
+        BorderSizePixel = 0;
+        Position = UDim2.new(0, 0, 1, 0);
+        Size = UDim2.new(1, 0, 0, 1);
+        BackgroundTransparency = 1;
+        ZIndex = 3;
+        Parent = TabButton;
+    });
+
+    Library:AddToRegistry(Blocker, {
+        BackgroundColor3 = 'MainColor';
+    });
+
+    local TabFrame = Library:Create('Frame', {
+        Name = 'TabFrame',
+        BackgroundTransparency = 1;
+        Position = UDim2.new(0, 0, 0, 0);
+        Size = UDim2.new(1, 0, 1, 0);
+        Visible = false;
+        ZIndex = 2;
+        Parent = TabContainer;
+    });
+
+    -- ══════════════════════════════════════════
+    -- LOGS TAB TYPE
+    -- ══════════════════════════════════════════
+    if TabType == 'logs' then
+
+        local C = {
+            bg       = Color3.fromRGB(10, 10, 12),
+            header   = Color3.fromRGB(16, 16, 18),
+            border   = Color3.fromRGB(40, 40, 45),
+            out      = Color3.fromRGB(210, 210, 210),
+            warn     = Color3.fromRGB(255, 200, 70),
+            err      = Color3.fromRGB(255, 90,  90),
+            info     = Color3.fromRGB(100, 170, 255),
+            dimText  = Color3.fromRGB(80,  80,  90),
+            rowEven  = Color3.fromRGB(12,  12,  15),
+            rowOdd   = Color3.fromRGB(17,  17,  20),
+        }
+
+        local SEVERITY_COLOR = {
+            out  = C.out,
+            warn = C.warn,
+            err  = C.err,
+            info = C.info,
+        }
+
+        local SEVERITY_PREFIX = {
+            out  = "OUT",
+            warn = "WRN",
+            err  = "ERR",
+            info = "INF",
+        }
+
+        local MAX_LOGS = 500
+        local ROW_H    = 24
+
+        -- ── Toolbar ────────────────────────────────────────────
+        local Toolbar = Library:Create('Frame', {
+            BackgroundColor3 = C.header,
+            BorderColor3     = C.border,
+            BorderMode       = Enum.BorderMode.Inset,
+            Position         = UDim2.new(0, 0, 0, 0),
+            Size             = UDim2.new(1, 0, 0, 28),
+            ZIndex           = 3,
+            Parent           = TabFrame,
+        })
+
+        Library:Create('UIListLayout', {
+            FillDirection       = Enum.FillDirection.Horizontal,
+            HorizontalAlignment = Enum.HorizontalAlignment.Left,
+            VerticalAlignment   = Enum.VerticalAlignment.Center,
+            Padding             = UDim.new(0, 4),
+            SortOrder           = Enum.SortOrder.LayoutOrder,
+            Parent              = Toolbar,
+        })
+
+        Library:Create('UIPadding', {
+            PaddingLeft  = UDim.new(0, 6),
+            PaddingRight = UDim.new(0, 6),
+            Parent       = Toolbar,
+        })
+
+        -- Toolbar başlık
+        local ToolbarTitle = Library:Create('TextLabel', {
+            BackgroundTransparency = 1,
+            Size                   = UDim2.new(0, 80, 1, 0),
+            FontFace               = Library.Font,
+            Text                   = 'LOGS',
+            TextColor3             = Library.AccentColor,
+            TextSize               = 12,
+            TextXAlignment         = Enum.TextXAlignment.Left,
+            ZIndex                 = 4,
+            Parent                 = Toolbar,
+            LayoutOrder            = 0,
+        })
+
+        Library:AddToRegistry(ToolbarTitle, { TextColor3 = 'AccentColor' })
+
+        -- Separator
+        Library:Create('Frame', {
+            BackgroundColor3 = C.border,
+            BorderSizePixel  = 0,
+            Size             = UDim2.new(0, 1, 0, 16),
+            ZIndex           = 4,
+            Parent           = Toolbar,
+            LayoutOrder      = 1,
+        })
+
+        -- Filter buttons
+        local activeFilter = 'all'
+        local FilterButtons = {}
+
+        local function MakeFilterBtn(label, filterKey, order)
+            local Btn = Library:Create('TextButton', {
+                BackgroundColor3 = Library.MainColor,
+                BorderColor3     = C.border,
+                Size             = UDim2.new(0, 40, 0, 18),
+                FontFace         = Library.Font,
+                Text             = label,
+                TextColor3       = C.dimText,
+                TextSize         = 10,
+                ZIndex           = 4,
+                Parent           = Toolbar,
+                LayoutOrder      = order,
+            })
+            FilterButtons[filterKey] = Btn
+            return Btn
+        end
+
+        local BtnAll  = MakeFilterBtn('ALL',  'all',  2)
+        local BtnOut  = MakeFilterBtn('OUT',  'out',  3)
+        local BtnInfo = MakeFilterBtn('INFO', 'info', 4)
+        local BtnWarn = MakeFilterBtn('WARN', 'warn', 5)
+        local BtnErr  = MakeFilterBtn('ERR',  'err',  6)
+
+        -- Separator
+        Library:Create('Frame', {
+            BackgroundColor3 = C.border,
+            BorderSizePixel  = 0,
+            Size             = UDim2.new(0, 1, 0, 16),
+            ZIndex           = 4,
+            Parent           = Toolbar,
+            LayoutOrder      = 7,
+        })
+
+        -- Search box
+        local SearchOuter = Library:Create('Frame', {
+            BackgroundColor3 = C.bg,
+            BorderColor3     = C.border,
+            Size             = UDim2.new(0, 130, 0, 18),
+            ZIndex           = 4,
+            Parent           = Toolbar,
+            LayoutOrder      = 8,
+        })
+
+        local SearchBox = Library:Create('TextBox', {
+            BackgroundTransparency = 1,
+            Position               = UDim2.new(0, 5, 0, 0),
+            Size                   = UDim2.new(1, -5, 1, 0),
+            FontFace               = Library.Font,
+            PlaceholderText        = 'Search...',
+            PlaceholderColor3      = C.dimText,
+            Text                   = '',
+            TextColor3             = C.out,
+            TextSize               = 10,
+            TextXAlignment         = Enum.TextXAlignment.Left,
+            ClearTextOnFocus       = false,
+            ZIndex                 = 5,
+            Parent                 = SearchOuter,
+        })
+
+        -- Spacer (right-push için)
+        local Spacer = Library:Create('Frame', {
+            BackgroundTransparency = 1,
+            Size                   = UDim2.new(1, -500, 1, 0),
+            ZIndex                 = 4,
+            Parent                 = Toolbar,
+            LayoutOrder            = 9,
+        })
+
+        -- Clear button (sağ tarafa)
+        local ClearBtn = Library:Create('TextButton', {
+            BackgroundColor3 = Color3.fromRGB(60, 20, 20),
+            BorderColor3     = Color3.fromRGB(100, 30, 30),
+            Size             = UDim2.new(0, 44, 0, 18),
+            FontFace         = Library.Font,
+            Text             = 'CLEAR',
+            TextColor3       = Color3.fromRGB(255, 90, 90),
+            TextSize         = 10,
+            ZIndex           = 4,
+            Parent           = Toolbar,
+            LayoutOrder      = 10,
+        })
+
+        -- ── Count badge ────────────────────────────────────────
+        local CountBadge = Library:Create('TextLabel', {
+            BackgroundTransparency = 1,
+            Size                   = UDim2.new(0, 80, 0, 18),
+            FontFace               = Library.Font,
+            Text                   = '0 entries',
+            TextColor3             = C.dimText,
+            TextSize               = 10,
+            TextXAlignment         = Enum.TextXAlignment.Right,
+            ZIndex                 = 4,
+            Parent                 = Toolbar,
+            LayoutOrder            = 11,
+        })
+
+        -- ── Column header ──────────────────────────────────────
+        local ColHeader = Library:Create('Frame', {
+            BackgroundColor3 = C.header,
+            BorderColor3     = C.border,
+            BorderMode       = Enum.BorderMode.Inset,
+            Position         = UDim2.new(0, 0, 0, 28),
+            Size             = UDim2.new(1, 0, 0, 18),
+            ZIndex           = 3,
+            Parent           = TabFrame,
+        })
+
+        -- bottom line
+        Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor,
+            BorderSizePixel  = 0,
+            AnchorPoint      = Vector2.new(0, 1),
+            Position         = UDim2.new(0, 0, 1, 0),
+            Size             = UDim2.new(1, 0, 0, 1),
+            ZIndex           = 4,
+            Parent           = ColHeader,
+        })
+
+        local function ColLabel(text, x, w, xalign)
+            Library:Create('TextLabel', {
+                BackgroundTransparency = 1,
+                Position               = UDim2.fromOffset(x, 0),
+                Size                   = UDim2.fromOffset(w, 18),
+                FontFace               = Library.Font,
+                Text                   = text,
+                TextColor3             = C.dimText,
+                TextSize               = 9,
+                TextXAlignment         = xalign or Enum.TextXAlignment.Left,
+                ZIndex                 = 4,
+                Parent                 = ColHeader,
+            })
+        end
+
+        ColLabel('#',       4,   28)
+        ColLabel('SEV',    36,   34)
+        ColLabel('TIME',   76,   54)
+        ColLabel('SOURCE', 136,  90)
+        ColLabel('MESSAGE', 232, 400)
+
+        -- col separators
+        for _, xp in ipairs({32, 72, 132, 228}) do
+            Library:Create('Frame', {
+                BackgroundColor3 = C.border,
+                BorderSizePixel  = 0,
+                Position         = UDim2.fromOffset(xp, 3),
+                Size             = UDim2.fromOffset(1, 12),
+                ZIndex           = 4,
+                Parent           = ColHeader,
+            })
+        end
+
+        -- ── Log scroll area ────────────────────────────────────
+        local LogScroll = Library:Create('ScrollingFrame', {
+            BackgroundColor3   = C.bg,
+            BackgroundTransparency = 0,
+            BorderSizePixel    = 0,
+            Position           = UDim2.new(0, 0, 0, 46),
+            Size               = UDim2.new(1, 0, 1, -70),
+            CanvasSize         = UDim2.new(0, 0, 0, 0),
+            ScrollBarThickness = 4,
+            ScrollBarImageColor3 = Library.AccentColor,
+            TopImage           = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+            BottomImage        = 'rbxasset://textures/ui/Scroll/scroll-middle.png',
+            ZIndex             = 3,
+            Parent             = TabFrame,
+        })
+
+        Library:AddToRegistry(LogScroll, { ScrollBarImageColor3 = 'AccentColor' })
+
+        local LogLayout = Library:Create('UIListLayout', {
+            Padding   = UDim.new(0, 0),
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Parent    = LogScroll,
+        })
+
+        -- ── Status bar ─────────────────────────────────────────
+        local StatusBar = Library:Create('Frame', {
+            BackgroundColor3 = C.header,
+            BorderColor3     = C.border,
+            BorderMode       = Enum.BorderMode.Inset,
+            AnchorPoint      = Vector2.new(0, 1),
+            Position         = UDim2.new(0, 0, 1, 0),
+            Size             = UDim2.new(1, 0, 0, 22),
+            ZIndex           = 3,
+            Parent           = TabFrame,
+        })
+
+        Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor,
+            BorderSizePixel  = 0,
+            Size             = UDim2.new(1, 0, 0, 1),
+            ZIndex           = 4,
+            Parent           = StatusBar,
+        })
+
+        Library:AddToRegistry(Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor,
+            BorderSizePixel  = 0,
+            Size             = UDim2.new(1, 0, 0, 1),
+            ZIndex           = 4,
+            Parent           = StatusBar,
+        }), { BackgroundColor3 = 'AccentColor' })
+
+        local StatusLeft = Library:Create('TextLabel', {
+            BackgroundTransparency = 1,
+            Position               = UDim2.fromOffset(8, 0),
+            Size                   = UDim2.new(0.5, 0, 1, 0),
+            FontFace               = Library.Font,
+            Text                   = 'Ready',
+            TextColor3             = C.dimText,
+            TextSize               = 10,
+            TextXAlignment         = Enum.TextXAlignment.Left,
+            ZIndex                 = 4,
+            Parent                 = StatusBar,
+        })
+
+        local StatusRight = Library:Create('TextLabel', {
+            BackgroundTransparency = 1,
+            AnchorPoint            = Vector2.new(1, 0.5),
+            Position               = UDim2.new(1, -8, 0.5, 0),
+            Size                   = UDim2.fromOffset(200, 22),
+            FontFace               = Library.Font,
+            Text                   = '',
+            TextColor3             = C.dimText,
+            TextSize               = 10,
+            TextXAlignment         = Enum.TextXAlignment.Right,
+            ZIndex                 = 4,
+            Parent                 = StatusBar,
+        })
+
+        -- ── Log Engine ─────────────────────────────────────────
+        local logEntries   = {}
+        local logCount     = 0
+        local currentFilter = 'all'
+        local currentSearch = ''
+        local lastRawValue  = nil
+        local autoScroll    = true
+
+        local function MatchesFilter(entry)
+            if currentFilter ~= 'all' and entry.severity ~= currentFilter then
+                return false
+            end
+            if currentSearch ~= '' then
+                local hay = (entry.message .. entry.source .. entry.time):lower()
+                if not hay:find(currentSearch:lower(), 1, true) then
+                    return false
+                end
+            end
+            return true
+        end
+
+        local function RebuildVisibility()
+            local visible = 0
+            for _, e in ipairs(logEntries) do
+                local show = MatchesFilter(e)
+                e.Row.Visible = show
+                if show then visible = visible + 1 end
+            end
+            CountBadge.Text = visible .. '/' .. logCount .. ' shown'
+            LogScroll.CanvasSize = UDim2.new(0, 0, 0, LogLayout.AbsoluteContentSize.Y)
+        end
+
+        local function UpdateFilterButtons()
+            for key, btn in pairs(FilterButtons) do
+                if key == currentFilter then
+                    btn.BackgroundColor3 = Library.AccentColor
+                    btn.TextColor3       = Color3.fromRGB(255, 255, 255)
+                    Library:RemoveFromRegistry(btn)
+                    Library:AddToRegistry(btn, { BackgroundColor3 = 'AccentColor' })
+                else
+                    btn.BackgroundColor3 = Library.MainColor
+                    btn.TextColor3       = C.dimText
+                    Library:RemoveFromRegistry(btn)
+                    Library:AddToRegistry(btn, { BackgroundColor3 = 'MainColor' })
+                end
+            end
+        end
+
+        UpdateFilterButtons()
+
+        -- Filter click handlers
+        for key, btn in pairs(FilterButtons) do
+            local k = key
+            btn.MouseButton1Click:Connect(function()
+                currentFilter = k
+                UpdateFilterButtons()
+                RebuildVisibility()
+            end)
+        end
+
+        SearchBox:GetPropertyChangedSignal('Text'):Connect(function()
+            currentSearch = SearchBox.Text
+            RebuildVisibility()
+        end)
+
+        ClearBtn.MouseButton1Click:Connect(function()
+            for _, e in ipairs(logEntries) do
+                e.Row:Destroy()
+            end
+            logEntries     = {}
+            logCount       = 0
+            lastRawValue   = nil
+            CountBadge.Text = '0 entries'
+            StatusLeft.Text = 'Cleared'
+            StatusRight.Text = ''
+            LogScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+        end)
+
+        -- Auto-scroll detection
+        LogScroll:GetPropertyChangedSignal('CanvasPosition'):Connect(function()
+            local maxY = LogScroll.CanvasSize.Y.Offset - LogScroll.AbsoluteSize.Y
+            autoScroll = (LogScroll.CanvasPosition.Y >= maxY - 4)
+        end)
+
+        local function AddLogRow(parsed)
+            logCount = logCount + 1
+
+            if logCount > MAX_LOGS then
+                local oldest = table.remove(logEntries, 1)
+                if oldest then oldest.Row:Destroy() end
+                logCount = MAX_LOGS
+            end
+
+            local col = SEVERITY_COLOR[parsed.severity] or C.out
+            local pfx = SEVERITY_PREFIX[parsed.severity] or "OUT"
+            local rowBg = (logCount % 2 == 0) and C.rowEven or C.rowOdd
+
+            local Row = Library:Create('Frame', {
+                BackgroundColor3 = rowBg,
+                BorderSizePixel  = 0,
+                LayoutOrder      = logCount,
+                Size             = UDim2.new(1, 0, 0, ROW_H),
+                ZIndex           = 4,
+                Parent           = LogScroll,
+            })
+
+            -- left color bar
+            Library:Create('Frame', {
+                BackgroundColor3 = col,
+                BorderSizePixel  = 0,
+                Size             = UDim2.fromOffset(2, ROW_H),
+                ZIndex           = 5,
+                Parent           = Row,
+            })
+
+            -- row number
+            Library:Create('TextLabel', {
+                BackgroundTransparency = 1,
+                Position               = UDim2.fromOffset(6, 0),
+                Size                   = UDim2.fromOffset(26, ROW_H),
+                FontFace               = Library.Font,
+                Text                   = tostring(logCount),
+                TextColor3             = C.dimText,
+                TextSize               = 9,
+                TextXAlignment         = Enum.TextXAlignment.Left,
+                ZIndex                 = 5,
+                Parent                 = Row,
+            })
+
+            -- severity badge
+            local SevLabel = Library:Create('TextLabel', {
+                BackgroundColor3       = col,
+                BackgroundTransparency = 0.85,
+                BorderSizePixel        = 0,
+                Position               = UDim2.fromOffset(34, 4),
+                Size                   = UDim2.fromOffset(32, ROW_H - 8),
+                FontFace               = Library.Font,
+                Text                   = pfx,
+                TextColor3             = col,
+                TextSize               = 9,
+                ZIndex                 = 5,
+                Parent                 = Row,
+            })
+            Library:Create('UICorner', { CornerRadius = UDim.new(0, 2), Parent = SevLabel })
+
+            -- time
+            Library:Create('TextLabel', {
+                BackgroundTransparency = 1,
+                Position               = UDim2.fromOffset(74, 0),
+                Size                   = UDim2.fromOffset(56, ROW_H),
+                FontFace               = Library.Font,
+                Text                   = parsed.time,
+                TextColor3             = C.dimText,
+                TextSize               = 9,
+                TextXAlignment         = Enum.TextXAlignment.Left,
+                ZIndex                 = 5,
+                Parent                 = Row,
+            })
+
+            -- source
+            Library:Create('TextLabel', {
+                BackgroundTransparency = 1,
+                Position               = UDim2.fromOffset(134, 0),
+                Size                   = UDim2.fromOffset(92, ROW_H),
+                FontFace               = Library.Font,
+                Text                   = parsed.source or '',
+                TextColor3             = Library.AccentColor,
+                TextSize               = 9,
+                TextTruncate           = Enum.TextTruncate.AtEnd,
+                TextXAlignment         = Enum.TextXAlignment.Left,
+                ZIndex                 = 5,
+                Parent                 = Row,
+            })
+
+            Library:AddToRegistry(Library:Create('Frame', { -- invisible dummy to keep source color synced
+                BackgroundTransparency = 1, Size = UDim2.new(0,0,0,0), Parent = Row
+            }), { BackgroundColor3 = 'AccentColor' })
+
+            -- message
+            Library:Create('TextLabel', {
+                BackgroundTransparency = 1,
+                Position               = UDim2.fromOffset(230, 0),
+                Size                   = UDim2.new(1, -238, 1, 0),
+                FontFace               = Library.Font,
+                Text                   = parsed.message,
+                TextColor3             = col,
+                TextSize               = 10,
+                TextTruncate           = Enum.TextTruncate.AtEnd,
+                TextXAlignment         = Enum.TextXAlignment.Left,
+                ZIndex                 = 5,
+                Parent                 = Row,
+            })
+
+            -- bottom separator
+            Library:Create('Frame', {
+                BackgroundColor3 = C.border,
+                BorderSizePixel  = 0,
+                AnchorPoint      = Vector2.new(0, 1),
+                Position         = UDim2.new(0, 0, 1, 0),
+                Size             = UDim2.new(1, 0, 0, 1),
+                ZIndex           = 5,
+                Parent           = Row,
+            })
+
+            -- Hover highlight
+            Row.MouseEnter:Connect(function()
+                TweenService:Create(Row, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = Color3.fromRGB(28, 28, 35)
+                }):Play()
+            end)
+            Row.MouseLeave:Connect(function()
+                TweenService:Create(Row, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                    BackgroundColor3 = rowBg
+                }):Play()
+            end)
+
+            -- fade in
+            Row.BackgroundTransparency = 1
+            TweenService:Create(Row, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {
+                BackgroundTransparency = 0
+            }):Play()
+
+            local entry = { Row = Row, severity = parsed.severity, message = parsed.message, source = parsed.source or '', time = parsed.time }
+            table.insert(logEntries, entry)
+
+            -- visibility
+            local show = MatchesFilter(entry)
+            Row.Visible = show
+
+            local visible = 0
+            for _, e in ipairs(logEntries) do
+                if e.Row.Visible then visible = visible + 1 end
+            end
+            CountBadge.Text = visible .. '/' .. logCount .. ' shown'
+            StatusLeft.Text = logCount .. ' total entries'
+            StatusRight.Text = parsed.time ~= '' and ('last: ' .. parsed.time) or ''
+
+            LogScroll.CanvasSize = UDim2.new(0, 0, 0, LogLayout.AbsoluteContentSize.Y)
+
+            if autoScroll and show then
+                LogScroll.CanvasPosition = Vector2.new(0, math.max(0,
+                    LogLayout.AbsoluteContentSize.Y - LogScroll.AbsoluteSize.Y))
+            end
+        end
+
+        -- ── Parser (aynı format: s:;;time:;;m:'''''';;source:;;) ──
+        local function ParseLog(raw)
+            if type(raw) ~= 'string' or raw == '' then return nil end
+            local result = { severity = 'out', time = '', message = '', source = '' }
+            for segment in (raw .. ';;'):gmatch('(.-);;') do
+                segment = segment:match('^%s*(.-)%s*$')
+                if segment ~= '' then
+                    local key, val = segment:match('^([%w]+):(.+)$')
+                    if key and val then
+                        key = key:lower()
+                        if     key == 's'      then result.severity = val:lower():match('^%s*(.-)%s*$')
+                        elseif key == 'time'   then result.time     = val:match('^%s*(.-)%s*$')
+                        elseif key == 'source' then result.source   = val:match('^%s*(.-)%s*$')
+                        elseif key == 'm'      then
+                            local inner = val:match("^%s*'''(.-)'''%s*$")
+                            result.message = inner or val:match('^%s*(.-)%s*$')
+                        end
+                    end
+                end
+            end
+            if result.message == '' then return nil end
+            return result
+        end
+
+        -- ── Watcher ────────────────────────────────────────────
+        Library:GiveSignal(RunService.Heartbeat:Connect(function()
+            local raw = getgenv().newaclogs
+            if raw == nil or raw == lastRawValue then return end
+            lastRawValue = raw
+            local parsed = ParseLog(raw)
+            if parsed then AddLogRow(parsed) end
+        end))
+
+        -- Tab API (logs tab için groupbox yok)
+        Tab.AddLog = function(raw)
+            local p = ParseLog(raw)
+            if p then AddLogRow(p) end
+        end
+        Tab.ClearLogs = function()
+            ClearBtn.MouseButton1Click:Fire()
+        end
+
+    -- ══════════════════════════════════════════
+    -- NORMAL TAB TYPE
+    -- ══════════════════════════════════════════
+    else
 
         local LeftSide = Library:Create('ScrollingFrame', {
             BackgroundTransparency = 1;
@@ -4672,29 +5287,6 @@ function Library:CreateWindow(...)
             end);
         end;
 
-        function Tab:ShowTab()
-            for _, Tab in next, Window.Tabs do
-                Tab:HideTab();
-            end;
-
-            Blocker.BackgroundTransparency = 0;
-            TabButton.BackgroundColor3 = Library.MainColor;
-            Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'MainColor';
-            TabFrame.Visible = true;
-        end;
-
-        function Tab:HideTab()
-            Blocker.BackgroundTransparency = 1;
-            TabButton.BackgroundColor3 = Library.BackgroundColor;
-            Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'BackgroundColor';
-            TabFrame.Visible = false;
-        end;
-
-        function Tab:SetLayoutOrder(Position)
-            TabButton.LayoutOrder = Position;
-            TabListLayout:ApplyLayout();
-        end;
-
         function Tab:AddGroupbox(Info)
             local Groupbox = {};
 
@@ -4715,7 +5307,6 @@ function Library:CreateWindow(...)
             local BoxInner = Library:Create('Frame', {
                 BackgroundColor3 = Library.BackgroundColor;
                 BorderColor3 = Color3.new(0, 0, 0);
-                -- BorderMode = Enum.BorderMode.Inset;
                 Size = UDim2.new(1, -2, 1, -2);
                 Position = UDim2.new(0, 1, 0, 1);
                 ZIndex = 4;
@@ -4764,24 +5355,19 @@ function Library:CreateWindow(...)
 
             function Groupbox:Resize()
                 local Size = 0;
-
                 for _, Element in next, Groupbox.Container:GetChildren() do
                     if (not Element:IsA('UIListLayout')) and Element.Visible then
                         Size = Size + Element.Size.Y.Offset;
                     end;
                 end;
-
                 BoxOuter.Size = UDim2.new(1, 0, 0, 20 + Size + 2 + 2);
             end;
 
             Groupbox.Container = Container;
             setmetatable(Groupbox, BaseGroupbox);
-
             Groupbox:AddBlank(3);
             Groupbox:Resize();
-
             Tab.Groupboxes[Info.Name] = Groupbox;
-
             return Groupbox;
         end;
 
@@ -4794,9 +5380,7 @@ function Library:CreateWindow(...)
         end;
 
         function Tab:AddTabbox(Info)
-            local Tabbox = {
-                Tabs = {};
-            };
+            local Tabbox = { Tabs = {}; };
 
             local BoxOuter = Library:Create('Frame', {
                 BackgroundColor3 = Library.BackgroundColor;
@@ -4815,16 +5399,13 @@ function Library:CreateWindow(...)
             local BoxInner = Library:Create('Frame', {
                 BackgroundColor3 = Library.BackgroundColor;
                 BorderColor3 = Color3.new(0, 0, 0);
-                -- BorderMode = Enum.BorderMode.Inset;
                 Size = UDim2.new(1, -2, 1, -2);
                 Position = UDim2.new(0, 1, 0, 1);
                 ZIndex = 4;
                 Parent = BoxOuter;
             });
 
-            Library:AddToRegistry(BoxInner, {
-                BackgroundColor3 = 'BackgroundColor';
-            });
+            Library:AddToRegistry(BoxInner, { BackgroundColor3 = 'BackgroundColor' });
 
             local Highlight = Library:Create('Frame', {
                 BackgroundColor3 = Library.AccentColor;
@@ -4834,9 +5415,7 @@ function Library:CreateWindow(...)
                 Parent = BoxInner;
             });
 
-            Library:AddToRegistry(Highlight, {
-                BackgroundColor3 = 'AccentColor';
-            });
+            Library:AddToRegistry(Highlight, { BackgroundColor3 = 'AccentColor' });
 
             local TabboxButtons = Library:Create('Frame', {
                 BackgroundTransparency = 1;
@@ -4864,9 +5443,7 @@ function Library:CreateWindow(...)
                     Parent = TabboxButtons;
                 });
 
-                Library:AddToRegistry(Button, {
-                    BackgroundColor3 = 'MainColor';
-                });
+                Library:AddToRegistry(Button, { BackgroundColor3 = 'MainColor' });
 
                 local ButtonLabel = Library:CreateLabel({
                     Size = UDim2.new(1, 0, 1, 0);
@@ -4887,9 +5464,7 @@ function Library:CreateWindow(...)
                     Parent = Button;
                 });
 
-                Library:AddToRegistry(Block, {
-                    BackgroundColor3 = 'BackgroundColor';
-                });
+                Library:AddToRegistry(Block, { BackgroundColor3 = 'BackgroundColor' });
 
                 local Container = Library:Create('Frame', {
                     BackgroundTransparency = 1;
@@ -4907,105 +5482,106 @@ function Library:CreateWindow(...)
                 });
 
                 function Tab:Show()
-                    for _, Tab in next, Tabbox.Tabs do
-                        Tab:Hide();
-                    end;
-
+                    for _, T in next, Tabbox.Tabs do T:Hide() end
                     Container.Visible = true;
                     Block.Visible = true;
-
                     Button.BackgroundColor3 = Library.BackgroundColor;
                     Library.RegistryMap[Button].Properties.BackgroundColor3 = 'BackgroundColor';
-
                     Tab:Resize();
                 end;
 
                 function Tab:Hide()
                     Container.Visible = false;
                     Block.Visible = false;
-
                     Button.BackgroundColor3 = Library.MainColor;
                     Library.RegistryMap[Button].Properties.BackgroundColor3 = 'MainColor';
                 end;
 
                 function Tab:Resize()
                     local TabCount = 0;
-
-                    for _, Tab in next, Tabbox.Tabs do
-                        TabCount = TabCount + 1;
-                    end;
-
-                    for _, Button in next, TabboxButtons:GetChildren() do
-                        if not Button:IsA('UIListLayout') then
-                            Button.Size = UDim2.new(1 / TabCount, 0, 1, 0);
+                    for _ in next, Tabbox.Tabs do TabCount = TabCount + 1 end
+                    for _, B in next, TabboxButtons:GetChildren() do
+                        if not B:IsA('UIListLayout') then
+                            B.Size = UDim2.new(1 / TabCount, 0, 1, 0);
                         end;
                     end;
-
-                    if (not Container.Visible) then
-                        return;
-                    end;
-
+                    if not Container.Visible then return end
                     local Size = 0;
-
-                    for _, Element in next, Tab.Container:GetChildren() do
-                        if (not Element:IsA('UIListLayout')) and Element.Visible then
-                            Size = Size + Element.Size.Y.Offset;
+                    for _, E in next, Tab.Container:GetChildren() do
+                        if not E:IsA('UIListLayout') and E.Visible then
+                            Size = Size + E.Size.Y.Offset;
                         end;
                     end;
-
                     BoxOuter.Size = UDim2.new(1, 0, 0, 20 + Size + 2 + 2);
                 end;
 
                 Button.InputBegan:Connect(function(Input)
                     if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
-                        Tab:Show();
-                        Tab:Resize();
+                        Tab:Show(); Tab:Resize();
                     end;
                 end);
 
                 Tab.Container = Container;
                 Tabbox.Tabs[Name] = Tab;
-
                 setmetatable(Tab, BaseGroupbox);
-
                 Tab:AddBlank(3);
                 Tab:Resize();
-
-                -- Show first tab (number is 2 cus of the UIListLayout that also sits in that instance)
-                if #TabboxButtons:GetChildren() == 2 then
-                    Tab:Show();
-                end;
-
+                if #TabboxButtons:GetChildren() == 2 then Tab:Show() end
                 return Tab;
             end;
 
             Tab.Tabboxes[Info.Name or ''] = Tabbox;
-
             return Tabbox;
         end;
 
         function Tab:AddLeftTabbox(Name)
-            return Tab:AddTabbox({ Name = Name, Side = 1; });
+            return Tab:AddTabbox({ Name = Name, Side = 1 });
         end;
 
         function Tab:AddRightTabbox(Name)
-            return Tab:AddTabbox({ Name = Name, Side = 2; });
+            return Tab:AddTabbox({ Name = Name, Side = 2 });
         end;
 
-        TabButton.InputBegan:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                Tab:ShowTab();
-            end;
-        end);
+    end -- end else (normal tab)
 
-        -- This was the first tab added, so we show it by default.
-        if #TabContainer:GetChildren() == 1 then
+    -- ── Ortak Tab fonksiyonları ──────────────────────────────────
+    function Tab:ShowTab()
+        for _, T in next, Window.Tabs do T:HideTab() end
+        Blocker.BackgroundTransparency = 0;
+        TabButton.BackgroundColor3 = Library.MainColor;
+        Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'MainColor';
+        TabFrame.Visible = true;
+    end;
+
+    function Tab:HideTab()
+        Blocker.BackgroundTransparency = 1;
+        TabButton.BackgroundColor3 = Library.BackgroundColor;
+        Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'BackgroundColor';
+        TabFrame.Visible = false;
+    end;
+
+    function Tab:SetLayoutOrder(Position)
+        TabButton.LayoutOrder = Position;
+        TabListLayout:ApplyLayout();
+    end;
+
+    TabButton.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 then
             Tab:ShowTab();
         end;
+    end);
 
-        Window.Tabs[Name] = Tab;
-        return Tab;
+    if #TabContainer:GetChildren() == 1 then
+        Tab:ShowTab();
     end;
+
+    Window.Tabs[Name] = Tab;
+    return Tab;
+end;
+
+
+
+
 
     local ModalElement = Library:Create('TextButton', {
         BackgroundTransparency = 1;
