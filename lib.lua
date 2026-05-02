@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.7B"
+local version = "0.7 B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -9425,10 +9425,16 @@ do
     }
 end
 
+
+
+
+
+
+
+
 -- ╔══════════════════════════════════════════════════════════════╗
--- ║        XWARE — Library:CreateTargetPreview()  v1.2          ║
--- ║   Görünmez FOV  •  ViewportFrame her zaman açık             ║
--- ║   return Library'den önce yapıştır                          ║
+-- ║        XWARE — Library:CreateTargetPreview()  v2.0          ║
+-- ║   Görünmez FOV  •  WorldModel fix  •  Optimized             ║
 -- ╚══════════════════════════════════════════════════════════════╝
 --
 -- KULLANIM:
@@ -9453,18 +9459,17 @@ function Library:CreateTargetPreview(Config)
 
     -- ── Sabitler ────────────────────────────────────────────────
     local PANEL_W   = Config.Width      or 210
-    local PANEL_H   = Config.Height     or 244
+    local PANEL_H   = Config.Height     or 240
     local PANEL_PAD = Config.Padding    or 16
-    local VP_H      = Config.ViewportH  or 178
-    local UPD_RATE  = Config.UpdateRate or 0.05  -- saniye
-    local ROT_SPEED = Config.RotSpeed   or 38    -- derece/saniye
+    local VP_H      = Config.ViewportH  or 175
+    local UPD_RATE  = Config.UpdateRate or 0.06   -- hedef tarama: ~16 fps yeterli
+    local ROT_SPEED = Config.RotSpeed   or 40     -- derece/saniye
 
-    -- ── FOV yardımcısı (invisible — sadece mantıksal) ────────────
+    -- ── FOV yardımcısı ───────────────────────────────────────────
     local function GetFovSize()
         local sa = getgenv().silent_aim
-        if type(sa) == "table" then
-            local v = sa.fovsize
-            if type(v) == "number" and v > 0 then return v end
+        if type(sa) == "table" and type(sa.fovsize) == "number" and sa.fovsize > 0 then
+            return sa.fovsize
         end
         return 120
     end
@@ -9483,7 +9488,6 @@ function Library:CreateTargetPreview(Config)
     end
 
     -- ── FOV içinde en yakın oyuncuyu bul ────────────────────────
-    -- (çember çizilmez, sadece bu fonksiyon kullanılır)
     local function GetNearestInFov(fovRadius)
         local center   = ScreenCenter()
         local bestDist = fovRadius
@@ -9491,19 +9495,21 @@ function Library:CreateTargetPreview(Config)
 
         for _, player in ipairs(Players:GetPlayers()) do
             if player == LocalPlayer then continue end
-            if not player.Character   then continue end
+            local char = player.Character
+            if not char then continue end
 
-            local root = player.Character:FindFirstChild("HumanoidRootPart")
-            local hum  = player.Character:FindFirstChildOfClass("Humanoid")
-            if not root or not hum or hum.Health <= 0 then continue end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hum or hum.Health <= 0 then continue end
 
-            local aimPart = player.Character:FindFirstChild("Head") or root
-            local screenPos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
+            local head = char:FindFirstChild("Head")
+            if not head then continue end
+
+            local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
             if not onScreen then continue end
 
-            local dist2D = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-            if dist2D < bestDist then
-                bestDist = dist2D
+            local d = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
+            if d < bestDist then
+                bestDist = d
                 best     = player
             end
         end
@@ -9517,7 +9523,7 @@ function Library:CreateTargetPreview(Config)
 
     local ScreenGui = Library.ScreenGui
 
-    -- ── Ana panel (sağ alt köşe) ─────────────────────────────────
+    -- ── Ana panel ────────────────────────────────────────────────
     local Panel = Library:Create("Frame", {
         Name             = "TargetPreviewPanel";
         BackgroundColor3 = Color3.new(0, 0, 0);
@@ -9530,7 +9536,7 @@ function Library:CreateTargetPreview(Config)
         Parent           = ScreenGui;
     })
 
-    -- XWARE glow efekti
+    -- Glow
     local glow = Instance.new("ImageLabel", Panel)
     glow.Name                   = "GlowEffect"
     glow.Image                  = "rbxassetid://18245826428"
@@ -9543,7 +9549,7 @@ function Library:CreateTargetPreview(Config)
     glow.Position               = UDim2.new(0, -20, 0, -20)
     glow.ZIndex                 = -1
 
-    local function StartGlowPulse()
+    do
         local t1 = TweenService:Create(glow,
             TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
             { ImageTransparency = 0.3 })
@@ -9554,9 +9560,8 @@ function Library:CreateTargetPreview(Config)
         t2.Completed:Connect(function() t1:Play() end)
         t1:Play()
     end
-    StartGlowPulse()
 
-    -- ── İç frame ─────────────────────────────────────────────────
+    -- İç frame
     local Inner = Library:Create("Frame", {
         BackgroundColor3 = Library.MainColor;
         BorderColor3     = Library.AccentColor;
@@ -9565,13 +9570,9 @@ function Library:CreateTargetPreview(Config)
         ZIndex           = 501;
         Parent           = Panel;
     })
+    Library:AddToRegistry(Inner, { BackgroundColor3 = "MainColor"; BorderColor3 = "AccentColor" })
 
-    Library:AddToRegistry(Inner, {
-        BackgroundColor3 = "MainColor";
-        BorderColor3     = "AccentColor";
-    })
-
-    -- Accent üst çizgi
+    -- Accent çizgi
     local AccentLine = Library:Create("Frame", {
         BackgroundColor3 = Library.AccentColor;
         BorderSizePixel  = 0;
@@ -9579,10 +9580,9 @@ function Library:CreateTargetPreview(Config)
         ZIndex           = 502;
         Parent           = Inner;
     })
-
     Library:AddToRegistry(AccentLine, { BackgroundColor3 = "AccentColor" })
 
-    -- ── Header ───────────────────────────────────────────────────
+    -- Header
     local Header = Library:Create("Frame", {
         BackgroundColor3 = Library.BackgroundColor;
         BorderColor3     = Library.OutlineColor;
@@ -9592,11 +9592,7 @@ function Library:CreateTargetPreview(Config)
         ZIndex           = 502;
         Parent           = Inner;
     })
-
-    Library:AddToRegistry(Header, {
-        BackgroundColor3 = "BackgroundColor";
-        BorderColor3     = "OutlineColor";
-    })
+    Library:AddToRegistry(Header, { BackgroundColor3 = "BackgroundColor"; BorderColor3 = "OutlineColor" })
 
     Library:CreateLabel({
         Position       = UDim2.fromOffset(5, 0);
@@ -9608,7 +9604,6 @@ function Library:CreateTargetPreview(Config)
         Parent         = Header;
     })
 
-    -- FOV değeri header'da gösterilir ama çember çizilmez
     local FovLabel = Library:CreateLabel({
         AnchorPoint    = Vector2.new(1, 0.5);
         Position       = UDim2.new(1, -5, 0.5, 0);
@@ -9620,7 +9615,9 @@ function Library:CreateTargetPreview(Config)
         Parent         = Header;
     })
 
-    -- ── ViewportFrame — HER ZAMAN görünür ────────────────────────
+    -- ── ViewportFrame ─────────────────────────────────────────────
+    -- CRITICAL: ViewportFrame BasePart'ları yalnızca WorldModel
+    -- içindeyse doğru render eder. Folder/Model değil — WorldModel.
     local VpOuter = Library:Create("Frame", {
         BackgroundColor3 = Library.BackgroundColor;
         BorderColor3     = Library.OutlineColor;
@@ -9631,37 +9628,37 @@ function Library:CreateTargetPreview(Config)
         ClipsDescendants = true;
         Parent           = Inner;
     })
+    Library:AddToRegistry(VpOuter, { BackgroundColor3 = "BackgroundColor"; BorderColor3 = "OutlineColor" })
 
-    Library:AddToRegistry(VpOuter, {
-        BackgroundColor3 = "BackgroundColor";
-        BorderColor3     = "OutlineColor";
-    })
-
-    -- Viewport — target yokken karanlık arka plan görünür
     local Viewport = Instance.new("ViewportFrame")
-    Viewport.BackgroundColor3       = Color3.fromRGB(12, 12, 15)
+    Viewport.BackgroundColor3       = Color3.fromRGB(10, 10, 13)
     Viewport.BackgroundTransparency = 0
     Viewport.BorderSizePixel        = 0
     Viewport.Size                   = UDim2.new(1, 0, 1, 0)
     Viewport.ZIndex                 = 503
+    Viewport.LightDirection         = Vector3.new(-1, -2, -1)   -- yukarıdan ışık
+    Viewport.LightColor             = Color3.fromRGB(200, 200, 220)
+    Viewport.Ambient                = Color3.fromRGB(80, 80, 90)
     Viewport.Parent                 = VpOuter
 
+    -- Viewport kamerası
     local VpCamera = Instance.new("Camera")
-    VpCamera.FieldOfView   = 30
+    VpCamera.FieldOfView   = 35
     VpCamera.Parent        = Viewport
     Viewport.CurrentCamera = VpCamera
 
-    local VpModel = Instance.new("Folder")
-    VpModel.Name   = "PreviewModel"
-    VpModel.Parent = Viewport
+    -- WorldModel — BasePart'ların render edilmesi için zorunlu
+    local WorldModel = Instance.new("WorldModel")
+    WorldModel.Parent = Viewport
 
-    -- "NO TARGET" overlay — viewport'un üstünde, target varken gizlenir
-    local NoTargetOverlay = Library:Create("Frame", {
-        BackgroundColor3       = Color3.fromRGB(12, 12, 15);
+    -- NO TARGET overlay (viewport üstünde, target yokken görünür)
+    local Overlay = Library:Create("Frame", {
+        BackgroundColor3       = Color3.fromRGB(10, 10, 13);
         BackgroundTransparency = 0;
         BorderSizePixel        = 0;
         Size                   = UDim2.new(1, 0, 1, 0);
-        ZIndex                 = 510;  -- viewport'un üstünde
+        ZIndex                 = 510;
+        Visible                = true;
         Parent                 = VpOuter;
     })
 
@@ -9670,21 +9667,20 @@ function Library:CreateTargetPreview(Config)
         Text           = "NO TARGET";
         TextSize       = 11;
         ZIndex         = 511;
-        Parent         = NoTargetOverlay;
+        Parent         = Overlay;
     })
 
-    -- Overlay görünür/gizli geçişi
-    local function ShowNoTarget()
-        NoTargetOverlay.Visible          = true
-        NoTargetOverlay.BackgroundTransparency = 1
-        Tw(NoTargetOverlay, 0.2, { BackgroundTransparency = 0 })
+    local function ShowOverlay()
+        Overlay.Visible = true
+        Overlay.BackgroundTransparency = 1
+        Tw(Overlay, 0.2, { BackgroundTransparency = 0 })
     end
 
-    local function HideNoTarget()
-        Tw(NoTargetOverlay, 0.15, { BackgroundTransparency = 1 })
+    local function HideOverlay()
+        Tw(Overlay, 0.15, { BackgroundTransparency = 1 })
         task.delay(0.16, function()
-            if NoTargetOverlay and NoTargetOverlay.Parent then
-                NoTargetOverlay.Visible = false
+            if Overlay and Overlay.Parent then
+                Overlay.Visible = false
             end
         end)
     end
@@ -9700,11 +9696,7 @@ function Library:CreateTargetPreview(Config)
         ZIndex           = 502;
         Parent           = Inner;
     })
-
-    Library:AddToRegistry(InfoBar, {
-        BackgroundColor3 = "BackgroundColor";
-        BorderColor3     = "OutlineColor";
-    })
+    Library:AddToRegistry(InfoBar, { BackgroundColor3 = "BackgroundColor"; BorderColor3 = "OutlineColor" })
 
     local NameLabel = Library:CreateLabel({
         Position         = UDim2.fromOffset(5, 2);
@@ -9728,123 +9720,134 @@ function Library:CreateTargetPreview(Config)
     })
 
     -- ╔══════════════════════════════════════════════════╗
-    -- ║               STATE & MANTIK                     ║
+    -- ║           STATE & RENDER ENGINE                  ║
     -- ╚══════════════════════════════════════════════════╝
 
     local currentTarget   = nil
-    local clonedChar      = nil
-    local originalCFrames = {}
-    local allParts        = {}
+    local clonedChar      = nil   -- WorldModel içindeki klon
     local rotation        = 0
     local lastUpdate      = 0
     local running         = false
     local connections     = {}
 
-    -- Viewport klonunu temizle
+    -- Kameranın baktığı merkez + offset (clone build'da hesaplanır, sonra sabit kalır)
+    local cachedCenter    = Vector3.new(0, 0, 0)
+    local cachedBound     = 3.0
+
+    -- Cached part listesi: {clonedPart, originalCF}
+    local partCache       = {}
+
+    -- ── Klon oluştur ─────────────────────────────────────────────
     local function ClearClone()
-        for _, c in ipairs(VpModel:GetChildren()) do c:Destroy() end
-        clonedChar      = nil
-        originalCFrames = {}
-        allParts        = {}
+        if clonedChar and clonedChar.Parent then
+            clonedChar:Destroy()
+        end
+        clonedChar  = nil
+        partCache   = {}
     end
 
-    -- Karakteri viewport'a klonla ve CFrame'leri cache'le
-    local function CloneCharacter(player)
+    local function BuildClone(player)
         ClearClone()
-        if not player or not player.Character then return end
+        local char = player and player.Character
+        if not char then return false end
 
-        local ok, clone = pcall(function()
-            return player.Character:Clone()
-        end)
-        if not ok or not clone then return end
+        -- Klonlama pcall içinde
+        local ok, clone = pcall(function() return char:Clone() end)
+        if not ok or not clone then return false end
 
-        -- Script temizle (animasyon scriptleri vs.)
+        -- Gereksiz objeleri temizle (script, sound, constraint, beam, vb.)
+        local toRemove = {}
         for _, obj in ipairs(clone:GetDescendants()) do
-            if obj:IsA("Script") or obj:IsA("LocalScript")
-            or obj:IsA("ModuleScript") then
-                obj:Destroy()
+            if obj:IsA("Script") or obj:IsA("LocalScript") or obj:IsA("ModuleScript")
+            or obj:IsA("Sound") or obj:IsA("BodyMover") or obj:IsA("Constraint")
+            or obj:IsA("Beam") or obj:IsA("Trail") or obj:IsA("ParticleEmitter")
+            or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
+                table.insert(toRemove, obj)
             end
         end
+        for _, obj in ipairs(toRemove) do obj:Destroy() end
 
-        clone.Parent    = VpModel
-        clonedChar      = clone
-        originalCFrames = {}
-        allParts        = {}
+        -- WorldModel'e parent et
+        clone.Parent = WorldModel
+        clonedChar   = clone
 
-        for _, part in ipairs(clone:GetDescendants()) do
-            if part:IsA("BasePart") then
-                originalCFrames[part] = part.CFrame
-                table.insert(allParts, part)
-            end
-        end
-    end
-
-    -- Karakteri gerçek zamanlı güncelle (pozlar değil, sadece ekipman/mesh değişimi)
-    -- Rotasyon + kamera her frame hesaplanır
-    local function UpdateViewport(dt)
-        if not clonedChar or #allParts == 0 then return end
-
-        -- Hedefin gerçek karakterinden part'ları güncelle (appearance sync)
-        if currentTarget and currentTarget.Character then
-            local realChar = currentTarget.Character
-            for _, clonedPart in ipairs(allParts) do
-                if clonedPart.Parent then
-                    local realPart = realChar:FindFirstChild(clonedPart.Name)
-                    if realPart and realPart:IsA("BasePart") then
-                        -- Mesh/color güncelle, CFrame'i biz kontrol ediyoruz
-                        if clonedPart.Color ~= realPart.Color then
-                            clonedPart.Color = realPart.Color
-                        end
-                    end
-                end
-            end
-        end
-
-        rotation = rotation + ROT_SPEED * dt
-
-        local angle     = math.rad(rotation)
-        local rotMatrix = CFrame.Angles(0, angle, 0)
-
+        -- Part cache'i doldur + bounds hesapla (bir kez)
+        partCache = {}
         local minX, minY, minZ =  math.huge,  math.huge,  math.huge
         local maxX, maxY, maxZ = -math.huge, -math.huge, -math.huge
 
-        for _, part in ipairs(allParts) do
-            if part.Parent then
-                part.CFrame = rotMatrix * originalCFrames[part]
+        for _, part in ipairs(clone:GetDescendants()) do
+            if part:IsA("BasePart") then
+                -- HumanoidRootPart'ı görünmez yap (çirkin kutu)
+                if part.Name == "HumanoidRootPart" then
+                    part.Transparency = 1
+                end
+
+                local cf = part.CFrame
+                table.insert(partCache, { part = part, originalCF = cf })
+
                 local p = part.Position
                 local h = part.Size * 0.5
-                minX = math.min(minX, p.X - h.X)
-                minY = math.min(minY, p.Y - h.Y)
-                minZ = math.min(minZ, p.Z - h.Z)
-                maxX = math.max(maxX, p.X + h.X)
-                maxY = math.max(maxY, p.Y + h.Y)
-                maxZ = math.max(maxZ, p.Z + h.Z)
+                minX = math.min(minX, p.X - h.X); maxX = math.max(maxX, p.X + h.X)
+                minY = math.min(minY, p.Y - h.Y); maxY = math.max(maxY, p.Y + h.Y)
+                minZ = math.min(minZ, p.Z - h.Z); maxZ = math.max(maxZ, p.Z + h.Z)
             end
         end
 
-        local center = Vector3.new(
+        -- Merkez ve bound boyutu önbellekte sakla
+        cachedCenter = Vector3.new(
             (minX + maxX) * 0.5,
             (minY + maxY) * 0.5,
             (minZ + maxZ) * 0.5
         )
-        local boundSize = math.sqrt(
-            (maxX - minX)^2 + (maxY - minY)^2 + (maxZ - minZ)^2
-        ) * 0.5
+        cachedBound = math.max(
+            maxX - minX,
+            maxY - minY,
+            maxZ - minZ
+        ) * 0.6
 
-        VpCamera.CFrame = CFrame.new(
-            center + Vector3.new(0, boundSize * 0.15, boundSize * 2.2),
-            center
-        )
+        return true
     end
 
-    -- Accent rengi senkronizasyonu
+    -- ── Kamera güncelle ──────────────────────────────────────────
+    -- Merkez sabit, kamera dairesel rotasyon yapar → karakter döner gibi görünür
+    local function UpdateCamera()
+        local angle   = math.rad(rotation)
+        local dist    = cachedBound * 2.4
+        local height  = cachedBound * 0.15
+
+        local camPos = cachedCenter + Vector3.new(
+            math.sin(angle) * dist,
+            height,
+            math.cos(angle) * dist
+        )
+
+        VpCamera.CFrame = CFrame.new(camPos, cachedCenter)
+    end
+
+    -- ── Part rotasyonu: tüm part'ları döndür ─────────────────────
+    local function RotateParts()
+        if #partCache == 0 then return end
+
+        local angle     = math.rad(rotation)
+        local rotMatrix = CFrame.Angles(0, angle, 0)
+
+        for _, entry in ipairs(partCache) do
+            local part = entry.part
+            if part and part.Parent then
+                part.CFrame = rotMatrix * entry.originalCF
+            end
+        end
+    end
+
+    -- Accent senkronizasyonu
     local lastAccent = Library.AccentColor
     local function SyncAccent()
         local col = Library.AccentColor
         if col == lastAccent then return end
         lastAccent = col
-        Tw(glow,       0.4, { ImageColor3 = col })
-        Tw(AccentLine, 0.4, { BackgroundColor3 = col })
+        Tw(glow, 0.5, { ImageColor3 = col })
+        Tw(AccentLine, 0.5, { BackgroundColor3 = col })
     end
 
     -- ── Ana döngü ────────────────────────────────────────────────
@@ -9853,77 +9856,86 @@ function Library:CreateTargetPreview(Config)
     local function MainLoop(dt)
         SyncAccent()
 
+        -- Viewport render (her frame — sadece kamera pozisyonu güncellenir)
+        if clonedChar and #partCache > 0 then
+            rotation = rotation + ROT_SPEED * dt
+            if rotation >= 360 then rotation = rotation - 360 end
+
+            -- Kamera döner, part'lar sabit kalır (daha performanslı)
+            UpdateCamera()
+        end
+
+        -- Hedef taraması (throttled)
+        lastUpdate = lastUpdate + dt
+        if lastUpdate < UPD_RATE then return end
+        lastUpdate = 0
+
         local fovSize = GetFovSize()
         FovLabel.Text = "FOV: " .. fovSize
-        -- FOV çemberi hiç çizilmez — sadece mantıksal olarak kullanılır
 
-        -- Hedef taraması (throttled — her UPD_RATE saniyede bir)
-        lastUpdate = lastUpdate + dt
-        if lastUpdate >= UPD_RATE then
-            lastUpdate = 0
+        local nearest = GetNearestInFov(fovSize)
 
-            local nearest = GetNearestInFov(fovSize)
+        if nearest ~= currentTarget then
+            currentTarget = nearest
 
-            if nearest ~= currentTarget then
-                currentTarget = nearest
-
-                if nearest then
-                    -- Yeni hedef bulundu
-                    CloneCharacter(nearest)
+            if nearest then
+                local built = BuildClone(nearest)
+                if built then
                     rotation       = 0
                     NameLabel.Text = nearest.Name
-                    HideNoTarget()
-                else
-                    -- Hedef kayboldu
-                    ClearClone()
-                    NameLabel.Text = "---"
-                    DistLabel.Text = ""
-                    ShowNoTarget()
+                    HideOverlay()
                 end
-            end
-
-            -- Hedef hâlâ geçerli mi kontrol et
-            if currentTarget then
-                local char = currentTarget.Character
-                if not char then
-                    -- Oyuncu öldü / çıktı
-                    currentTarget  = nil
-                    ClearClone()
-                    NameLabel.Text = "---"
-                    DistLabel.Text = ""
-                    ShowNoTarget()
-                else
-                    -- Respawn: klon parent'sız kaldıysa yeniden klonla
-                    if clonedChar and not clonedChar.Parent then
-                        CloneCharacter(currentTarget)
-                        rotation = 0
-                    end
-
-                    -- HP bilgisi
-                    local hpStr = "?"
-                    local hum = char:FindFirstChildOfClass("Humanoid")
-                    if hum then
-                        hpStr = math.floor(hum.Health) .. "/" .. math.floor(hum.MaxHealth)
-                    end
-
-                    -- Mesafe
-                    local distStr    = "?"
-                    local localChar  = LocalPlayer.Character
-                    if localChar then
-                        local lr = localChar:FindFirstChild("HumanoidRootPart")
-                        local tr = char:FindFirstChild("HumanoidRootPart")
-                        if lr and tr then
-                            distStr = math.floor((lr.Position - tr.Position).Magnitude) .. "m"
-                        end
-                    end
-
-                    DistLabel.Text = "HP: " .. hpStr .. "  |  " .. distStr
-                end
+            else
+                ClearClone()
+                NameLabel.Text = "---"
+                DistLabel.Text = ""
+                ShowOverlay()
             end
         end
 
-        -- Viewport rotasyonu her frame güncellenir
-        UpdateViewport(dt)
+        -- Geçerli hedef bilgileri
+        if currentTarget then
+            local char = currentTarget.Character
+            if not char then
+                -- Oyuncu öldü/çıktı
+                currentTarget  = nil
+                ClearClone()
+                NameLabel.Text = "---"
+                DistLabel.Text = ""
+                ShowOverlay()
+            else
+                -- HP
+                local hpStr = ""
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    local hp    = math.floor(hum.Health)
+                    local maxHp = math.floor(hum.MaxHealth)
+                    hpStr = "HP: " .. hp .. "/" .. maxHp
+                end
+
+                -- Mesafe
+                local distStr   = ""
+                local localChar = LocalPlayer.Character
+                if localChar then
+                    local lr = localChar:FindFirstChild("HumanoidRootPart")
+                    local tr = char:FindFirstChild("HumanoidRootPart")
+                    if lr and tr then
+                        distStr = math.floor((lr.Position - tr.Position).Magnitude) .. "m"
+                    end
+                end
+
+                DistLabel.Text = hpStr .. (hpStr ~= "" and "  |  " or "") .. distStr
+
+                -- Respawn kontrolü: klon geçersizleştiyse yeniden build et
+                if clonedChar and not clonedChar.Parent then
+                    local built = BuildClone(currentTarget)
+                    if built then
+                        rotation = 0
+                        HideOverlay()
+                    end
+                end
+            end
+        end
     end
 
     -- ╔══════════════════════════════════════════════════╗
@@ -9937,11 +9949,13 @@ function Library:CreateTargetPreview(Config)
         running = true
 
         Panel.Visible = true
-        -- Başlangıçta hedef yok → overlay göster
-        ShowNoTarget()
+        ShowOverlay()
 
         renderConn = RunService.RenderStepped:Connect(function(dt)
-            if running then MainLoop(dt) end
+            if running then
+                local ok, err = pcall(MainLoop, dt)
+                if not ok then warn("[TargetPreview] MainLoop error:", err) end
+            end
         end)
 
         local conn = Players.PlayerRemoving:Connect(function(p)
@@ -9950,7 +9964,7 @@ function Library:CreateTargetPreview(Config)
                 ClearClone()
                 NameLabel.Text = "---"
                 DistLabel.Text = ""
-                ShowNoTarget()
+                ShowOverlay()
             end
         end)
 
@@ -9993,16 +10007,21 @@ end
 --   local Preview = Library:CreateTargetPreview()
 --   Preview:Start()
 --
--- CONFIG (isteğe bağlı):
+-- CONFIG:
 --   Library:CreateTargetPreview({
---       Width      = 210,   -- panel genişliği
---       Height     = 244,   -- panel yüksekliği
---       Padding    = 16,    -- sağ/alt boşluk
---       ViewportH  = 178,   -- viewport yüksekliği
---       UpdateRate = 0.05,  -- hedef tarama sıklığı (sn)
---       RotSpeed   = 38,    -- döndürme hızı (derece/sn)
+--       Width      = 210,
+--       Height     = 240,
+--       Padding    = 16,
+--       ViewportH  = 175,
+--       UpdateRate = 0.06,  -- hedef tarama hz
+--       RotSpeed   = 40,    -- kamera dönüş hızı (derece/sn)
 --   })
 -- ═══════════════════════════════════════════════════════════════
+
+
+
+
+
 
 
 local function OnPlayerChange()
