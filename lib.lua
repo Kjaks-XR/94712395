@@ -1092,25 +1092,37 @@ end;
 
 
 
-
 function Library:UpdateColorsUsingRegistry()
-    for Idx, Object in next, Library.Registry do
-        -- Make sure the instance still exists and has a parent
-        if Object.Instance and Object.Instance.Parent then
-            -- Update all registered properties
+    for Idx = #Library.Registry, 1, -1 do
+        local Object = Library.Registry[Idx]
+
+        local alive = false
+        pcall(function()
+            alive = Object.Instance ~= nil and Object.Instance.Parent ~= nil
+        end)
+
+        if not alive then
+            -- Otomatik cleanup — destroyed instance'ı registry'den sil
+            table.remove(Library.Registry, Idx)
+            if Object.Instance then
+                Library.RegistryMap[Object.Instance] = nil
+            end
+            -- HudRegistry'den de temizle
+            for HudIdx = #Library.HudRegistry, 1, -1 do
+                if Library.HudRegistry[HudIdx] == Object then
+                    table.remove(Library.HudRegistry, HudIdx)
+                    break
+                end
+            end
+        else
             for Property, ColorIdx in next, Object.Properties do
-                -- Safely get the new color/value
                 local success, result = pcall(function()
                     if type(ColorIdx) == 'string' then
-                        -- Reference to Library.AccentColor, Library.MainColor, etc.
                         return Library[ColorIdx]
                     elseif type(ColorIdx) == 'function' then
-                        -- Function that returns a color
                         return ColorIdx()
                     end
                 end)
-                
-                -- If we got a valid value, apply it safely
                 if success and result then
                     pcall(function()
                         Object.Instance[Property] = result
@@ -3897,20 +3909,23 @@ end;
 
 -- < Create other UI elements >
 do
-    Library.NotificationArea = Library:Create('Frame', {
-        BackgroundTransparency = 1;
-        Position = UDim2.new(0, 0, 0, 40);
-        Size = UDim2.new(0, 300, 0, 200);
-        ZIndex = 100;
-        Parent = ScreenGui;
-    });
+Library.NotificationArea = Library:Create('Frame', {
+    BackgroundTransparency = 1;
+    AnchorPoint = Vector2.new(0.5, 1);
+    Position = UDim2.new(0.5, 0, 1, -55);
+    Size = UDim2.new(0, 340, 1, -55);
+    ZIndex = 100;
+    Parent = ScreenGui;
+});
 
-    Library:Create('UIListLayout', {
-        Padding = UDim.new(0, 4);
-        FillDirection = Enum.FillDirection.Vertical;
-        SortOrder = Enum.SortOrder.LayoutOrder;
-        Parent = Library.NotificationArea;
-    });
+Library:Create('UIListLayout', {
+    Padding = UDim.new(0, 4);
+    FillDirection = Enum.FillDirection.Vertical;
+    VerticalAlignment = Enum.VerticalAlignment.Bottom;
+    HorizontalAlignment = Enum.HorizontalAlignment.Center;
+    SortOrder = Enum.SortOrder.LayoutOrder;
+    Parent = Library.NotificationArea;
+});
 
     local WatermarkOuter = Library:Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0);
@@ -4141,15 +4156,15 @@ function Library:Notify(Text, Time, Button1Text, Button2Text)
     local ButtonHeight = HasButtons and 28 or 0
     local TotalHeight = YSize + ButtonHeight + (HasButtons and 10 or 0)
     
-    local NotifyOuter = Library:Create('Frame', {
-        BackgroundTransparency = 1;
-        BorderColor3 = Color3.new(0, 0, 0);
-        Position = UDim2.new(0, 100, 0, 10);
-        Size = UDim2.new(0, 0, 0, TotalHeight);
-        ClipsDescendants = true;
-        ZIndex = 100;
-        Parent = Library.NotificationArea;
-    })
+-- YENİ:
+local NotifyOuter = Library:Create('Frame', {
+    BackgroundTransparency = 1;
+    BorderColor3 = Color3.new(0, 0, 0);
+    Size = UDim2.new(0, 0, 0, TotalHeight);
+    ClipsDescendants = true;
+    ZIndex = 100;
+    Parent = Library.NotificationArea;
+})
     
     local NotifyInner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
@@ -4390,9 +4405,9 @@ function Library:Notify(Text, Time, Button1Text, Button2Text)
         BackgroundColor3 = 'AccentColor';
     }, true)
     
-    local openTween = TweenService:Create(NotifyOuter, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, XSize + 8 + 4, 0, TotalHeight)
-    })
+local openTween = TweenService:Create(NotifyOuter, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, math.min(XSize + 16, 320), 0, TotalHeight)
+})
     openTween:Play()
     
     local function CloseNotification()
