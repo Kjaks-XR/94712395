@@ -4423,12 +4423,13 @@ local openTween = TweenService:Create(NotifyOuter, TweenInfo.new(0.35, Enum.Easi
         end)
     end
     
-    if Time and Time > 0 then
-        task.spawn(function()
-            wait(Time)
-            CloseNotification()
-        end)
-    end
+-- YENİ:
+Time = (type(Time) == 'number' and Time > 0) and Time or 3
+
+task.spawn(function()
+    wait(Time)
+    CloseNotification()
+end)
     
     local NotificationObject = {
         OnButton1 = function(self, callback)
