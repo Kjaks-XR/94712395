@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.6B"
+local version = "0.7B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -3301,15 +3301,16 @@ function Funcs:AddDropdown(Idx, Info)
         Info.Compact = true;
     end;
 
-    local Dropdown = {
-        Values = Info.Values;
-        Value = Info.Multi and {};
-        Multi = Info.Multi;
-        Type = 'Dropdown';
-        SpecialType = Info.SpecialType; -- can be either 'Player' or 'Team'
-        Callback = Info.Callback or function(Value) end;
-        IsAnimating = false; -- Add animation state tracking
-    };
+local Dropdown = {
+    Values = Info.Values;
+    Value = Info.Multi and {};
+    Multi = Info.Multi;
+    Type = 'Dropdown';
+    SpecialType = Info.SpecialType;
+    Callback = Info.Callback or function(Value) end;
+    IsAnimating = false;
+    DisabledValues = Info.DisabledValues or {};
+};
 
     local Groupbox = self;
     local Container = Groupbox.Container;
@@ -3518,20 +3519,25 @@ function Funcs:AddDropdown(Idx, Info)
 
         local Count = 0;
 
-        for Idx, Value in next, Values do
-            local Table = {};
+-- YENİ:
+for Idx, Value in next, Values do
+    local Table = {};
+    local isDisabled = false;
+    for _, dv in next, Dropdown.DisabledValues do
+        if dv == Value then isDisabled = true; break end
+    end
 
-            Count = Count + 1;
+    Count = Count + 1;
 
-            local Button = Library:Create('Frame', {
-                BackgroundColor3 = Library.MainColor;
-                BorderColor3 = Library.OutlineColor;
-                BorderMode = Enum.BorderMode.Middle;
-                Size = UDim2.new(1, -1, 0, 20);
-                ZIndex = 23;
-                Active = true,
-                Parent = Scrolling;
-            });
+    local Button = Library:Create('Frame', {
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3 = Library.OutlineColor;
+        BorderMode = Enum.BorderMode.Middle;
+        Size = UDim2.new(1, -1, 0, 20);
+        ZIndex = 23;
+        Active = not isDisabled;
+        Parent = Scrolling;
+    });
 
             Library:AddToRegistry(Button, {
                 BackgroundColor3 = 'MainColor';
@@ -3549,10 +3555,32 @@ function Funcs:AddDropdown(Idx, Info)
                 Parent = Button;
             });
 
-            Library:OnHighlight(Button, Button,
-                { BorderColor3 = 'AccentColor', ZIndex = 24 },
-                { BorderColor3 = 'OutlineColor', ZIndex = 23 }
-            );
+if isDisabled then
+    -- Gri renk, hover yok, tıklanamaz
+    ButtonLabel.TextColor3 = Color3.fromRGB(70, 70, 70);
+    Library:RemoveFromRegistry(ButtonLabel);
+    Library:AddToRegistry(ButtonLabel, {});
+
+    -- Üstüne "disabled" ibaresi
+    Library:Create('TextLabel', {
+        BackgroundTransparency = 1;
+        AnchorPoint = Vector2.new(1, 0.5);
+        Position = UDim2.new(1, -6, 0.5, 0);
+        Size = UDim2.fromOffset(50, 20);
+        FontFace = Library.Font;
+        Text = 'disabled';
+        TextColor3 = Color3.fromRGB(55, 55, 55);
+        TextSize = 10;
+        TextXAlignment = Enum.TextXAlignment.Right;
+        ZIndex = 25;
+        Parent = Button;
+    });
+else
+    Library:OnHighlight(Button, Button,
+        { BorderColor3 = 'AccentColor', ZIndex = 24 },
+        { BorderColor3 = 'OutlineColor', ZIndex = 23 }
+    );
+end
 
             local Selected;
 
@@ -3604,8 +3632,9 @@ function Funcs:AddDropdown(Idx, Info)
 
             CreateHoverEffect();
 
-            ButtonLabel.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+ButtonLabel.InputBegan:Connect(function(Input)
+    if isDisabled then return end
+    if Input.UserInputType == Enum.UserInputType.MouseButton1 then
                     -- Add click animation
                     local clickTween = TweenService:Create(Button, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
                         Size = UDim2.new(Button.Size.X.Scale, Button.Size.X.Offset - 4, Button.Size.Y.Scale, Button.Size.Y.Offset)
