@@ -9425,6 +9425,286 @@ do
     }
 end
 
+
+
+
+
+
+
+
+
+function Library:CreateInvViewer()
+    local Players = game:GetService("Players");
+    local UIS = game:GetService("UserInputService");
+    local RunService = game:GetService("RunService");
+
+    local lp = Players.LocalPlayer;
+    local mouse = lp:GetMouse();
+    local cam = workspace.CurrentCamera;
+
+    local file = "xware/invviewerpos.txt";
+
+    local UI = {
+        frame = nil;
+        list = nil;
+        enabled = false;
+        target = nil;
+        dragging = false;
+        dragStart = nil;
+        startPos = nil;
+    };
+
+    local function loadPos()
+        if isfile and isfile(file) then
+            local d = readfile(file);
+            local x,y = d:match("(.+),(.+)");
+            if x then
+                return UDim2.new(0, tonumber(x), 0, tonumber(y));
+            end;
+        end;
+        return UDim2.new(0,20,0.5,-180);
+    end;
+
+    local function savePos()
+        if writefile and UI.frame then
+            local p = UI.frame.Position;
+            writefile(file, p.X.Offset..","..p.Y.Offset);
+        end;
+    end;
+
+    local function create()
+        if UI.frame then return end;
+
+        local Panel = Library:Create("Frame", {
+            Name = "InvViewer";
+            BackgroundColor3 = Color3.new(0,0,0);
+            BorderColor3 = Color3.new(0,0,0);
+            Position = loadPos();
+            Size = UDim2.fromOffset(260, 330);
+            ZIndex = 500;
+            Parent = Library.ScreenGui;
+        });
+
+        local Glow = Instance.new("ImageLabel", Panel);
+        Glow.Image = "rbxassetid://18245826428";
+        Glow.ScaleType = Enum.ScaleType.Slice;
+        Glow.SliceCenter = Rect.new(21,21,79,79);
+        Glow.ImageColor3 = Library.AccentColor;
+        Glow.ImageTransparency = 0.7;
+        Glow.BackgroundTransparency = 1;
+        Glow.Size = UDim2.new(1,30,1,30);
+        Glow.Position = UDim2.new(0,-15,0,-15);
+        Glow.ZIndex = -1;
+
+        local Inner = Library:Create("Frame", {
+            BackgroundColor3 = Library.MainColor;
+            BorderColor3 = Library.AccentColor;
+            BorderMode = Enum.BorderMode.Inset;
+            Size = UDim2.new(1,0,1,0);
+            ZIndex = 501;
+            Parent = Panel;
+        });
+
+        local Accent = Library:Create("Frame", {
+            BackgroundColor3 = Library.AccentColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1,0,0,2);
+            ZIndex = 502;
+            Parent = Inner;
+        });
+
+        local Header = Library:Create("Frame", {
+            BackgroundColor3 = Library.BackgroundColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderMode = Enum.BorderMode.Inset;
+            Position = UDim2.fromOffset(0,2);
+            Size = UDim2.new(1,0,0,22);
+            ZIndex = 502;
+            Parent = Inner;
+        });
+
+        local Title = Library:CreateLabel({
+            Text = "INVENTORY";
+            Position = UDim2.fromOffset(5,0);
+            Size = UDim2.new(0.6,0,1,0);
+            TextSize = 11;
+            TextXAlignment = Enum.TextXAlignment.Left;
+            ZIndex = 503;
+            Parent = Header;
+        });
+
+        local Target = Library:CreateLabel({
+            Name = "Target";
+            Text = "---";
+            AnchorPoint = Vector2.new(1,0.5);
+            Position = UDim2.new(1,-5,0.5,0);
+            Size = UDim2.fromOffset(100,22);
+            TextSize = 9;
+            TextXAlignment = Enum.TextXAlignment.Right;
+            ZIndex = 503;
+            Parent = Header;
+        });
+
+        local ListFrame = Library:Create("Frame", {
+            BackgroundColor3 = Library.BackgroundColor;
+            BorderColor3 = Library.OutlineColor;
+            BorderMode = Enum.BorderMode.Inset;
+            Position = UDim2.fromOffset(4,26);
+            Size = UDim2.new(1,-8,1,-30);
+            ZIndex = 502;
+            Parent = Inner;
+        });
+
+        local Scroll = Instance.new("ScrollingFrame");
+        Scroll.BackgroundTransparency = 1;
+        Scroll.Size = UDim2.new(1,0,1,0);
+        Scroll.BorderSizePixel = 0;
+        Scroll.ScrollBarThickness = 2;
+        Scroll.Parent = ListFrame;
+
+        local Layout = Instance.new("UIListLayout");
+        Layout.Padding = UDim.new(0,4);
+        Layout.Parent = Scroll;
+
+        Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Scroll.CanvasSize = UDim2.new(0,0,0,Layout.AbsoluteContentSize.Y);
+        end);
+
+        UI.frame = Panel;
+        UI.list = Scroll;
+
+        Panel.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                UI.dragging = true;
+                UI.dragStart = i.Position;
+                UI.startPos = Panel.Position;
+            end;
+        end);
+
+        Panel.InputEnded:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                UI.dragging = false;
+            end;
+        end);
+
+        UIS.InputChanged:Connect(function(i)
+            if UI.dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+                local d = i.Position - UI.dragStart;
+                Panel.Position = UDim2.new(
+                    UI.startPos.X.Scale,
+                    UI.startPos.X.Offset + d.X,
+                    UI.startPos.Y.Scale,
+                    UI.startPos.Y.Offset + d.Y
+                );
+            end;
+        end);
+
+        task.spawn(function()
+            while task.wait(5) do
+                savePos();
+            end;
+        end);
+    end;
+
+    local function clear()
+        for _,v in pairs(UI.list:GetChildren()) do
+            if v:IsA("TextLabel") then v:Destroy() end;
+        end;
+    end;
+
+    local function add(txt)
+        local l = Library:CreateLabel({
+            Text = txt;
+            Size = UDim2.new(1,-4,0,16);
+            TextSize = 10;
+            TextXAlignment = Enum.TextXAlignment.Left;
+            Parent = UI.list;
+        });
+    end;
+
+    local function getTarget()
+        local best = nil;
+        local distMax = SilentAim.fov;
+
+        for _,p in pairs(Players:GetPlayers()) do
+            if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local pos = cam:WorldToViewportPoint(p.Character.HumanoidRootPart.Position);
+                local dist = (Vector2.new(pos.X,pos.Y) - Vector2.new(mouse.X,mouse.Y)).Magnitude;
+
+                if dist < distMax then
+                    distMax = dist;
+                    best = p;
+                end;
+            end;
+        end;
+
+        return best;
+    end;
+
+    local function update()
+        if not UI.enabled then return end;
+
+        clear();
+
+        local t = UI.target or getTarget();
+        UI.target = t;
+
+        local label = UI.frame:FindFirstChild("Target", true);
+
+        if not t then
+            if label then label.Text = "---" end;
+            return;
+        end;
+
+        if label then label.Text = t.Name end;
+
+        local bp = t:FindFirstChild("Backpack");
+        if bp then
+            for _,tool in pairs(bp:GetChildren()) do
+                if tool:IsA("Tool") then
+                    add(tool.Name);
+                end;
+            end;
+        end;
+    end;
+
+    RunService.RenderStepped:Connect(update);
+
+    local api = {};
+
+    function api:createinvviewerui()
+        create();
+    end;
+
+    function api:deleteinvviewerui()
+        if UI.frame then UI.frame:Destroy() UI.frame=nil end;
+    end;
+
+    function api:enableinvviewerui()
+        UI.enabled = true;
+        if UI.frame then UI.frame.Visible = true end;
+    end;
+
+    function api:disableinvviewerui()
+        UI.enabled = false;
+        if UI.frame then UI.frame.Visible = false end;
+    end;
+
+    function api:settarget(p)
+        UI.target = p;
+    end;
+
+    return api;
+end;
+
+
+
+
+
+
+
+
+
 -- ╔══════════════════════════════════════════════════════════════╗
 -- ║        XWARE — Library:CreateTargetPreview()  v1.2          ║
 -- ║   Görünmez FOV  •  ViewportFrame her zaman açık             ║
