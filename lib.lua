@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.8B"
+local version = "0.6B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -9657,14 +9657,14 @@ local function update()
 
     if label then label.Text = t.Name end;
 
+    local bp = t:FindFirstChild("Backpack");
+    if not bp then return end;
+
     local items = {};
 
-    local bp = t:FindFirstChildOfClass("Backpack");
-    if bp then
-        for _,tool in ipairs(bp:GetChildren()) do
-            if tool:IsA("Tool") then
-                table.insert(items, tool.Name);
-            end;
+    for _,tool in ipairs(bp:GetChildren()) do
+        if tool:IsA("Tool") then
+            table.insert(items, tool.Name);
         end;
     end;
 
