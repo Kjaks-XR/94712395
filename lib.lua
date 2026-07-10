@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.7B"
+local version = "0.8B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -9641,10 +9641,8 @@ function Library:CreateInvViewer()
         return best;
     end;
 
-    local function update()
+local function update()
     if not UI.enabled then return end;
-
-    clear();
 
     local t = UI.target or getTarget();
     UI.target = t;
@@ -9652,20 +9650,36 @@ function Library:CreateInvViewer()
     local label = UI.frame:FindFirstChild("Target", true);
 
     if not t then
+        clear();
         if label then label.Text = "---" end;
         return;
     end;
 
     if label then label.Text = t.Name end;
 
-    local bp = t:FindFirstChildOfClass("Backpack");
+    local items = {};
 
+    local bp = t:FindFirstChildOfClass("Backpack");
     if bp then
         for _,tool in ipairs(bp:GetChildren()) do
             if tool:IsA("Tool") then
-                add(tool.Name);
+                table.insert(items, tool.Name);
             end;
         end;
+    end;
+
+    if t.Character then
+        for _,tool in ipairs(t.Character:GetChildren()) do
+            if tool:IsA("Tool") then
+                table.insert(items, tool.Name);
+            end;
+        end;
+    end;
+
+    clear();
+
+    for _,name in ipairs(items) do
+        add(name);
     end;
 end;
 
