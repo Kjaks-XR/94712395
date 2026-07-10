@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.4B"
+local version = "0.3B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -9431,7 +9431,6 @@ end
 
 
 
-
 function Library:CreateInvViewer()
     local Players = game:GetService("Players");
     local UIS = game:GetService("UserInputService");
@@ -9473,6 +9472,8 @@ function Library:CreateInvViewer()
 
     local function create()
         if UI.frame then return end;
+
+        print("[DEBUG] Creating InvViewer UI");
 
         local Panel = Library:Create("Frame", {
             Name = "InvViewer";
@@ -9603,15 +9604,24 @@ function Library:CreateInvViewer()
                 savePos();
             end;
         end);
+        
+        print("[DEBUG] InvViewer UI created successfully");
     end;
 
     local function clear()
+        print("[DEBUG] Clearing inventory list");
+        local count = 0;
         for _,v in pairs(UI.list:GetChildren()) do
-            if v:IsA("TextLabel") then v:Destroy() end;
+            if v:IsA("TextLabel") then 
+                v:Destroy();
+                count = count + 1;
+            end;
         end;
+        print("[DEBUG] Cleared " .. count .. " items from list");
     end;
 
     local function add(txt)
+        print("[DEBUG] Adding item to list: " .. txt);
         local l = Library:CreateLabel({
             Text = txt;
             Size = UDim2.new(1,-4,0,16);
@@ -9623,108 +9633,181 @@ function Library:CreateInvViewer()
 
     -- SADECE backpack'teki tool'ları göster
     local function updateInventory(player)
+        print("[DEBUG] ===== UPDATE INVENTORY START =====");
+        print("[DEBUG] Player parameter:", player);
+        
         clear(); -- Önce temizle
         
         if not player then 
+            print("[DEBUG] Player is nil, showing ---");
             if UI.frame then
                 local label = UI.frame:FindFirstChild("Target", true);
-                if label then label.Text = "---" end;
+                if label then 
+                    label.Text = "---" 
+                    print("[DEBUG] Target label set to ---");
+                else
+                    print("[DEBUG] Target label not found!");
+                end;
+            else
+                print("[DEBUG] UI.frame is nil!");
             end;
             return; 
         end;
 
+        print("[DEBUG] Updating inventory for player:", player.Name);
+        print("[DEBUG] Player class:", typeof(player));
+
         -- Target ismini güncelle
         if UI.frame then
             local label = UI.frame:FindFirstChild("Target", true);
-            if label then label.Text = player.Name end;
+            if label then 
+                label.Text = player.Name 
+                print("[DEBUG] Target label set to:", player.Name);
+            else
+                print("[DEBUG] Target label not found!");
+            end;
+        else
+            print("[DEBUG] UI.frame is nil!");
         end;
 
         -- Backpack'i kontrol et
         local bp = player:FindFirstChild("Backpack");
+        print("[DEBUG] Backpack found:", bp ~= nil);
+        
         if bp then
+            print("[DEBUG] Backpack class:", typeof(bp));
+            local children = bp:GetChildren();
+            print("[DEBUG] Backpack child count:", #children);
+            
             local hasItems = false;
-            for _,tool in ipairs(bp:GetChildren()) do
+            local toolCount = 0;
+            
+            for i, tool in ipairs(children) do
+                print("[DEBUG] Child " .. i .. ":", tool.Name, "IsA Tool:", tool:IsA("Tool"));
                 if tool:IsA("Tool") then
                     add(tool.Name);
                     hasItems = true;
+                    toolCount = toolCount + 1;
+                    print("[DEBUG] Added tool:", tool.Name);
                 end;
             end;
             
+            print("[DEBUG] Total tools found:", toolCount);
+            
             -- Eğer hiç item yoksa mesaj göster
             if not hasItems then
+                print("[DEBUG] No tools found, showing Empty");
                 add("Empty");
             end;
         else
+            print("[DEBUG] No Backpack found!");
             add("No Backpack");
         end;
+        
+        print("[DEBUG] ===== UPDATE INVENTORY END =====");
     end;
 
     local function getTarget()
+        print("[DEBUG] Getting target...");
         local best = nil;
         local distMax = _G.Fovsize or 200;
+        print("[DEBUG] FOV size:", distMax);
 
-        for _,p in pairs(Players:GetPlayers()) do
-            if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                local pos = cam:WorldToViewportPoint(p.Character.HumanoidRootPart.Position);
-                local dist = (Vector2.new(pos.X,pos.Y) - Vector2.new(mouse.X,mouse.Y)).Magnitude;
+        local mousePos = Vector2.new(mouse.X, mouse.Y);
+        print("[DEBUG] Mouse position:", mousePos.X, mousePos.Y);
 
-                if dist < distMax then
-                    distMax = dist;
-                    best = p;
+        local players = Players:GetPlayers();
+        print("[DEBUG] Total players:", #players);
+
+        for _,p in ipairs(players) do
+            if p ~= lp then
+                if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    local pos = cam:WorldToViewportPoint(p.Character.HumanoidRootPart.Position);
+                    local dist = (Vector2.new(pos.X,pos.Y) - mousePos).Magnitude;
+                    
+                    print("[DEBUG] Player:", p.Name, "Distance:", dist);
+                    
+                    if dist < distMax then
+                        distMax = dist;
+                        best = p;
+                        print("[DEBUG] New best target:", p.Name, "Distance:", dist);
+                    end;
+                else
+                    print("[DEBUG] Player", p.Name, "has no character or HumanoidRootPart");
                 end;
             end;
         end;
 
+        print("[DEBUG] Final target:", best and best.Name or "None");
         return best;
     end;
 
     local lastTarget = nil;
     local function update()
-        if not UI.enabled then return end;
+        if not UI.enabled then 
+            print("[DEBUG] UI is disabled, skipping update");
+            return; 
+        end;
 
         local t = UI.target or getTarget();
+        print("[DEBUG] Current target from UI.target:", UI.target and UI.target.Name or "nil");
+        print("[DEBUG] Target from getTarget():", t and t.Name or "nil");
+        print("[DEBUG] Last target:", lastTarget and lastTarget.Name or "nil");
         
         -- Eğer target değiştiyse güncelle
         if t ~= lastTarget then
+            print("[DEBUG] Target changed! Updating inventory...");
             lastTarget = t;
             updateInventory(t);
+        else
+            print("[DEBUG] Target unchanged, skipping update");
         end;
     end;
 
+    print("[DEBUG] Connecting update to RenderStepped");
     RunService.RenderStepped:Connect(update);
 
     local api = {};
 
     function api:createinvviewerui()
+        print("[DEBUG] createinvviewerui called");
         create();
     end;
 
     function api:deleteinvviewerui()
+        print("[DEBUG] deleteinvviewerui called");
         if UI.frame then UI.frame:Destroy() UI.frame=nil end;
     end;
 
     function api:enableinvviewerui()
+        print("[DEBUG] enableinvviewerui called");
         UI.enabled = true;
-        if UI.frame then UI.frame.Visible = true end;
+        if UI.frame then 
+            UI.frame.Visible = true 
+            print("[DEBUG] UI frame visible set to true");
+        else
+            print("[DEBUG] UI.frame is nil, creating...");
+            create();
+            UI.frame.Visible = true;
+        end;
     end;
 
     function api:disableinvviewerui()
+        print("[DEBUG] disableinvviewerui called");
         UI.enabled = false;
         if UI.frame then UI.frame.Visible = false end;
     end;
 
     function api:settarget(p)
+        print("[DEBUG] settarget called with:", p and p.Name or "nil");
         UI.target = p;
         lastTarget = nil; -- Target değişince güncellemeyi tetikle
+        print("[DEBUG] Target set, lastTarget reset");
     end;
 
+    print("[DEBUG] InvViewer created successfully");
     return api;
 end;
-
-
-
-
-
 
 
 
