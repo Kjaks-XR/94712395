@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.3B"
+local version = "0.4B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -9428,7 +9428,6 @@ end
 
 
 
-
 function Library:CreateInvViewer()
     local Players = game:GetService("Players");
     local UIS = game:GetService("UserInputService");
@@ -9443,7 +9442,6 @@ function Library:CreateInvViewer()
     local UI = {
         frame = nil;
         list = nil;
-        listFrame = nil;
         enabled = false;
         target = nil;
         dragging = false;
@@ -9543,7 +9541,7 @@ function Library:CreateInvViewer()
             Parent = Header;
         });
 
-        UI.listFrame = Library:Create("Frame", {
+        local ListFrame = Library:Create("Frame", {
             BackgroundColor3 = Library.BackgroundColor;
             BorderColor3 = Library.OutlineColor;
             BorderMode = Enum.BorderMode.Inset;
@@ -9554,7 +9552,6 @@ function Library:CreateInvViewer()
             ClipsDescendants = true;
         });
 
-        -- ScrollingFrame'i doğru ayarla
         local Scroll = Instance.new("ScrollingFrame");
         Scroll.BackgroundTransparency = 1;
         Scroll.Size = UDim2.new(1,0,1,0);
@@ -9564,8 +9561,10 @@ function Library:CreateInvViewer()
         Scroll.ScrollBarImageColor3 = Library.AccentColor;
         Scroll.ScrollBarImageTransparency = 0.5;
         Scroll.CanvasSize = UDim2.new(0,0,0,0);
-        Scroll.Parent = UI.listFrame;
+        Scroll.Parent = ListFrame;
         Scroll.Visible = true;
+        Scroll.BackgroundTransparency = 0;
+        Scroll.BackgroundColor3 = Color3.fromRGB(20,20,25);
 
         local Layout = Instance.new("UIListLayout");
         Layout.Padding = UDim.new(0,4);
@@ -9581,7 +9580,6 @@ function Library:CreateInvViewer()
         UI.frame = Panel;
         UI.list = Scroll;
 
-        -- Drag işlemleri
         Panel.InputBegan:Connect(function(i)
             if i.UserInputType == Enum.UserInputType.MouseButton1 then
                 UI.dragging = true;
@@ -9627,11 +9625,13 @@ function Library:CreateInvViewer()
     local function add(txt)
         if not UI.list then return end;
         
+        print("[ADD] Adding:", txt);
+        
         local l = Instance.new("TextLabel");
         l.Text = txt;
-        l.Size = UDim2.new(1,-4,0,16);
-        l.Position = UDim2.new(0,2,0,0);
-        l.TextSize = 10;
+        l.Size = UDim2.new(1,-8,0,18);
+        l.Position = UDim2.new(0,4,0,0);
+        l.TextSize = 11;
         l.TextColor3 = Color3.new(1,1,1);
         l.TextXAlignment = Enum.TextXAlignment.Left;
         l.TextYAlignment = Enum.TextYAlignment.Center;
@@ -9639,15 +9639,12 @@ function Library:CreateInvViewer()
         l.Font = Enum.Font.Gotham;
         l.Parent = UI.list;
         l.Visible = true;
+        l.ZIndex = 600;
         
-        -- Alternatif olarak Library:CreateLabel kullan
-        -- Library:CreateLabel({
-        --     Text = txt;
-        --     Size = UDim2.new(1,-4,0,16);
-        --     TextSize = 10;
-        --     TextXAlignment = Enum.TextXAlignment.Left;
-        --     Parent = UI.list;
-        -- });
+        print("[ADD] Label created, parent:", l.Parent);
+        print("[ADD] Label text:", l.Text);
+        print("[ADD] Label visible:", l.Visible);
+        print("[ADD] Scroll children:", #UI.list:GetChildren());
     end;
 
     local function updateInventory(player)
@@ -9666,11 +9663,16 @@ function Library:CreateInvViewer()
             if label then label.Text = player.Name end;
         end;
 
-        -- Backpack'teki tool'ları göster
+        print("[UPDATE] Player:", player and player.Name or "nil");
+        
         local bp = player:FindFirstChild("Backpack");
+        print("[UPDATE] Backpack found:", bp ~= nil);
+        
         if bp then
+            print("[UPDATE] Backpack children:", #bp:GetChildren());
             local hasItems = false;
             for _,tool in ipairs(bp:GetChildren()) do
+                print("[UPDATE] Child:", tool.Name, "Is Tool:", tool:IsA("Tool"));
                 if tool:IsA("Tool") then
                     add(tool.Name);
                     hasItems = true;
@@ -9683,6 +9685,8 @@ function Library:CreateInvViewer()
         else
             add("No Backpack");
         end;
+        
+        print("[UPDATE] Final scroll children:", UI.list and #UI.list:GetChildren() or 0);
     end;
 
     local function getTarget()
@@ -9738,7 +9742,6 @@ function Library:CreateInvViewer()
             create();
             UI.frame.Visible = true;
         end;
-        -- İlk güncellemeyi tetikle
         lastTarget = nil;
     end;
 
@@ -9754,7 +9757,6 @@ function Library:CreateInvViewer()
 
     return api;
 end;
-
 
 -- ╔══════════════════════════════════════════════════════════════╗
 -- ║        XWARE — Library:CreateTargetPreview()  v1.2          ║
