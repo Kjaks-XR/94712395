@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.6B"
+local version = "0.3B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -9647,10 +9647,14 @@ local function update()
     local t = UI.target or getTarget();
     UI.target = t;
 
+    if UI._lastTarget == t then return end;
+    UI._lastTarget = t;
+
+    clear();
+
     local label = UI.frame:FindFirstChild("Target", true);
 
     if not t then
-        clear();
         if label then label.Text = "---" end;
         return;
     end;
@@ -9660,26 +9664,18 @@ local function update()
     local bp = t:FindFirstChild("Backpack");
     if not bp then return end;
 
-    local items = {};
-
     for _,tool in ipairs(bp:GetChildren()) do
         if tool:IsA("Tool") then
-            table.insert(items, tool.Name);
+            add(tool.Name);
         end;
     end;
 
     if t.Character then
         for _,tool in ipairs(t.Character:GetChildren()) do
             if tool:IsA("Tool") then
-                table.insert(items, tool.Name);
+                add(tool.Name);
             end;
         end;
-    end;
-
-    clear();
-
-    for _,name in ipairs(items) do
-        add(name);
     end;
 end;
 
