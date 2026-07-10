@@ -9647,9 +9647,6 @@ local function update()
     local t = UI.target or getTarget();
     UI.target = t;
 
-    if UI._lastTarget == t then return end;
-    UI._lastTarget = t;
-
     clear();
 
     local label = UI.frame:FindFirstChild("Target", true);
@@ -9662,11 +9659,12 @@ local function update()
     if label then label.Text = t.Name end;
 
     local bp = t:FindFirstChild("Backpack");
-    if not bp then return end;
 
-    for _,tool in ipairs(bp:GetChildren()) do
-        if tool:IsA("Tool") then
-            add(tool.Name);
+    if bp then
+        for _,tool in ipairs(bp:GetChildren()) do
+            if tool:IsA("Tool") then
+                add(tool.Name);
+            end;
         end;
     end;
 
