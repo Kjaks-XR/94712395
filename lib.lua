@@ -9624,7 +9624,7 @@ function Library:CreateInvViewer()
 
     local function getTarget()
         local best = nil;
-        local distMax = SilentAim.fov;
+        local distMax = _G.Fovsize;
 
         for _,p in pairs(Players:GetPlayers()) do
             if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
