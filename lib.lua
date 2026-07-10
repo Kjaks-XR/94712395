@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.3B"
+local version = "0.4B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -9432,7 +9432,6 @@ end
 
 
 
-
 function Library:CreateInvViewer()
     local Players = game:GetService("Players");
     local UIS = game:GetService("UserInputService");
@@ -9622,9 +9621,47 @@ function Library:CreateInvViewer()
         });
     end;
 
+    -- SADECE backpack'teki tool'ları göster
+    local function updateInventory(player)
+        clear(); -- Önce temizle
+        
+        if not player then 
+            if UI.frame then
+                local label = UI.frame:FindFirstChild("Target", true);
+                if label then label.Text = "---" end;
+            end;
+            return; 
+        end;
+
+        -- Target ismini güncelle
+        if UI.frame then
+            local label = UI.frame:FindFirstChild("Target", true);
+            if label then label.Text = player.Name end;
+        end;
+
+        -- Backpack'i kontrol et
+        local bp = player:FindFirstChild("Backpack");
+        if bp then
+            local hasItems = false;
+            for _,tool in ipairs(bp:GetChildren()) do
+                if tool:IsA("Tool") then
+                    add(tool.Name);
+                    hasItems = true;
+                end;
+            end;
+            
+            -- Eğer hiç item yoksa mesaj göster
+            if not hasItems then
+                add("Empty");
+            end;
+        else
+            add("No Backpack");
+        end;
+    end;
+
     local function getTarget()
         local best = nil;
-        local distMax = _G.Fovsize;
+        local distMax = _G.Fovsize or 200;
 
         for _,p in pairs(Players:GetPlayers()) do
             if p ~= lp and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -9641,41 +9678,18 @@ function Library:CreateInvViewer()
         return best;
     end;
 
-local function update()
-    if not UI.enabled then return end;
+    local lastTarget = nil;
+    local function update()
+        if not UI.enabled then return end;
 
-    local t = UI.target or getTarget();
-    UI.target = t;
-
-    clear();
-
-    local label = UI.frame:FindFirstChild("Target", true);
-
-    if not t then
-        if label then label.Text = "---" end;
-        return;
-    end;
-
-    if label then label.Text = t.Name end;
-
-    local bp = t:FindFirstChild("Backpack");
-
-    if bp then
-        for _,tool in ipairs(bp:GetChildren()) do
-            if tool:IsA("Tool") then
-                add(tool.Name);
-            end;
+        local t = UI.target or getTarget();
+        
+        -- Eğer target değiştiyse güncelle
+        if t ~= lastTarget then
+            lastTarget = t;
+            updateInventory(t);
         end;
     end;
-
-    if t.Character then
-        for _,tool in ipairs(t.Character:GetChildren()) do
-            if tool:IsA("Tool") then
-                add(tool.Name);
-            end;
-        end;
-    end;
-end;
 
     RunService.RenderStepped:Connect(update);
 
@@ -9701,11 +9715,11 @@ end;
 
     function api:settarget(p)
         UI.target = p;
+        lastTarget = nil; -- Target değişince güncellemeyi tetikle
     end;
 
     return api;
 end;
-
 
 
 
