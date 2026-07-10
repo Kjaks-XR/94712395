@@ -36,7 +36,7 @@ local TweenService = game:GetService('TweenService');
 local RenderStepped = RunService.RenderStepped;
 local LocalPlayer = Players.LocalPlayer;
 local Mouse = LocalPlayer:GetMouse();
-local version = "0.7B"
+local version = "0.8B"
 warn("Current Version Of Lib: "..version)
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
@@ -10017,6 +10017,440 @@ end;
 
 Players.PlayerAdded:Connect(OnPlayerChange);
 Players.PlayerRemoving:Connect(OnPlayerChange);
+
+
+
+
+-- ═══════════════════════════════════════════════════════════════
+-- PLAYER INFO CARD - KÜÇÜk DİKDÖRTGEN HEADPREVİEW
+-- ═══════════════════════════════════════════════════════════════
+-- KULLANIM:
+--   local Card = Library:CreatePlayerInfoCard()
+--   Card:Start()
+--   Card:Stop()
+--   Card:Destroy()
+--
+-- KONFİG (isteğe bağlı):
+--   Library:CreatePlayerInfoCard({
+--       Width      = 160,      -- card genişliği
+--       Height     = 120,      -- card yüksekliği
+--       Padding    = 12,       -- sol/üst boşluk
+--       ViewportW  = 92,       -- viewport genişliği
+--       ViewportH  = 92,       -- viewport yüksekliği
+--       UpdateRate = 0.05,     -- güncelleme sıklığı
+--   })
+-- ═══════════════════════════════════════════════════════════════
+
+function Library:CreatePlayerInfoCard(Config)
+    Config = Config or {}
+
+    -- ── Servisler ────────────────────────────────────────────────
+    local Players      = game:GetService("Players")
+    local RunService   = game:GetService("RunService")
+    local TweenService = game:GetService("TweenService")
+
+    local LocalPlayer = Players.LocalPlayer
+    local Camera      = workspace.CurrentCamera
+
+    -- ── Sabitler ────────────────────────────────────────────────
+    local CARD_W    = Config.Width      or 160
+    local CARD_H    = Config.Height     or 120
+    local PADDING   = Config.Padding    or 12
+    local VP_W      = Config.ViewportW  or 92
+    local VP_H      = Config.ViewportH  or 92
+    local UPD_RATE  = Config.UpdateRate or 0.05
+
+    -- ╔══════════════════════════════════════════════════╗
+    -- ║               UI OLUŞTURMA                       ║
+    -- ╚══════════════════════════════════════════════════╝
+
+    local ScreenGui = Library.ScreenGui
+
+    -- ── Ana card paneli (sol üst köşe) ──────────────────────────
+    local Card = Library:Create("Frame", {
+        Name             = "PlayerInfoCard";
+        BackgroundColor3 = Color3.new(0, 0, 0);
+        BorderColor3     = Color3.new(0, 0, 0);
+        AnchorPoint      = Vector2.new(0, 0);
+        Position         = UDim2.new(0, PADDING, 0, PADDING);
+        Size             = UDim2.fromOffset(CARD_W, CARD_H);
+        ZIndex           = 450;
+        Visible          = false;
+        Parent           = ScreenGui;
+    })
+
+    -- XWARE glow efekti
+    local glow = Instance.new("ImageLabel", Card)
+    glow.Name                   = "GlowEffect"
+    glow.Image                  = "rbxassetid://18245826428"
+    glow.ScaleType              = Enum.ScaleType.Slice
+    glow.SliceCenter            = Rect.new(21, 21, 79, 79)
+    glow.ImageColor3            = Library.AccentColor
+    glow.ImageTransparency      = 0.6
+    glow.BackgroundTransparency = 1
+    glow.Size                   = UDim2.new(1, 30, 1, 30)
+    glow.Position               = UDim2.new(0, -15, 0, -15)
+    glow.ZIndex                 = -1
+
+    local function StartGlowPulse()
+        local t1 = TweenService:Create(glow,
+            TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+            { ImageTransparency = 0.3 })
+        local t2 = TweenService:Create(glow,
+            TweenInfo.new(2.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+            { ImageTransparency = 0.6 })
+        t1.Completed:Connect(function() t2:Play() end)
+        t2.Completed:Connect(function() t1:Play() end)
+        t1:Play()
+    end
+    StartGlowPulse()
+
+    -- ── İç frame ─────────────────────────────────────────────────
+    local Inner = Library:Create("Frame", {
+        BackgroundColor3 = Library.MainColor;
+        BorderColor3     = Library.AccentColor;
+        BorderMode       = Enum.BorderMode.Inset;
+        Size             = UDim2.new(1, 0, 1, 0);
+        ZIndex           = 451;
+        Parent           = Card;
+    })
+
+    Library:AddToRegistry(Inner, {
+        BackgroundColor3 = "MainColor";
+        BorderColor3     = "AccentColor";
+    })
+
+    -- Accent üst çizgi
+    local AccentLine = Library:Create("Frame", {
+        BackgroundColor3 = Library.AccentColor;
+        BorderSizePixel  = 0;
+        Size             = UDim2.new(1, 0, 0, 2);
+        ZIndex           = 452;
+        Parent           = Inner;
+    })
+
+    Library:AddToRegistry(AccentLine, { BackgroundColor3 = "AccentColor" })
+
+    -- ── Viewport (head preview) ──────────────────────────────────
+    local VpOuter = Library:Create("Frame", {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3     = Library.OutlineColor;
+        BorderMode       = Enum.BorderMode.Inset;
+        Position         = UDim2.fromOffset(4, 2);
+        Size             = UDim2.new(1, -8, 0, VP_H);
+        ZIndex           = 452;
+        ClipsDescendants = true;
+        Parent           = Inner;
+    })
+
+    Library:AddToRegistry(VpOuter, {
+        BackgroundColor3 = "BackgroundColor";
+        BorderColor3     = "OutlineColor";
+    })
+
+    local Viewport = Instance.new("ViewportFrame")
+    Viewport.BackgroundColor3       = Color3.fromRGB(12, 12, 15)
+    Viewport.BackgroundTransparency = 0
+    Viewport.BorderSizePixel        = 0
+    Viewport.Size                   = UDim2.new(1, 0, 1, 0)
+    Viewport.ZIndex                 = 453
+    Viewport.Parent                 = VpOuter
+
+    local VpCamera = Instance.new("Camera")
+    VpCamera.FieldOfView   = 25
+    VpCamera.Parent        = Viewport
+    Viewport.CurrentCamera = VpCamera
+
+    local VpModel = Instance.new("Folder")
+    VpModel.Name   = "HeadPreview"
+    VpModel.Parent = Viewport
+
+    -- "NO HEAD" overlay
+    local NoHeadOverlay = Library:Create("Frame", {
+        BackgroundColor3       = Color3.fromRGB(12, 12, 15);
+        BackgroundTransparency = 0;
+        BorderSizePixel        = 0;
+        Size                   = UDim2.new(1, 0, 1, 0);
+        ZIndex                 = 460;
+        Parent                 = VpOuter;
+    })
+
+    Library:CreateLabel({
+        Size           = UDim2.new(1, 0, 1, 0);
+        Text           = "—";
+        TextSize       = 9;
+        ZIndex         = 461;
+        Parent         = NoHeadOverlay;
+    })
+
+    -- ── Bilgi bölümü (adı, HP, age) ──────────────────────────────
+    local InfoPanel = Library:Create("Frame", {
+        BackgroundColor3 = Library.BackgroundColor;
+        BorderColor3     = Library.OutlineColor;
+        BorderMode       = Enum.BorderMode.Inset;
+        AnchorPoint      = Vector2.new(0, 1);
+        Position         = UDim2.new(0, 4, 1, -4);
+        Size             = UDim2.new(1, -8, 0, 26);
+        ZIndex           = 452;
+        Parent           = Inner;
+    })
+
+    Library:AddToRegistry(InfoPanel, {
+        BackgroundColor3 = "BackgroundColor";
+        BorderColor3     = "OutlineColor";
+    })
+
+    local NameLabel = Library:CreateLabel({
+        Position         = UDim2.fromOffset(3, 1);
+        Size             = UDim2.new(1, -6, 0, 10);
+        Text             = "---";
+        TextSize         = 9;
+        TextXAlignment   = Enum.TextXAlignment.Left;
+        TextTruncate     = Enum.TextTruncate.AtEnd;
+        ZIndex           = 453;
+        Parent           = InfoPanel;
+    })
+
+    local HpLabel = Library:CreateLabel({
+        Position         = UDim2.fromOffset(3, 11);
+        Size             = UDim2.new(0.5, -3, 0, 7);
+        Text             = "HP: ?/?";
+        TextSize         = 8;
+        TextXAlignment   = Enum.TextXAlignment.Left;
+        ZIndex           = 453;
+        Parent           = InfoPanel;
+    })
+
+    local AgeLabel = Library:CreateLabel({
+        AnchorPoint      = Vector2.new(1, 0);
+        Position         = UDim2.new(1, -3, 11, 0);
+        Size             = UDim2.fromOffset(60, 7);
+        Text             = "Age: ?";
+        TextSize         = 8;
+        TextXAlignment   = Enum.TextXAlignment.Right;
+        ZIndex           = 453;
+        Parent           = InfoPanel;
+    })
+
+    -- ╔══════════════════════════════════════════════════╗
+    -- ║               STATE & MANTIK                     ║
+    -- ╚══════════════════════════════════════════════════╝
+
+    local clonedHead    = nil
+    local headCFrame    = CFrame.new()
+    local headSize      = Vector3.new()
+    local lastUpdate    = 0
+    local running       = false
+    local connections   = {}
+
+    -- Head klonunu temizle
+    local function ClearHead()
+        if clonedHead and clonedHead.Parent then clonedHead:Destroy() end
+        clonedHead = nil
+    end
+
+    -- LocalPlayer'ın kafasını klonla
+    local function CloneHead()
+        ClearHead()
+
+        local char = LocalPlayer.Character
+        if not char then return end
+
+        local head = char:FindFirstChild("Head")
+        if not head then return end
+
+        local ok, clone = pcall(function()
+            local h = head:Clone()
+            -- Scripti temizle
+            for _, obj in ipairs(h:GetDescendants()) do
+                if obj:IsA("Script") or obj:IsA("LocalScript") then
+                    obj:Destroy()
+                end
+            end
+            return h
+        end)
+
+        if not ok or not clone then return end
+
+        clone.Parent = VpModel
+        clonedHead   = clone
+        headCFrame   = clone.CFrame
+        headSize     = clone.Size
+    end
+
+    -- Account age hesapla
+    local function GetAccountAge(player)
+        local accountAge = player.AccountAge
+        if accountAge < 1 then return "0d"
+        elseif accountAge < 30 then return accountAge .. "d"
+        elseif accountAge < 365 then return math.floor(accountAge / 30) .. "m"
+        else return math.floor(accountAge / 365) .. "y" end
+    end
+
+    -- Viewport'u güncelle
+    local function UpdateViewport()
+        if not clonedHead or not clonedHead.Parent then return end
+
+        local char = LocalPlayer.Character
+        if not char then return end
+
+        local realHead = char:FindFirstChild("Head")
+        if not realHead then return end
+
+        -- Color sync
+        if clonedHead.Color ~= realHead.Color then
+            clonedHead.Color = realHead.Color
+        end
+
+        -- Hafif rotasyon (estetik)
+        local rot = tick() * 0.3  -- saniyede bir tur
+        clonedHead.CFrame = CFrame.Angles(0, math.rad(rot), 0) * headCFrame
+            * CFrame.new(0, 0, -3)  -- uzağa taşı
+
+        -- Kamera
+        VpCamera.CFrame = CFrame.new(
+            Vector3.new(0, 0, 5),
+            Vector3.new(0, 0, 0)
+        )
+    end
+
+    -- Accent rengi senkronizasyonu
+    local lastAccent = Library.AccentColor
+    local function SyncAccent()
+        local col = Library.AccentColor
+        if col == lastAccent then return end
+        lastAccent = col
+        TweenService:Create(glow, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            { ImageColor3 = col }):Play()
+        TweenService:Create(AccentLine, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            { BackgroundColor3 = col }):Play()
+    end
+
+    -- ── Ana döngü ────────────────────────────────────────────────
+    local renderConn
+
+    local function MainLoop(dt)
+        SyncAccent()
+
+        -- Güncelleme
+        lastUpdate = lastUpdate + dt
+        if lastUpdate >= UPD_RATE then
+            lastUpdate = 0
+
+            local char = LocalPlayer.Character
+            if not char then
+                ClearHead()
+                NameLabel.Text = "---"
+                HpLabel.Text = "HP: ?/?"
+                AgeLabel.Text = "Age: ?"
+                NoHeadOverlay.Visible = true
+                return
+            end
+
+            -- İlk klonlama
+            if not clonedHead or not clonedHead.Parent then
+                CloneHead()
+            end
+
+            -- Bilgiler
+            NameLabel.Text = LocalPlayer.Name
+
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                HpLabel.Text = "HP: " .. math.floor(hum.Health) .. "/" .. math.floor(hum.MaxHealth)
+            else
+                HpLabel.Text = "HP: ?/?"
+            end
+
+            AgeLabel.Text = "Age: " .. GetAccountAge(LocalPlayer)
+
+            if clonedHead and clonedHead.Parent then
+                NoHeadOverlay.Visible = false
+            else
+                NoHeadOverlay.Visible = true
+            end
+        end
+
+        -- Viewport rotasyonu her frame
+        UpdateViewport()
+    end
+
+    -- ╔══════════════════════════════════════════════════╗
+    -- ║               PUBLIC API                         ║
+    -- ╚══════════════════════════════════════════════════╝
+
+    local CardObj = {}
+
+    function CardObj:Start()
+        if running then return end
+        running = true
+
+        Card.Visible = true
+        CloneHead()
+        NoHeadOverlay.Visible = false
+
+        renderConn = RunService.RenderStepped:Connect(function(dt)
+            if running then MainLoop(dt) end
+        end)
+
+        local charConn = LocalPlayer.CharacterAdded:Connect(function(char)
+            wait(0.1)  -- character yüklensin
+            CloneHead()
+        end)
+
+        table.insert(connections, charConn)
+        Library:GiveSignal(charConn)
+    end
+
+    function CardObj:Stop()
+        if not running then return end
+        running = false
+
+        Card.Visible = false
+
+        if renderConn then
+            renderConn:Disconnect()
+            renderConn = nil
+        end
+
+        for _, c in ipairs(connections) do c:Disconnect() end
+        connections = {}
+
+        ClearHead()
+    end
+
+    function CardObj:SetVisible(bool)
+        Card.Visible = bool
+    end
+
+    function CardObj:SetPosition(x, y)
+        Card.Position = UDim2.new(0, x, 0, y)
+    end
+
+    function CardObj:Destroy()
+        self:Stop()
+        if Card and Card.Parent then Card:Destroy() end
+    end
+
+    return CardObj
+end
+
+-- ═══════════════════════════════════════════════════════════════
+-- KULLANIM ÖRNEĞİ:
+--
+--   local Card = Library:CreatePlayerInfoCard({
+--       Width      = 160,
+--       Height     = 120,
+--       Padding    = 12,
+--       ViewportW  = 92,
+--       ViewportH  = 92,
+--   })
+--   Card:Start()
+--   Card:SetPosition(20, 20)  -- konum ayarla
+--
+-- ═══════════════════════════════════════════════════════════════
+
+
 
 getgenv().Library = Library
         end
