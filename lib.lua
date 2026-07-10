@@ -10019,8 +10019,6 @@ Players.PlayerAdded:Connect(OnPlayerChange);
 Players.PlayerRemoving:Connect(OnPlayerChange);
 
 
-
-
 -- ═══════════════════════════════════════════════════════════════
 -- PLAYER INFO CARD - KÜÇÜk DİKDÖRTGEN HEADPREVİEW
 -- ═══════════════════════════════════════════════════════════════
@@ -10449,8 +10447,6 @@ end
 --   Card:SetPosition(20, 20)  -- konum ayarla
 --
 -- ═══════════════════════════════════════════════════════════════
-
-
 
 getgenv().Library = Library
         end
