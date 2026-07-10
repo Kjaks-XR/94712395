@@ -9663,16 +9663,16 @@ function Library:CreateInvViewer()
             if label then label.Text = player.Name end;
         end;
 
-        print("[UPDATE] Player:", player and player.Name or "nil");
+
         
         local bp = player:FindFirstChild("Backpack");
-        print("[UPDATE] Backpack found:", bp ~= nil);
+
         
         if bp then
-            print("[UPDATE] Backpack children:", #bp:GetChildren());
+            
             local hasItems = false;
             for _,tool in ipairs(bp:GetChildren()) do
-                print("[UPDATE] Child:", tool.Name, "Is Tool:", tool:IsA("Tool"));
+                
                 if tool:IsA("Tool") then
                     add(tool.Name);
                     hasItems = true;
@@ -9686,7 +9686,7 @@ function Library:CreateInvViewer()
             add("No Backpack");
         end;
         
-        print("[UPDATE] Final scroll children:", UI.list and #UI.list:GetChildren() or 0);
+       
     end;
 
     local function getTarget()
