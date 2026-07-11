@@ -9624,8 +9624,7 @@ function Library:CreateInvViewer()
 
     local function add(txt)
         if not UI.list then return end;
-        
-        print("[ADD] Adding:", txt);
+    
         
         local l = Instance.new("TextLabel");
         l.Text = txt;
@@ -9641,10 +9640,6 @@ function Library:CreateInvViewer()
         l.Visible = true;
         l.ZIndex = 600;
         
-        print("[ADD] Label created, parent:", l.Parent);
-        print("[ADD] Label text:", l.Text);
-        print("[ADD] Label visible:", l.Visible);
-        print("[ADD] Scroll children:", #UI.list:GetChildren());
     end;
 
     local function updateInventory(player)
