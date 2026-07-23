@@ -43,18 +43,16 @@ local ProtectGui = protectgui or (syn and syn.protect_gui) or (function() end);
 
 
 
-
-
-local fonts = {}
+local fonts = {};
 do
     function Register_Font(Name, Weight, Style, Asset)
         if not isfile(Asset.Id) then
-            writefile(Asset.Id, Asset.Font)
-        end
+            writefile(Asset.Id, Asset.Font);
+        end;
 
         if isfile(Name .. ".font") then
-            delfile(Name .. ".font")
-        end
+            delfile(Name .. ".font");
+        end;
 
         local Data = {
             name = Name,
@@ -66,50 +64,39 @@ do
                     assetId = getcustomasset(Asset.Id),
                 },
             },
-        }
+        };
 
-        writefile(Name .. ".font", game:GetService("HttpService"):JSONEncode(Data))
+        writefile(Name .. ".font", game:GetService("HttpService"):JSONEncode(Data));
 
         return getcustomasset(Name .. ".font");
-    end
+    end;
 
     local ProggyTiny = Register_Font("ProggyTiny", 200, "Normal", {
         Id = "ProggyTiny.ttf",
         Font = game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/tahoma_bold.ttf"),
-    })
+    });
 
-    local Mono = Register_Font("Mono", 200, "normal", {
-        Id = "Mono.ttf",
-        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/Minecraftia-Regular.ttf")
-    })
-
-    local PIXY = Register_Font("PIXY", 200, "normal", {
+    local PIXY = Register_Font("PIXY", 200, "Normal", {
         Id = "PIXY.ttf",
-        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/PIXY.ttf")
-    })
+        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/PIXY.ttf"),
+    });
 
-	local Mono = Register_Font("Mono", 200, "normal", {
-        Id = "Mono",
-        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/JetBrainsMono-Light.ttf")
-    })
-
-	
+    local Mono = Register_Font("Mono", 200, "Normal", {
+        Id = "Mono.ttf",
+        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/JetBrainsMono-Light.ttf"),
+    });
 
     fonts = {
         ["TahomaBold"] = Font.new(ProggyTiny, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-        ["Mono"] = Font.new(Mono, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
         ["PIXY"] = Font.new(PIXY, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-		["Mono"] = Font.new(Mono, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-    }
-    
-    -- Validate fonts loaded correctly
-    if not fonts[""] or typeof(fonts[""]) ~= "Font" then
-        warn("⚠️ Font loading failed Using Enum.Font as fallback")
-        fonts["Mono"] = Enum.Font.Code
-    end
-end
+        ["Mono"] = Font.new(Mono, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+    };
 
-
+    if not fonts["Mono"] or typeof(fonts["Mono"]) ~= "Font" then
+        warn("⚠️ Mono font failed, fallback");
+        fonts["Mono"] = Enum.Font.Code;
+    end;
+end;
 
 
 
