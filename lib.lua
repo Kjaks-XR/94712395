@@ -21,7 +21,7 @@ else
 print("nun opt")
 
 end
-
+print("3.4")
 
 
 
@@ -86,11 +86,6 @@ do
     local PIXY = Register_Font("PIXY", 200, "normal", {
         Id = "PIXY.ttf",
         Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/PIXY.ttf")
-    })
-
-	local Mono = Register_Font("Mono", 200, "normal", {
-        Id = "Mono",
-        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/MonoPro-Regular.ttf")
     })
 
 	local Mono = Register_Font("Mono", 200, "normal", {
