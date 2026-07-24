@@ -76,25 +76,31 @@ do
         Font = game:HttpGet("https://github.com/i77lhm/storage/raw/refs/heads/main/fonts/tahoma_bold.ttf"),
     });
 
+	local ProggyClean = Register_Font("ProggyClean", 200, "Normal", {
+        Id = "ProggyClean.ttf",
+        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/ProggyClean%20(1).ttf"),
+    });
+	
     local PIXY = Register_Font("PIXY", 200, "Normal", {
         Id = "PIXY.ttf",
         Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/PIXY.ttf"),
     });
 
-    local Mono = Register_Font("Mono", 200, "Normal", {
-        Id = "Mono.ttf",
-        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/JetBrainsMono-Light.ttf"),
+    local ProggyClean = Register_Font("ProggyClean", 200, "Normal", {
+        Id = "ProggyClean.ttf",
+        Font = game:HttpGet("https://github.com/Kjaks-XR/94712395/raw/refs/heads/main/JetBrainsProggyClean-Light.ttf"),
     });
 
     fonts = {
         ["TahomaBold"] = Font.new(ProggyTiny, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
         ["PIXY"] = Font.new(PIXY, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-        ["Mono"] = Font.new(Mono, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+        ["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+		["ProggyClean"] = Font.new(ProggyClean, Enum.FontWeight.Regular, Enum.FontStyle.Normal);
     };
 
-    if not fonts["Mono"] or typeof(fonts["Mono"]) ~= "Font" then
-        warn("⚠️ Mono font failed, fallback");
-        fonts["Mono"] = Enum.Font.Code;
+    if not fonts["ProggyClean"] or typeof(fonts["ProggyClean"]) ~= "Font" then
+        warn("⚠️ ProggyClean font failed, fallback");
+        fonts["ProggyClean"] = Enum.Font.Code;
     end;
 end;
 
@@ -334,7 +340,7 @@ xsx.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 xsx.BackgroundTransparency = 1
 xsx.Position = UDim2.new(0, 10, 0, 5)
 xsx.Size = UDim2.new(0, 120, 0, 21)
-xsx.FontFace = fonts["Mono"]
+xsx.FontFace = fonts["ProggyClean"]
 xsx.Text = "XWARE V3.4B"
 xsx.TextColor3 = Color3.fromRGB(180, 140, 255)
 xsx.TextSize = 11
@@ -347,7 +353,7 @@ text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 text.BackgroundTransparency = 1
 text.Position = UDim2.new(1, -40, 0, 5)
 text.Size = UDim2.new(0, 30, 0, 21)
-text.FontFace = fonts["Mono"]
+text.FontFace = fonts["ProggyClean"]
 text.Text = "PRIME"
 text.TextColor3 = Color3.fromRGB(255, 190, 70)
 text.TextSize = 11
@@ -362,7 +368,7 @@ n3TextLabel.BackgroundTransparency = 1
 n3TextLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 n3TextLabel.Position = UDim2.new(0.50, 0, 0.4, 0)
 n3TextLabel.Size = UDim2.new(0, 200, 0, 100)
-n3TextLabel.FontFace = fonts["Mono"]
+n3TextLabel.FontFace = fonts["ProggyClean"]
 n3TextLabel.Text = "<b><font size=\"70\">X</font><font color=\"rgb(180, 140, 255)\"><font size=\"70\">3</font></font></b>"
 n3TextLabel.TextColor3 = Color3.fromRGB(230, 230, 230)
 n3TextLabel.TextSize = 70
@@ -377,7 +383,7 @@ specialEditionBadge.BackgroundColor3 = Color3.fromRGB(25, 18, 40)
 specialEditionBadge.BackgroundTransparency = 0.8
 specialEditionBadge.Position = UDim2.new(0.5, -80, 0.58, 0)
 specialEditionBadge.Size = UDim2.new(0, 160, 0, 22)
-specialEditionBadge.FontFace = fonts["Mono"]
+specialEditionBadge.FontFace = fonts["ProggyClean"]
 specialEditionBadge.Text = "B SERIES"
 specialEditionBadge.TextColor3 = Color3.fromRGB(180, 140, 255)
 specialEditionBadge.TextSize = 9
@@ -401,7 +407,7 @@ badgeDotLeft.Text = ""
 badgeDotLeft.TextColor3 = Color3.fromRGB(255, 190, 70)
 badgeDotLeft.TextSize = 10
 badgeDotLeft.TextTransparency = 1
-badgeDotLeft.FontFace = fonts["Mono"]
+badgeDotLeft.FontFace = fonts["ProggyClean"]
 
 local badgeDotRight = Instance.new("TextLabel", specialEditionBadge)
 badgeDotRight.BackgroundTransparency = 1
@@ -411,7 +417,7 @@ badgeDotRight.Text = ""
 badgeDotRight.TextColor3 = Color3.fromRGB(255, 190, 70)
 badgeDotRight.TextSize = 10
 badgeDotRight.TextTransparency = 1
-badgeDotRight.FontFace = fonts["Mono"]
+badgeDotRight.FontFace = fonts["ProggyClean"]
 
 -- Blinking cursor
 task.spawn(function()
@@ -451,7 +457,7 @@ local function addTerminalLine(textContent, color)
 	local newText = Instance.new("TextLabel")
 	newText.Parent = terminalTextFrame
 	newText.BackgroundTransparency = 1
-	newText.FontFace = fonts["Mono"]
+	newText.FontFace = fonts["ProggyClean"]
 	newText.Text = textContent
 	newText.TextColor3 = color or Color3.fromRGB(200, 160, 255)
 	newText.TextSize = 9
@@ -641,7 +647,7 @@ local Library = {
     OutlineColor = Color3.fromRGB(50, 50, 50);
     RiskColor = Color3.fromRGB(255, 50, 50),
     Black = Color3.new(0, 0, 0);
-    Font = fonts["Mono"],  -- Use your custom font
+    Font = fonts["ProggyClean"],  -- Use your custom font
 
     OpenedFrames = {};
     DependencyBoxes = {};
@@ -7062,7 +7068,7 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
         Position = UDim2.new(0, 4, 0, 2),
         Text = 'Chance For A Mod To Join',
         TextSize = 10,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 52,
         Parent = ChanceInner,
@@ -7074,7 +7080,7 @@ function Library:CreateModJoinChanceBar(ParentWindow, Config)
         Position = UDim2.new(0, 4, 0, 22),
         Text = '0%',
         TextSize = 12,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Center,
         ZIndex = 52,
         Parent = ChanceInner,
@@ -7350,7 +7356,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Position = UDim2.new(0, 4, 0, 2),
         Text = 'STATS',
         TextSize = 11,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         ZIndex = 53,
         Parent = StatsInner,
     })
@@ -7371,7 +7377,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Position = UDim2.new(0, 0, 0, 0),
         Text = 'Memory: 0 MB',
         TextSize = 10,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
@@ -7382,7 +7388,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Position = UDim2.new(0, 0, 0, 20),
         Text = 'FPS: 0',
         TextSize = 10,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
@@ -7393,7 +7399,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Position = UDim2.new(0, 0, 0, 40),
         Text = 'Ping: 0ms',
         TextSize = 10,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
@@ -7404,7 +7410,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Position = UDim2.new(0, 0, 0, 60),
         Text = 'Executor: ' .. GetExecutorName(),
         TextSize = 10,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
@@ -7415,7 +7421,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Position = UDim2.new(0, 0, 0, 80),
         Text = 'Region: Loading...',
         TextSize = 10,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
@@ -7426,7 +7432,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Position = UDim2.new(0, 0, 0, 100),
         Text = 'Players: 0/0',
         TextSize = 10,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
@@ -7437,7 +7443,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Position = UDim2.new(0, 0, 0, 120),
         Text = 'Time: 00:00',
         TextSize = 10,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
@@ -7448,7 +7454,7 @@ function Library:CreateStatsPanel(ParentWindow, Config)
         Position = UDim2.new(0, 0, 0, 140),
         Text = 'UpTime: 0m 0s',
         TextSize = 10,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = StatsContainer,
@@ -7676,7 +7682,7 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
         Position = UDim2.new(0, 4, 0, 0),
         Text = 'LOGS',
         TextSize = 12,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = TitleContainer,
@@ -7752,7 +7758,7 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
             Text = logInfo.prefix,
             TextColor3 = logInfo.color,
             TextSize = 10,
-            FontFace = fonts["Mono"],
+            FontFace = fonts["ProggyClean"],
             ZIndex = 55,
             Parent = LogEntry,
         })
@@ -7766,7 +7772,7 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
             Text = message,
             TextColor3 = Color3.fromRGB(220, 220, 220),
             TextSize = 13,
-            FontFace = fonts["Mono"],
+            FontFace = fonts["ProggyClean"],
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
             TextTruncate = Enum.TextTruncate.AtEnd,
@@ -7929,7 +7935,7 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
         Position = UDim2.new(0, 4, 0, 0),
         Text = 'LOGS',
         TextSize = 12,
-        FontFace = fonts["Mono"],
+        FontFace = fonts["ProggyClean"],
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 53,
         Parent = TitleContainer,
@@ -8010,7 +8016,7 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
             Text = logInfo.prefix,
             TextColor3 = logInfo.color,
             TextSize = 10,
-            FontFace = fonts["Mono"],
+            FontFace = fonts["ProggyClean"],
             TextStrokeTransparency = 1,
             ZIndex = 55,
             Parent = LogEntry,
@@ -8029,7 +8035,7 @@ function Library:CreateLogPanel(ParentWindow, PlayerListFrame, Config)
             Text = message,
             TextColor3 = Color3.fromRGB(220, 220, 220),
             TextSize = 13,
-            FontFace = fonts["Mono"],
+            FontFace = fonts["ProggyClean"],
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
             TextTruncate = Enum.TextTruncate.AtEnd,
@@ -8135,7 +8141,7 @@ function Library:CreateCommandBar(Toggles, Options)
         modeText    = Color3.fromRGB(55,  55,  55),
     }
 
-    local FontMono = Library.Font
+    local FontProggyClean = Library.Font
 
     -- ─── Helpers ─────────────────────────────────────────────────
     local function Tw(inst, t, props)
@@ -8206,7 +8212,7 @@ function Library:CreateCommandBar(Toggles, Options)
         BackgroundTransparency = 1;
         Position               = UDim2.fromOffset(12, 0);
         Size                   = UDim2.fromOffset(16, BAR_H);
-        FontFace               = FontMono;
+        FontFace               = FontProggyClean;
         Text                   = "›";
         TextColor3             = C.textDim;
         TextSize               = 16;
@@ -8219,7 +8225,7 @@ function Library:CreateCommandBar(Toggles, Options)
         BackgroundTransparency = 1;
         Position               = UDim2.fromOffset(34, 0);
         Size                   = UDim2.new(1, -140, 1, 0);
-        FontFace               = FontMono;
+        FontFace               = FontProggyClean;
         PlaceholderText        = 'set-toggle "name" true   —   type help';
         PlaceholderColor3      = C.textDim;
         Text                   = "";
@@ -8238,7 +8244,7 @@ function Library:CreateCommandBar(Toggles, Options)
         AnchorPoint            = Vector2.new(1, 0.5);
         Position               = UDim2.new(1, -22, 0.5, 0);
         Size                   = UDim2.fromOffset(100, BAR_H);
-        FontFace               = FontMono;
+        FontFace               = FontProggyClean;
         Text                   = "RightAlt  ×";
         TextColor3             = C.modeText;
         TextSize               = 10;
@@ -8330,7 +8336,7 @@ function Library:CreateCommandBar(Toggles, Options)
         BackgroundTransparency = 1;
         Position               = UDim2.fromOffset(12, 0);
         Size                   = UDim2.new(1, -16, 1, 0);
-        FontFace               = FontMono;
+        FontFace               = FontProggyClean;
         Text                   = "";
         TextColor3             = C.textGreen;
         TextSize               = 12;
@@ -8674,7 +8680,7 @@ function Library:CreateCommandBar(Toggles, Options)
             Lb({
                 BackgroundTransparency = 1;
                 Size      = UDim2.fromOffset(22, SUGG_H);
-                FontFace  = FontMono;
+                FontFace  = FontProggyClean;
                 Text      = tostring(idx);
                 TextColor3 = C.textDim;
                 TextSize  = 10;
@@ -8697,7 +8703,7 @@ function Library:CreateCommandBar(Toggles, Options)
                 BackgroundTransparency = 1;
                 Size           = UDim2.new(1, -52, 1, 0);
                 Position       = UDim2.fromOffset(27, 0);
-                FontFace       = FontMono;
+                FontFace       = FontProggyClean;
                 Text           = sugg.display;
                 TextColor3     = C.text;
                 TextSize       = 12;
@@ -8713,7 +8719,7 @@ function Library:CreateCommandBar(Toggles, Options)
                 AnchorPoint    = Vector2.new(1, 0.5);
                 Position       = UDim2.new(1, -8, 0.5, 0);
                 Size           = UDim2.fromOffset(32, SUGG_H);
-                FontFace       = FontMono;
+                FontFace       = FontProggyClean;
                 Text           = idx == 1 and "TAB" or "";
                 TextColor3     = C.textDim;
                 TextSize       = 9;
